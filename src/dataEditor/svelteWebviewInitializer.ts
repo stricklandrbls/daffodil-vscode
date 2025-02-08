@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+import { readFileSync } from 'fs'
 import * as vscode from 'vscode'
 
 export class SvelteWebviewInitializer {
@@ -36,25 +37,35 @@ export class SvelteWebviewInitializer {
       this.getSvelteAppDistributionIndexJsUri(context, view)
     )
     const stylesUri = webView.asWebviewUri(this.getStylesUri(context))
-    return `
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <title>Data Editor</title>
-        <meta charset="UTF-8">
-        <!--
-          Use a content security policy to only allow loading images from the extension directory,
-          and only allow scripts that have a specific nonce.
-        -->
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webView.cspSource}; style-src ${webView.cspSource}; img-src ${webView.cspSource}; script-src 'nonce-${nonce}';">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="${stylesUri}" rel="stylesheet" type="text/css" />
-    </head>
-    <body>
-    </body>
-    <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
-</html>
-`
+    const svelteHTMLContent = readFileSync(
+      vscode.Uri.joinPath(
+        context.extensionUri,
+        'dist',
+        'views',
+        view,
+        'index.html'
+      ).path
+    )
+    return svelteHTMLContent.toString()
+    //     return `
+    // <!DOCTYPE html>
+    // <html lang="en">
+    //     <head>
+    //         <title>Data Editor</title>
+    //         <meta charset="UTF-8">
+    //         <!--
+    //           Use a content security policy to only allow loading images from the extension directory,
+    //           and only allow scripts that have a specific nonce.
+    //         -->
+    //         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webView.cspSource}; style-src ${webView.cspSource}; img-src ${webView.cspSource}; script-src 'nonce-${nonce}';">
+    //         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    //         <link href="${stylesUri}" rel="stylesheet" type="text/css" />
+    //     </head>
+    //     <body>
+    //     </body>
+    //     <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
+    // </html>
+    // `
   }
 
   // get a nonce for use in a content security policy

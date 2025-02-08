@@ -120,10 +120,17 @@ function package() {
   )
 }
 
+function svelteInstall() {
+  const svelteBuildDir = '../dataeditor/build'
+  const extensionDataEditorViewDir = '../dist/views/dataEditor'
+  fs.copyFileSync(svelteBuildDir, extensionDataEditorViewDir)
+}
+
 module.exports = {
   genVersionTS: genVersionTS,
   nodeclean: nodeclean,
   scalaclean: scalaclean,
   watch: watch,
   package: package,
+  svelteInstall: svelteInstall,
 }
