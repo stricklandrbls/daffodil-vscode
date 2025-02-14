@@ -24,6 +24,7 @@ export class SvelteWebviewInitializer {
   initialize(view: string, webView: vscode.Webview): void {
     webView.options = this.getWebViewOptions(this.context, view)
     webView.html = this.getHtmlContent(this.context, view, webView)
+    console.log(webView.options)
   }
 
   // get the HTML content for the webview
@@ -37,6 +38,8 @@ export class SvelteWebviewInitializer {
       this.getSvelteAppDistributionIndexJsUri(context, view)
     )
     const stylesUri = webView.asWebviewUri(this.getStylesUri(context))
+    console.log(stylesUri, scriptUri)
+
     const svelteHTMLContent = readFileSync(
       vscode.Uri.joinPath(
         context.extensionUri,
@@ -46,7 +49,23 @@ export class SvelteWebviewInitializer {
         'index.html'
       ).path
     )
-    return svelteHTMLContent.toString()
+    const svelteHTMLStr = svelteHTMLContent
+      .toString()
+      .replaceAll(/<script.*nonce*>/g, (tag) => {
+        return this.insertNonceTag(tag, nonce)
+      })
+
+    let svelteHTMLwithNonce = svelteHTMLStr.split('<head>')
+    console.log(svelteHTMLwithNonce)
+    const ret =
+      svelteHTMLwithNonce[0] +
+      `<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webView.cspSource}; style-src ${webView.cspSource}; img-src ${webView.cspSource};script-src-elem 'nonce-${nonce}'; script-src 'nonce-${nonce}';">` +
+      // `<link href="./styles/styles.css" rel="stylesheet" type="text/css" />` +
+      `<link href="${stylesUri}" rel="stylesheet" type="text/css" />` +
+      `<script type="module" nonce="${nonce}" src="${scriptUri}"></script>` +
+      svelteHTMLwithNonce[1]
+    console.log(webView.cspSource)
+    return ret
     //     return `
     // <!DOCTYPE html>
     // <html lang="en">
@@ -68,6 +87,9 @@ export class SvelteWebviewInitializer {
     // `
   }
 
+  private insertNonceTag(scriptTag: string, nonce: string): string {
+    return scriptTag.replace(/nonce=""/g, `nonce="${nonce}"`)
+  }
   // get a nonce for use in a content security policy
   private getNonce(): string {
     let text = ''
@@ -84,11 +106,22 @@ export class SvelteWebviewInitializer {
     context: vscode.ExtensionContext,
     view: string
   ): vscode.WebviewPanelOptions & vscode.WebviewOptions {
+    let svelteimm: vscode.Uri[] = []
+    ;['chunks', 'entry', 'nodes'].forEach((dir) => {
+      svelteimm.push(
+        vscode.Uri.joinPath(
+          this.getSvelteAppDistributionViewFolderUri(context, view),
+          '_app/immutable',
+          dir
+        )
+      )
+    })
     return {
       enableScripts: true,
       localResourceRoots: [
         this.getSvelteAppDistributionFolderUri(context),
         this.getSvelteAppDistributionViewFolderUri(context, view),
+        ...svelteimm,
       ],
     }
   }
@@ -117,13 +150,19 @@ export class SvelteWebviewInitializer {
       context.extensionUri,
       'dist',
       'views',
-      view,
+      'dataEditor',
       'index.js'
     )
   }
 
   // get the styles uri
   private getStylesUri(context: vscode.ExtensionContext): vscode.Uri {
-    return vscode.Uri.joinPath(context.extensionUri, 'dist', 'styles.css')
+    return vscode.Uri.joinPath(
+      context.extensionUri,
+      'dist',
+      'views',
+      'dataEditor',
+      'styles.css'
+    )
   }
 }

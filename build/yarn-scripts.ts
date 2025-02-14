@@ -121,9 +121,18 @@ function package() {
 }
 
 function svelteInstall() {
-  const svelteBuildDir = '../dataeditor/build'
-  const extensionDataEditorViewDir = '../dist/views/dataEditor'
-  fs.copyFileSync(svelteBuildDir, extensionDataEditorViewDir)
+  const svelteDir = './dataeditor'
+  const svelteBuildDir = './dataeditor/build'
+  const extensionDataEditorViewDir = './dist/views/dataEditor/'
+  fs.cpSync(svelteBuildDir, extensionDataEditorViewDir, { recursive: true })
+  fs.cpSync(`${svelteDir}/src/styles`, extensionDataEditorViewDir, {
+    recursive: true,
+  })
+  fs.cpSync(
+    `${svelteDir}/dist/index.js`,
+    `${extensionDataEditorViewDir}/index.js`
+  )
+  // fs.copyFileSync(svelteBuildDir, extensionDataEditorViewDir)
 }
 
 module.exports = {
