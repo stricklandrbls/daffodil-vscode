@@ -1,10 +1,17 @@
 <script lang='ts'>
 	import Button from "./components/Button.svelte";
+	import Tooltips from '../.backup/src/components/layouts/Tooltip.svelte'
 	export let name;
 </script>
 
 <main>
-	<Button name="Test" disableIf={true}/>
+	<Tooltips
+		description="test button"
+		alwaysEnabled={true}
+	>
+
+	<Button name="Test" disableIf={false}/>
+	</Tooltips>
 	<h1>Hello {name}!</h1>
 	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
 </main>

@@ -1,6 +1,7 @@
-const sveltePreprocess = require('svelte-preprocess')
+// const sveltePreprocess = require('svelte-preprocess')
+// const adapter = require('@sveltejs/adapter-static')
+import { sveltePreprocess } from 'svelte-preprocess'
 import adapter from '@sveltejs/adapter-static'
-
 const config = {
   kit: {
     preprocess: sveltePreprocess(),

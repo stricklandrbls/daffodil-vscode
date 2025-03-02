@@ -38,7 +38,7 @@ class ElementKeypressEventMap {
   }
 
   public run(elementId: string, keyEvent: KeyboardEvent) {
-    this.events[keyEvent.key].forEach((eventItem) => {
+    this.events[keyEvent.key].forEach((eventItem: ElementKeypressEvent) => {
       if (eventItem.elementId === elementId) eventItem.run(keyEvent)
     })
   }
