@@ -16,23 +16,17 @@
  */
 
 {
-  "extends":"@tsconfig/svelte/tsconfig.json",
+  "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "./src",
-    "paths": {
-      "svelte":["./node_modules/svelte"]
-    },
     "module": "esnext",
     "moduleResolution": "Node10",
+    "baseUrl": "../../",
     "target": "es6",
-    "outDir": "public/build",
+    "outDir": "out",
     "lib": ["es6", "es2021", "DOM"],
-    "ignoreDeprecations": "5.0",
-    "types": [
-        "svelte"
-    ]
+    "ignoreDeprecations": "5.0"
   },
-  "include": ["src/**/*"],
+  "include": ["src/svelte/src/**/*"],
   "exclude": ["node_modules/*"],
   "strict": true /* enable all strict type-checking options */,
   "noImplicitAny": false,
