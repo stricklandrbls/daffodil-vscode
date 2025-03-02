@@ -20,7 +20,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "svelte":["node_modules/svelte"]
+      "svelte":["node_modules/svelte"],
+      "svelte/internal":["node_modules/svelte/internal"]
     },
     "module": "esnext",
     "moduleResolution": "Node10",

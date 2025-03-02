@@ -38,7 +38,7 @@
     "watch:tdmlEditorJS": "esbuild src/tdmlEditor/webview/webview.js --outfile=dist/views/tdmlEditor/webview/webview.js --bundle --platform=node --format=cjs --watch",
     "webpack:root": "webpack --mode production --config ./webpack/ext-dev.webpack.config.js",
     "webpack:pkg": "webpack --mode production --config ./webpack/ext-package.webpack.config.js",
-    "webpack:svelte": "webpack -c ./src/svelte/webpack.config.js",
+    "webpack:svelte": "webpack --mode production -c ./src/svelte/webpack.config.js",
     "compile:tdmlEditorJS": "esbuild src/tdmlEditor/webview/webview.js --outfile=dist/views/tdmlEditor/webview/webview.js --bundle --platform=node --format=cjs",
     "prepackage": "yarn install && yarn compile && yarn webpack:pkg",
     "package": "run-func build/yarn-scripts.ts package && yarn --cwd dist/package install && yarn --cwd dist/package vsce package --out ../../",

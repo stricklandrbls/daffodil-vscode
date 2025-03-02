@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 const entry = path.resolve(__dirname, 'src', 'main.ts')
 const buildDir = path.resolve(__dirname, './dist')
+// const svelteInclude = path.dirname(require.resolve('svelte/package.json'))
 const svelteInclude = path.resolve('node_modules', 'svelte/src')
 const appHTML = path.resolve(__dirname, 'src/app.html')
 const indexHTML = path.resolve(buildDir, 'index.html')
@@ -21,9 +22,12 @@ module.exports = (env) => /** @type WebpackConfig */ {
     resolve: {
       alias: {
         svelte: svelteInclude,
+        // 'svelte/internal': path.dirname(
+        //   require.resolve('../svelte/package.json') + '/internal'
+        // ),
       },
       extensions: ['.mjs', '.js', '.ts', '.svelte', '.d.ts'],
-      conditionNames: ['browser', 'svelte'],
+      conditionNames: ['browser', 'svelte', 'svelte/legacy'],
     },
     module: {
       rules: [
@@ -46,8 +50,13 @@ module.exports = (env) => /** @type WebpackConfig */ {
           test: /\.d\.ts$/,
           use: 'null-loader',
         },
+        {
+          test: /\.mjs$/,
+          type: 'javascript/auto',
+        },
       ],
     },
+    optimization: { usedExports: true },
     plugins: [
       new HtmlWebpackPlugin({
         template: appHTML,
