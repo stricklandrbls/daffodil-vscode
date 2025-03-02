@@ -1,6 +1,6 @@
 <script lang='ts'>
 	import Button from "./components/Button.svelte";
-	export let name;
+	let name = $state("World");
 </script>
 
 <main>

@@ -30,7 +30,8 @@
     "ignoreDeprecations": "5.0",
     "types": [
         "svelte"
-    ]
+    ],
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules/*"],

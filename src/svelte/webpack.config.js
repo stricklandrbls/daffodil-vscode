@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 const entry = path.resolve(__dirname, 'src', 'main.ts')
 const buildDir = path.resolve(__dirname, './dist')
-const svelteInclude = path.resolve('node_modules', 'svelte/src/runtime')
+const svelteInclude = path.resolve('node_modules', 'svelte/src')
 const appHTML = path.resolve(__dirname, 'src/app.html')
 const indexHTML = path.resolve(buildDir, 'index.html')
 
@@ -16,6 +16,7 @@ module.exports = (env) => /** @type WebpackConfig */ {
     output: {
       filename: 'dataeditor.js',
       path: buildDir,
+      clean: true,
     },
     resolve: {
       alias: {
@@ -31,6 +32,7 @@ module.exports = (env) => /** @type WebpackConfig */ {
           use: {
             loader: 'svelte-loader',
             options: {
+              compilerOptions: { customElement: true, hydratable: true }, // Svelte5 REQURIED
               preprocess: require('svelte-preprocess')(),
             },
           },
@@ -39,6 +41,10 @@ module.exports = (env) => /** @type WebpackConfig */ {
           test: /\.ts$/,
           use: 'ts-loader',
           exclude: /node_modules/,
+        },
+        {
+          test: /\.d\.ts$/,
+          use: 'null-loader',
         },
       ],
     },

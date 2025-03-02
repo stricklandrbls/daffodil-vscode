@@ -1,10 +1,17 @@
+// import { mount } from 'svelte' // Causing Browser TypeErrors
+import { createClassComponent } from 'svelte/legacy'
 import App from './App.svelte'
 
-const app = new App({
-  target: document.body,
-  props: {
-    name: 'world',
-  },
-})
+/**
+ * Svelte version < 4
+ * - Requires DOM target
+ */
+// const app = new App({
+//   target: document.getElementById('app')!,
+// })
 
+const app = createClassComponent({
+  component: App,
+  target: document.getElementById('app')!,
+})
 export default app
