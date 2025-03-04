@@ -24,11 +24,11 @@
 	  "target": "es6",
 	  "outDir": "out",
 	  "lib": ["es6", "es2021", "DOM"],
-	  "ignoreDeprecations": "5.0"
+	  "ignoreDeprecations": "5.0",
+      "strict": true
 	},
 	"include": ["**/*"],
-	"exclude": ["node_modules/*"],
-	"strict": true /* enable all strict type-checking options */,
+	"exclude": ["../../../node_modules/*"],
 	"noImplicitAny": false,
 	"removeComments": false,
 	"noUnusedLocals": true,
