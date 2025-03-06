@@ -47,7 +47,7 @@
     "test:svelte": "mocha -r ts-node/register ./src/svelte/tests/**/*.test.ts",
     "sbt": "sbt debugger/Universal/packageBin",
     "svelte:check": "svelte-check --tsconfig ./src/svelte/.kit/tsconfig.json",
-    "svelte:build":"cd src/svelte/.kit && svelte-kit sync"
+    "svelte:build": "cd src/svelte && vite --config ./vite.config.mjs build"
   },
   "dependencies": {
     "@omega-edit/client": "0.9.83",
@@ -81,6 +81,8 @@
     "chai": "^4.3.10",
     "concurrently": "^8.2.2",
     "copy-webpack-plugin": "^12.0.2",
+    "create": "^0.5.4",
+    "create-vite": "^6.3.1",
     "css-loader": "^6.8.1",
     "css-minimizer-webpack-plugin": "^7.0.0",
     "esbuild": "^0.25.0",
@@ -93,6 +95,7 @@
     "prettier-plugin-svelte": "3.2.6",
     "run-func": "^3.0.0",
     "sass": "^1.69.4",
+    "serve": "^14.2.4",
     "svelte": "^5.20.5",
     "svelte-check": "^4.1.4",
     "svelte-loader": "^3.2.4",
