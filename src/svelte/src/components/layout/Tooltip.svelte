@@ -15,27 +15,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <script lang="ts">
-  import { tooltipsEnabled } from '../../stores'
-
+  let tooltipsEnabled = $state(false)
+  let { description, alwaysEnabled = false, tooltipSizeExtended = false }:{
+    description:string,
+    alwaysEnabled: boolean,
+    tooltipSizeExtended: boolean
+  } = $props()
   const NULL = () => {}
   const TOOLTIP_MIN_WIDTH = 50
   const TOOLTIP_MIN_HEIGHT = 25
-  interface Props {
-    description: string;
-    alwaysEnabled?: boolean;
-    tooltipSizeExtended?: boolean;
-    children?: import('svelte').Snippet;
-  }
-
-  let {
-    description,
-    alwaysEnabled = false,
-    tooltipSizeExtended = false,
-    children
-  }: Props = $props();
-  let showTooltip = $state(false)
-  let left = $state(0),
-    top = $state(0)
+  let showTooltip = false
+  let left = 0,
+    top = 0
 
   function renderTooltip(event: MouseEvent) {
     const targetElement = event.target as HTMLElement
@@ -68,13 +59,13 @@ limitations under the License.
   }
 </script>
 
-{#if ($tooltipsEnabled || alwaysEnabled) && description.length > 0}
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
+{#if (tooltipsEnabled || alwaysEnabled) && description.length > 0}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <span
-    onmouseenter={showTooltip ? NULL : renderTooltip}
-    onmouseleave={showTooltip ? renderTooltip : NULL}
+    on:mouseenter={showTooltip ? NULL : renderTooltip}
+    on:mouseleave={showTooltip ? renderTooltip : NULL}
   >
-    {@render children?.()}
+    <slot />
   </span>
 
   {#if showTooltip}
@@ -87,7 +78,7 @@ limitations under the License.
     </div>
   {/if}
 {:else}
-  <span>{@render children?.()}</span>
+  <span><slot /></span>
 {/if}
 
 <style lang="scss">

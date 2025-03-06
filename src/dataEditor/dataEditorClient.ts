@@ -67,12 +67,12 @@ import { extractDaffodilEvent } from '../daffodilDebugger/daffodil'
 import {
   EditByteModes,
   VIEWPORT_CAPACITY_MAX,
-} from '../svelte/src/stores/configuration'
+} from '../svelte/src/lib/configuration'
 import {
   EditorMessage,
   MessageCommand,
   MessageLevel,
-} from '../svelte/src/utilities/message'
+} from '../svelte/src/lib/message'
 import * as editor_config from './config'
 import { configureOmegaEditPort, ServerInfo } from './include/server/ServerInfo'
 import { isDFDLDebugSessionActive } from './include/utils'
@@ -917,11 +917,11 @@ async function sendViewportRefresh(
     command: MessageCommand.viewportRefresh,
     data: {
       viewportId: viewportDataResponse.getViewportId(),
-      viewportOffset: viewportDataResponse.getOffset(),
-      viewportLength: viewportDataResponse.getLength(),
-      viewportFollowingByteCount: viewportDataResponse.getFollowingByteCount(),
-      viewportData: viewportDataResponse.getData_asU8(),
-      viewportCapacity: VIEWPORT_CAPACITY_MAX,
+      fileOffset: viewportDataResponse.getOffset(),
+      length: viewportDataResponse.getLength(),
+      bytesLeft: viewportDataResponse.getFollowingByteCount(),
+      data: viewportDataResponse.getData_asU8(),
+      capacity: VIEWPORT_CAPACITY_MAX,
     },
   })
 }

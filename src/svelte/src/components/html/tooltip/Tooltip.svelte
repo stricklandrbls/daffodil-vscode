@@ -15,8 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <script lang="ts">
-  import { tooltipsEnabled } from '../../stores'
-
+  let tooltipsEnabled = $state(false)
   const NULL = () => {}
   const TOOLTIP_MIN_WIDTH = 50
   const TOOLTIP_MIN_HEIGHT = 25
@@ -68,7 +67,7 @@ limitations under the License.
   }
 </script>
 
-{#if ($tooltipsEnabled || alwaysEnabled) && description.length > 0}
+{#if (tooltipsEnabled || alwaysEnabled) && description.length > 0}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <span
     onmouseenter={showTooltip ? NULL : renderTooltip}

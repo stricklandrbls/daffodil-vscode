@@ -15,31 +15,39 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <script lang="ts">
-  // position for the side panel: top-left, top-right, bottom-left, bottom-right
-  export let position = 'top-left'
+  interface Props {
+    // position for the side panel: top-left, top-right, bottom-left, bottom-right
+    position?: string;
+    // title for the side panel
+    title?: string;
+    // whether the side panel is open or not
+    open?: boolean;
+    panelWidth?: string; // Default width
+    children?: import('svelte').Snippet;
+  }
 
-  // title for the side panel
-  export let title = 'Side Panel Title'
-
-  // whether the side panel is open or not
-  export let open = true
-
-  export let panelWidth = '300px' // Default width
+  let {
+    position = 'top-left',
+    title = 'Side Panel Title',
+    open = $bindable(true),
+    panelWidth = '300px',
+    children
+  }: Props = $props();
 </script>
 
 {#if open}
-  <div class="overlay" on:click={() => (open = false)} />
+  <div class="overlay" onclick={() => (open = false)}></div>
 {/if}
 
 <div
   class={`side-panel ${position} ${open ? 'open' : ''}`}
   style="width: {panelWidth};height: 50%;"
 >
-  <div class="tab" on:mouseenter={() => (open = !open)}>
+  <div class="tab" onmouseenter={() => (open = !open)}>
     <span>{title}</span>
   </div>
   <div class="content">
-    <slot />
+    {@render children?.()}
   </div>
 </div>
 

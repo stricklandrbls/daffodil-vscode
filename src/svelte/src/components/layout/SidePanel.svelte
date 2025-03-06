@@ -22,7 +22,7 @@ limitations under the License.
   export let title = 'Side Panel Title'
 
   // whether the side panel is open or not
-  export let open = true
+  export let open = false
 
   export let panelWidth = '300px' // Default width
 </script>
@@ -33,9 +33,9 @@ limitations under the License.
 
 <div
   class={`side-panel ${position} ${open ? 'open' : ''}`}
-  style="width: {panelWidth};height: 50%;"
+  style="width: {panelWidth};"
 >
-  <div class="tab" on:mouseenter={() => (open = !open)}>
+  <div class="tab" on:click={() => (open = false)}>
     <span>{title}</span>
   </div>
   <div class="content">

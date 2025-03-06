@@ -33,7 +33,7 @@
     "lint:fix": "yarn prettier src -w",
     "prewatch": "yarn gen-version-ts && yarn sbt",
     "watch": "run-func build/yarn-scripts.ts watch",
-    "watch:svelte": "yarn webpack --env development=true -w -c ./src/svelte/webpack.config.js",
+    "watch:svelte": "yarn svelte:build",
     "watch:svelte-tests": "mocha -r ts-node/register -w ./src/svelte/tests/**/*.test.ts",
     "watch:tdmlEditorJS": "esbuild src/tdmlEditor/webview/webview.js --outfile=dist/views/tdmlEditor/webview/webview.js --bundle --platform=node --format=cjs --watch",
     "webpack:root": "webpack --mode production --config ./webpack/ext-dev.webpack.config.js",
@@ -47,7 +47,7 @@
     "test:svelte": "mocha -r ts-node/register ./src/svelte/tests/**/*.test.ts",
     "sbt": "sbt debugger/Universal/packageBin",
     "svelte:check": "svelte-check --tsconfig ./src/svelte/.kit/tsconfig.json",
-    "svelte:build": "cd src/svelte && vite --config ./vite.config.mjs build"
+    "svelte:build": "cd src/svelte && vite --config ./vite.config.mjs build --watch"
   },
   "dependencies": {
     "@omega-edit/client": "0.9.83",
@@ -942,7 +942,7 @@
               "port": 9000,
               "logging": {
                 "file": "${workspaceFolder}/dataEditor-${omegaEditPort}.log",
-                "level": "info"
+                "level": "debug"
               }
             }
           },

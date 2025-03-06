@@ -25,22 +25,11 @@
     "allowJs": true,
     "checkJs": true,
     "isolatedModules": true,
-    "moduleDetection": "force"
-    // "baseUrl": ".",
-    // "paths": {
-    //   "svelte":["node_modules/svelte"],
-    //   "svelte/internal":["node_modules/svelte/internal"]
-    // },
-    // "module": "esnext",
-    // "moduleResolution": "node10",
-    // "target": "es6",
-    // "outDir": "public/build",
-    // "lib": ["es6", "es2021", "DOM"],
-    // "ignoreDeprecations": "5.0",
-    // "types": [
-    //     "svelte"
-    // ],
-    // "skipLibCheck": true
+    "moduleDetection": "force",
+    "paths": {
+      "@layouts":["./src/components/layout"],
+      "@html": ["./src/components/html"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
   "exclude": ["node_modules/*"],

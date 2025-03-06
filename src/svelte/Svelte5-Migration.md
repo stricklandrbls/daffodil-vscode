@@ -1,0 +1,32 @@
+# Svelte5 Migration Checklists
+
+## Components
+- [ ] src/svelte/.backup/src/components/Error/Error.svelte
+- [ ] src/svelte/.backup/src/components/dataEditor.svelte
+- [ ] src/svelte/.backup/src/components/Header/fieldsets/SearchReplace.svelte
+- [ ] src/svelte/.backup/src/components/Header/fieldsets/FileMetrics.svelte
+- [ ] src/svelte/.backup/src/components/Header/fieldsets/Settings.svelte
+- [ ] src/svelte/.backup/src/components/Header/Header.svelte
+- [x] src/svelte/.backup/src/components/layouts/SidePanel.svelte
+- [ ] src/svelte/.backup/src/components/layouts/Help.svelte
+- [ ] src/svelte/.backup/src/components/layouts/Tooltip.svelte
+- [ ] src/svelte/.backup/src/components/layouts/HelpIcon.svelte
+- [x] src/svelte/.backup/src/components/layouts/FlexContainer.svelte
+- [ ] src/svelte/.backup/src/components/ServerMetrics/ServerMetrics.svelte
+- [ ] src/svelte/.backup/src/components/Main.svelte
+- [ ] src/svelte/.backup/src/components/Icons/ViewportVisibilityIcon.svelte
+- [ ] src/svelte/.backup/src/components/DataDisplays/Fieldsets/DataView.svelte
+- [ ] src/svelte/.backup/src/components/DataDisplays/Fieldsets/ContentControls.svelte
+- [ ] src/svelte/.backup/src/components/DataDisplays/DataViewports.svelte
+- [ ] src/svelte/.backup/src/components/DataDisplays/Header/DisplayHeader.svelte
+- [ ] src/svelte/.backup/src/components/DataDisplays/CustomByteDisplay/SelectedByteEdit.svelte
+- [ ] src/svelte/.backup/src/components/DataDisplays/CustomByteDisplay/FileTraversalIndicator.svelte
+- [ ] src/svelte/.backup/src/components/DataDisplays/CustomByteDisplay/DataLineFeed.svelte
+- [ ] src/svelte/.backup/src/components/DataDisplays/CustomByteDisplay/DataValue.svelte
+- [ ] src/svelte/.backup/src/components/Editors/DataEditor.svelte
+- [ ] src/svelte/.backup/src/components/DataMetrics/DataMetrics.svelte
+- [ ] src/svelte/.backup/src/components/Inputs/Input/RadioEdit.svelte
+- [ ] src/svelte/.backup/src/components/Inputs/Input/Input.svelte
+- [ ] src/svelte/.backup/src/components/Inputs/Buttons/Button.svelte
+- [ ] src/svelte/.backup/src/components/Inputs/Buttons/ToggleableButton.svelte
+- [ ] src/svelte/.backup/src/components/Inputs/Buttons/ConfigurationToggle.svelte

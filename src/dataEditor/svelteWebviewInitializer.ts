@@ -16,7 +16,7 @@
  */
 
 import * as vscode from 'vscode'
-
+import * as fs from 'fs'
 export class SvelteWebviewInitializer {
   constructor(private context: vscode.ExtensionContext) {}
 
@@ -36,27 +36,43 @@ export class SvelteWebviewInitializer {
       this.getSvelteAppDistributionIndexJsUri(context, view)
     )
     const stylesUri = webView.asWebviewUri(this.getStylesUri(context))
-    return `
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <title>Data Editor</title>
-        <meta charset="UTF-8">
-        <!--
-          Use a content security policy to only allow loading images from the extension directory,
-          and only allow scripts that have a specific nonce.
-        -->
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webView.cspSource}; style-src ${webView.cspSource}; img-src ${webView.cspSource}; script-src 'nonce-${nonce}';">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="${stylesUri}" rel="stylesheet" type="text/css" />
-    </head>
-    <body>
-    </body>
-    <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
-</html>
-`
+    const indexHTML = this.injectNonce(
+      this.getIndexHTML(context),
+      webView,
+      nonce,
+      scriptUri
+    )!
+    const withNonce = indexHTML.replaceAll(
+      'src="/index.js" nonce="__nonce__"',
+      `src="${scriptUri.toString()}" nonce="${nonce}"`
+    )
+    console.log(withNonce)
+    return withNonce
   }
 
+  private injectNonce(
+    html: string,
+    webView: vscode.Webview,
+    nonce: string,
+    scriptsUri: vscode.Uri
+  ) {
+    let ret = html.replaceAll(
+      '<head>',
+      `<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webView.cspSource}; style-src 'unsafe-inline'; img-src ${webView.cspSource}; script-src 'nonce-${nonce}';">`
+    )
+    return ret
+  }
+  private getIndexHTML(context: vscode.ExtensionContext) {
+    const indexFile = vscode.Uri.joinPath(
+      context.extensionUri,
+      'dist',
+      'views',
+      'dataEditor',
+      'index.html'
+    )
+    const indexContent = fs.readFileSync(indexFile.fsPath).toString()
+    return indexContent
+  }
   // get a nonce for use in a content security policy
   private getNonce(): string {
     let text = ''

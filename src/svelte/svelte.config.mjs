@@ -4,4 +4,13 @@ export default {
   // Consult https://svelte.dev/docs#compile-time-svelte-preprocess
   // for more information about preprocessors
   preprocess: vitePreprocess(),
+  compilerOptions: {
+    css: 'external',
+  },
+  kit: {
+    alias: {
+      '@layouts': './src/components/layout',
+      '@html': './src/components/html/**/*',
+    },
+  },
 }
