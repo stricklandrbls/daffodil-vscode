@@ -2,13 +2,15 @@
   import Button from './components/html/buttons/Button.svelte'
   import IconButton from './components/html/buttons/IconButton.svelte'
   import DataDisplay from './components/sections/data/BinaryDisplay.svelte'
+  import { ByteRadix } from './components/sections/data/ViewportDisplay'
+  let radix = $state<ByteRadix>(16)
 </script>
 {#snippet text()}
   <span>Hello</span>
 {/snippet}
 <main>
-  <IconButton text="Something" icon={'start'} />
-  <DataDisplay />
+  <IconButton text="Something" icon={'start'} clickCallback={(e)=>{ radix = 10}}/>
+  <DataDisplay {radix}/>
 </main>
 
 <style>

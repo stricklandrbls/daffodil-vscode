@@ -20,18 +20,20 @@
   "compilerOptions": {
     "target": "ES6",
     "useDefineForClassFields": true,
-    "module": "ESNext",
+    "module": "CommonJS",
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": true,
     "isolatedModules": true,
-    "moduleDetection": "force",
+    "outDir": "tsout",
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": false,
     "paths": {
       "@layouts":["./src/components/layout"],
       "@html": ["./src/components/html"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
+  "include": ["src/**/*.ts", "src/**/*.svelte", "src/tests/**/*.test.ts"],
   "exclude": ["node_modules/*"],
   "strict": true /* enable all strict type-checking options */,
   "noImplicitAny": false,
@@ -40,7 +42,7 @@
   "noImplicitThis": true,
   "inlineSourceMap": false,
   "preserveConstEnums": true,
-  "strictNullChecks": true,
+  "strictNullChecks": false,
   "noUnusedParameters": false,
   "esModuleInterop": true
 }

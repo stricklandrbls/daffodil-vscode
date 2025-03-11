@@ -20,6 +20,7 @@ const Icons: { [k in Icon]: k } = {
 }
 
 export type IconButtonProps = {
+  clickCallback: (event?: Event) => void
   icon: Icon
   text: string
 }
