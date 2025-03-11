@@ -15,30 +15,31 @@
  * limitations under the License.
  */
 
-{
-  "extends":"@tsconfig/svelte/tsconfig.json",
-  "compilerOptions": {
-    "target": "ES6",
-    "useDefineForClassFields": true,
-    "module": "CommonJS",
-    "resolveJsonModule": true,
-    "allowJs": true,
-    "checkJs": true,
-    "isolatedModules": true,
-    "outDir": "tsout",
-    "esModuleInterop": true,
-    "verbatimModuleSyntax": false,
-  },
-  "include": ["src/**/*.ts", "src/**/*.svelte", "src/tests/**/*.test.ts"],
-  "exclude": ["node_modules/*"],
-  "strict": true /* enable all strict type-checking options */,
-  "noImplicitAny": false,
-  "removeComments": false,
-  "noUnusedLocals": true,
-  "noImplicitThis": true,
-  "inlineSourceMap": false,
-  "preserveConstEnums": true,
-  "strictNullChecks": false,
-  "noUnusedParameters": false,
-  "esModuleInterop": true
+export interface IByteIndication {
+  selector(): string
+  equals(categoryArg: IByteIndication): boolean
 }
+
+class NullIndication implements IByteIndication {
+  equals(categoryArg: IByteIndication): boolean {
+    return this.selector() === categoryArg.selector()
+  }
+  selector(): string {
+    return 'none'
+  }
+}
+
+export class ByteIndication implements IByteIndication {
+  private _selector: string
+  constructor(selector: string) {
+    this._selector = selector.toLowerCase()
+  }
+  equals(categoryArg: IByteIndication): boolean {
+    return this.selector() === categoryArg.selector()
+  }
+  selector(): string {
+    return this._selector
+  }
+}
+
+export const NoIndication: NullIndication = new NullIndication()

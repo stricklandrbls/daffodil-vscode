@@ -47,7 +47,8 @@
     "test:svelte": "mocha -r ts-node/register ./src/svelte/tests/**/*.test.ts",
     "sbt": "sbt debugger/Universal/packageBin",
     "svelte:check": "svelte-check --tsconfig ./src/svelte/.kit/tsconfig.json",
-    "svelte:build": "cd src/svelte && vite --config ./vite.config.mjs build --watch"
+    "svelte:build": "cd src/svelte && vite --config ./vite.config.mjs build --mode development --watch",
+    "svelte:test" : "tsc src/svelte/src/tests/driver.ts && node src/svelte/src/tests/driver.js"
   },
   "dependencies": {
     "@omega-edit/client": "0.9.83",

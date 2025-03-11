@@ -15,30 +15,30 @@
  * limitations under the License.
  */
 
-{
-  "extends":"@tsconfig/svelte/tsconfig.json",
-  "compilerOptions": {
-    "target": "ES6",
-    "useDefineForClassFields": true,
-    "module": "CommonJS",
-    "resolveJsonModule": true,
-    "allowJs": true,
-    "checkJs": true,
-    "isolatedModules": true,
-    "outDir": "tsout",
-    "esModuleInterop": true,
-    "verbatimModuleSyntax": false,
-  },
-  "include": ["src/**/*.ts", "src/**/*.svelte", "src/tests/**/*.test.ts"],
-  "exclude": ["node_modules/*"],
-  "strict": true /* enable all strict type-checking options */,
-  "noImplicitAny": false,
-  "removeComments": false,
-  "noUnusedLocals": true,
-  "noImplicitThis": true,
-  "inlineSourceMap": false,
-  "preserveConstEnums": true,
-  "strictNullChecks": false,
-  "noUnusedParameters": false,
-  "esModuleInterop": true
+import { writable } from 'svelte/store'
+
+export enum ColorPalette {
+  PrimaryDarker = '#02060B',
+  PrimaryDark = '#101821',
+  PrimaryMid = '#2F3E4F',
+  PrimaryLight = '#687483',
+  PrimaryLighter = '#E1E3E5',
+  SecondaryDarker = '#110B02',
+  SecondaryDark = '#322716',
+  SecondaryMid = '#796444',
+  SecondaryLight = '#C8B69B',
+  SecondaryLighter = '#FFFDFA',
 }
+
+export enum ThemeType {
+  Dark = 2,
+  Light = 3,
+}
+export enum CSSThemeClass {
+  Dark = 'dark',
+  Light = 'light',
+}
+
+export const darkUITheme = writable(true)
+
+export const UIThemeCSSClass = writable(CSSThemeClass.Dark)

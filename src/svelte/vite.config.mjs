@@ -16,24 +16,19 @@ export default defineConfig({
       },
     },
   ],
-  resolve: {
-    alias: {
-      '@layouts': path.resolve(__dirname, 'src', 'components', 'layout'),
-      '@html': path.resolve(__dirname, 'src', 'components', 'html'),
-    },
-  },
   mode: 'development',
   build: {
     cssCodeSplit: true,
     rollupOptions: {
       output: {
-        // assetFileNames: (info) => {
-        //   if (info.names.includes('.css')) {
-        //     console.log(info)
-        //     return 'styles.css'
-        //   }
-        //   return 'index.js'
-        // },
+        assetFileNames: (info) => {
+          const asset = info.names
+          console.log(asset)
+          return info.originalFileNames.toString()
+          if (info.names.includes(/[.]woff2/)) {
+            return 'styles.css'
+          }
+        },
         format: 'iife', // Immediately Invoked Function Expression for a single file
         inlineDynamicImports: true, // Forces all dynamic imports to be included in the same file
         entryFileNames: 'index.js', // Name of the final output file

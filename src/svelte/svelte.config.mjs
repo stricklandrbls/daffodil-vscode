@@ -7,10 +7,4 @@ export default {
   compilerOptions: {
     css: 'external',
   },
-  kit: {
-    alias: {
-      '@layouts': './src/components/layout',
-      '@html': './src/components/html/**/*',
-    },
-  },
 }

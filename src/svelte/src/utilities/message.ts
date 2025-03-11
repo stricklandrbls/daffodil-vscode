@@ -15,30 +15,37 @@
  * limitations under the License.
  */
 
-{
-  "extends":"@tsconfig/svelte/tsconfig.json",
-  "compilerOptions": {
-    "target": "ES6",
-    "useDefineForClassFields": true,
-    "module": "CommonJS",
-    "resolveJsonModule": true,
-    "allowJs": true,
-    "checkJs": true,
-    "isolatedModules": true,
-    "outDir": "tsout",
-    "esModuleInterop": true,
-    "verbatimModuleSyntax": false,
-  },
-  "include": ["src/**/*.ts", "src/**/*.svelte", "src/tests/**/*.test.ts"],
-  "exclude": ["node_modules/*"],
-  "strict": true /* enable all strict type-checking options */,
-  "noImplicitAny": false,
-  "removeComments": false,
-  "noUnusedLocals": true,
-  "noImplicitThis": true,
-  "inlineSourceMap": false,
-  "preserveConstEnums": true,
-  "strictNullChecks": false,
-  "noUnusedParameters": false,
-  "esModuleInterop": true
+export enum MessageCommand {
+  clearChanges,
+  applyChanges,
+  editorOnChange,
+  fileInfo,
+  heartbeat,
+  profile,
+  redoChange,
+  replaceResults,
+  requestEditedData,
+  save,
+  saveAs,
+  saveSegment,
+  scrollViewport,
+  search,
+  replace,
+  searchResults,
+  setUITheme,
+  showMessage,
+  undoChange,
+  updateLogicalDisplay,
+  viewportRefresh,
+}
+
+export enum MessageLevel {
+  Error,
+  Info,
+  Warn,
+}
+
+export type EditorMessage = {
+  command: MessageCommand
+  data: Record<string, any>
 }

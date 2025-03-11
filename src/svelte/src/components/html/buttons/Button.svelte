@@ -8,16 +8,13 @@
     width = '',
     fixedWidth = '',
     description = '',
-    tooltipAlwaysEnabled = false,
-    children
-  }: ButtonProps = $props()
+    tooltipAlwaysEnabled = false
+  } = $props()
+
 </script>
 
 <Tooltip alwaysEnabled={tooltipAlwaysEnabled} {description}>
   <button {disabled} onclick={!disabled ? clickCallback : undefined} style:width={width}>
-    {#if children}
-    {@render children.left?.()}
-    {@render children.right?.()}
-    {/if}
+    {@render children?.()}
   </button>
 </Tooltip>

@@ -67,12 +67,12 @@ import { extractDaffodilEvent } from '../daffodilDebugger/daffodil'
 import {
   EditByteModes,
   VIEWPORT_CAPACITY_MAX,
-} from '../svelte/src/lib/configuration'
+} from '../svelte/src/global/configuration'
 import {
   EditorMessage,
   MessageCommand,
   MessageLevel,
-} from '../svelte/src/lib/message'
+} from '../svelte/src/global/message'
 import * as editor_config from './config'
 import { configureOmegaEditPort, ServerInfo } from './include/server/ServerInfo'
 import { isDFDLDebugSessionActive } from './include/utils'

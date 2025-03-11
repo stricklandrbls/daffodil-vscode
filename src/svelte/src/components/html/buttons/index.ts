@@ -7,10 +7,7 @@ export interface ButtonProps {
   fixedWidth?: string
   description?: string
   tooltipAlwaysEnabled?: boolean
-  children?: {
-    left?: Snippet
-    right?: Snippet
-  }
+  children: any
 }
 type Icon = 'start' | 'my_location'
 
@@ -20,6 +17,7 @@ const Icons: { [k in Icon]: k } = {
 }
 
 export type IconButtonProps = {
+  clickCallback: (event?: Event) => void
   icon: Icon
   text: string
 }
