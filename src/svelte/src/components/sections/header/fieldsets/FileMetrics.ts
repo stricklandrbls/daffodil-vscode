@@ -16,7 +16,7 @@ export enum BinaryBytePrefixes {
   'TB',
 }
 export function humanReadableByteLength(byteLength: number): string {
-  let ret = byteLength.toLocaleString('en')
+  let ret = byteLength.toString()
   let byteStrLen = ret.length
   if (byteStrLen <= 3) ret += BinaryBytePrefixes[0]
   else {

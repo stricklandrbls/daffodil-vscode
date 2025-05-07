@@ -7,8 +7,8 @@
 
 {#snippet buttonContent(content:IconButtonProps)}
     
-<button>
-    <span class="material-symbols-outlined" onclick={clickCallback}>{icon}</span>
+<button onclick={clickCallback}>
+    <span class="material-symbols-outlined" >{icon}</span>
     {text}
 </button>
 {/snippet}

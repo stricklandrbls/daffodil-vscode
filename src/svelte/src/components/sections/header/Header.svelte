@@ -5,7 +5,10 @@
   import { FileMetricsData } from "./fieldsets/FileMetrics"
   import FileMetrics from "./fieldsets/FileMetrics.svelte"
 
-    let metrics = $state<FileMetricsData>({fileName: '',changeCount: -1,computedSize:-1,diskFileSize:-1,type:"",undoCount: -1})
+    let metrics = $state<FileMetricsData>({
+      fileName: '', changeCount: -1, computedSize: -1, diskFileSize: -1, type: "", undoCount: -1,
+      language: ""
+    })
     let hide = $state(false) 
 
     addMessageListener(MessageCommand.fileInfo, msg => {

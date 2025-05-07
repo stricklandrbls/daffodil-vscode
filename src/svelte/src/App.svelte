@@ -5,17 +5,36 @@
   import { ByteRadix } from './components/sections/data/ViewportDisplay'
   import Header from './components/sections/header/Header.svelte'
   import { createMessenger, WindowListener } from './utilities/Messenger'
-
+  import { viewportDisplayConfig } from './components/sections/data/index.svelte'
   let radix = $state<ByteRadix>(16)
-    createMessenger<WindowListener>(new WindowListener(window))
+  createMessenger<WindowListener>(new WindowListener(window))
+
+  // <Header /> Required Stores:
+  // - ViewportDisplayConfig: For modifying the viewport display in the <Settings> Component
 </script>
+
 {#snippet text()}
   <span>Hello</span>
 {/snippet}
 <main>
   <Header />
-  <IconButton text="Something" icon={'start'} clickCallback={(e)=>{ radix = 10}}/>
-  <DataDisplay {radix}/>
+  <h3>Config.addressRadix: {viewportDisplayConfig.addressRadix}</h3>
+  <button
+    onclick={() => {
+      viewportDisplayConfig.addressRadix = 10
+    }}>Radix: 10</button
+  >
+  <IconButton
+    text="Something"
+    icon={'start'}
+    clickCallback={() => {
+      // viewportDisplayConfig.addressRadix = 10
+      console.debug(
+        `Change radix display to ${viewportDisplayConfig.addressRadix}`
+      )
+    }}
+  />
+  <DataDisplay />
 </main>
 
 <style>

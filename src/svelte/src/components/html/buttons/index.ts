@@ -1,7 +1,7 @@
 import type { Snippet } from 'svelte'
 
 export interface ButtonProps {
-  clickCallback: (event?: Event) => void
+  clickCallback: () => void
   disabled?: boolean
   width?: string
   fixedWidth?: string
@@ -17,7 +17,7 @@ const Icons: { [k in Icon]: k } = {
 }
 
 export type IconButtonProps = {
-  clickCallback: (event?: Event) => void
+  clickCallback: () => void
   icon: Icon
   text: string
 }

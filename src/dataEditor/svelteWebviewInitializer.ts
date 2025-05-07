@@ -35,7 +35,7 @@ export class SvelteWebviewInitializer {
     const scriptUri = webView.asWebviewUri(
       this.getSvelteAppDistributionIndexJsUri(context, view)
     )
-    const stylesUri = webView.asWebviewUri(this.getStylesUri(context))
+    // const stylesUri = webView.asWebviewUri(this.getStylesUri(context))
     const indexHTML = this.injectNonce(
       this.getIndexHTML(context),
       webView,
@@ -128,7 +128,7 @@ export class SvelteWebviewInitializer {
   }
 
   // get the styles uri
-  private getStylesUri(context: vscode.ExtensionContext): vscode.Uri {
-    return vscode.Uri.joinPath(context.extensionUri, 'dist', 'styles.css')
-  }
+  // private getStylesUri(context: vscode.ExtensionContext): vscode.Uri {
+  //   return vscode.Uri.joinPath(context.extensionUri, 'dist', 'styles.css')
+  // }
 }

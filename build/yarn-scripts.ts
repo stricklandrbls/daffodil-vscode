@@ -93,7 +93,7 @@ function watch() {
 
 function package() {
   const pkg_dir = 'dist/package'
-
+  console.log('Yarn: package output')
   // create .vscodeignore to not package all node_modules into the vsix
   fs.writeFileSync(
     path.join(pkg_dir, '.vscodeignore'),
