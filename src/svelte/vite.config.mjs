@@ -4,6 +4,12 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  resolve: {
+    alias: {
+      utilities: path.resolve(__dirname, 'src/utilities'),
+      layout: path.resolve(__dirname, 'src/components/layout'),
+    },
+  },
   plugins: [
     svelte(),
     {
@@ -17,7 +23,10 @@ export default defineConfig({
     },
   ],
   mode: 'development',
+  dev: true,
   build: {
+    sourcemap: true,
+    minify: false,
     cssCodeSplit: true,
     rollupOptions: {
       output: {

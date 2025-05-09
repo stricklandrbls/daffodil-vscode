@@ -1,52 +1,44 @@
 <script lang="ts">
   import IconButton from '../../../../html/buttons/IconButton.svelte'
   import FlexContainer from '../../../../layout/FlexContainer.svelte'
-  import FileMetricsData from '.'
+  import { FileMetrics_t, getFileMetrics, setFileMetrics } from '.'
   import ISO6391 from 'iso-639-1'
+  import { addMessageListener } from 'utilities/Messenger'
+  import { MessageCommand } from 'utilities/message'
+  import { humanReadableByteLength } from 'utilities/display.svelte'
 
-  let {
-    onMetricsChange,
-  }: { onMetricsChange: (metrics: FileMetricsData.FileMetrics_t) => void } =
-    $props()
-  $effect(() => {
-    onMetricsChange(FileMetricsData)
+  addMessageListener(MessageCommand.fileInfo, (msg) => {
+    switch (msg.data.command) {
+      case MessageCommand.fileInfo:
+        const metricsMsg = msg.data.data as FileMetrics_t
+        setFileMetrics(metricsMsg)
+        break
+    }
   })
-
-  // addMessageListener(MessageCommand.fileInfo, msg => {
-  //     switch(msg.data.command){
-  //         case MessageCommand.fileInfo:
-  //             metrics = msg.data.data as FileMetricsData
-  //             console.log(msg)
-  //             // filename = msg.data.data.fileName ? msg.data.data.fileName : "ERROR: MSGEXT"
-
-  //         break
-  //     }
-
-  // })
 </script>
 
 <fieldset class="file-metrics">
   <legend> File Metrics </legend>
 
   <FlexContainer --dir="row">
-    <span id="filename" class="nowrap">{FileMetricsData.fileName}</span>
+    <span id="filename" class="nowrap">{getFileMetrics().fileName}</span>
   </FlexContainer>
   <hr />
   <FlexContainer --dir="row">
     <label for="content-type">Content Type</label>
-    <span>{FileMetricsData.type}</span>
+    <span>{getFileMetrics().type}</span>
   </FlexContainer>
   <FlexContainer --dir="row">
     <label for="langage">Language</label>
-    <span>{ISO6391.getName(FileMetricsData.language)}</span>
+    <span>{ISO6391.getName(getFileMetrics().language)}</span>
   </FlexContainer>
   <FlexContainer --dir="row">
     <label for="disk-file-size">Disk Size</label>
-    <span>{humanReadableByteLength(FileMetricsData.diskFileSize)}</span>
+    <span>{humanReadableByteLength(getFileMetrics().diskFileSize)}</span>
   </FlexContainer>
   <FlexContainer --dir="row">
     <label for="disk-computed-size">Computed Size</label>
-    <span>{humanReadableByteLength(FileMetricsData.computedSize)}</span>
+    <span>{humanReadableByteLength(getFileMetrics().computedFileSize)}</span>
   </FlexContainer>
   <FlexContainer --dir="row" --align-items="center">
     <IconButton clickCallback={() => {}} icon="start" text="Save"></IconButton>

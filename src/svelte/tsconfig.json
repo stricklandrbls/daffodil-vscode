@@ -16,9 +16,16 @@
  */
 
 {
-  "extends":"@tsconfig/svelte/tsconfig.json",
+  "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "baseUrl": "./src",
+    "paths": {
+      "utilities": ["utilities"],
+      "layout/*": ["components/layout/*"]
+    },
+    // "allowImportingTsExtensions": true,
     "target": "ES6",
     "useDefineForClassFields": true,
     "module": "CommonJS",
@@ -28,9 +35,15 @@
     "isolatedModules": true,
     "outDir": "tsout",
     "esModuleInterop": true,
-    "verbatimModuleSyntax": false,
+    "verbatimModuleSyntax": false
   },
-  "include": ["src/**/*.ts", "src/**/*.svelte", "src/tests/**/*.test.ts", ".backup/_Header.svelte", ".backup/_Header.svelte"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.svelte",
+    "src/tests/**/*.test.ts",
+    ".backup/_Header.svelte",
+    ".backup/_Header.svelte"
+  ],
   "exclude": ["node_modules/*"],
   "strict": true /* enable all strict type-checking options */,
   "noImplicitAny": false,

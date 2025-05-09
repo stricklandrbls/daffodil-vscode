@@ -4,20 +4,16 @@
 // The ASF licenses this file to You under the Apache License, Version 2.0
 // (the "License"); you may not use this file except in compliance with
 // the License.  You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-  EditByteModes,
-  type BytesPerRow,
-  type RadixValues,
-} from '../stores/configuration'
 
+import { BytesPerRow, EditByteModes, RadixValues } from './data.svelte'
 export type Viewport = 'physical' | 'address' | 'logical'
 
 export type ValidationResponse = {
@@ -36,6 +32,69 @@ const ByteDivWidths = {
   2: '64px' as ByteDivWidth,
 }
 
+export type RadixStr = 'Hexadecimal' | 'Decimal' | 'Octal' | 'Binary'
+
+export const RadixValueToStr: Record<RadixValues, RadixStr> = {
+  16: 'Hexadecimal',
+  10: 'Decimal',
+  8: 'Octal',
+  2: 'Binary',
+}
+export const RadixStrToValue: Record<RadixStr, RadixValues> = {
+  Hexadecimal: 16,
+  Decimal: 10,
+  Octal: 8,
+  Binary: 2,
+}
+
+export type AvailableStrEncodings =
+  | 'hex'
+  | 'binary'
+  | 'ascii'
+  | 'latin1'
+  | 'utf-8'
+  | 'utf-16'
+
+//TODO: Define encoding group type
+export const ENCODING_GROUPS = [
+  {
+    group: 'Binary',
+    encodings: [
+      { name: 'Hexadecimal', value: 'hex' },
+      { name: 'Binary', value: 'binary' },
+    ],
+  },
+  {
+    group: 'Single-byte',
+    encodings: [
+      { name: 'ASCII (7-bit)', value: 'ascii' },
+      { name: 'Latin-1 (8-bit)', value: 'latin1' },
+    ],
+  },
+  {
+    group: 'Multi-byte',
+    encodings: [
+      { name: 'UTF-8', value: 'utf-8' },
+      { name: 'UTF-16LE', value: 'utf-16le' },
+    ],
+  },
+]
+export type DataDisplaySettings_t = {
+  dataRadix: RadixValues
+  editorEncoding: AvailableStrEncodings
+}
+
+let DataDisplaySettingsState = $state<DataDisplaySettings_t>({
+  dataRadix: 16,
+  editorEncoding: 'hex',
+})
+export const getDataDisplaySettings = () => DataDisplaySettingsState
+export function setDataDisplaySettings<K extends keyof DataDisplaySettings_t>(
+  setting: K,
+  value: DataDisplaySettings_t[K]
+) {
+  DataDisplaySettingsState[setting] = value
+}
 export function radixBytePad(radix: RadixValues): number {
   switch (radix) {
     case 2:
@@ -198,12 +257,16 @@ export enum BinaryBytePrefixes {
 }
 
 export function humanReadableByteLength(byteLength: number): string {
-  let ret = byteLength.toLocaleString('en')
+  if (byteLength == undefined) return ''
+  let ret = byteLength.toString()
   let byteStrLen = ret.length
   if (byteStrLen <= 3) ret += BinaryBytePrefixes[0]
   else {
-    const octets = ret.split(',')
-
+    const octetCount = Math.ceil(ret.length / 3)
+    let octets: string[] = []
+    for (let index = 0; index < octetCount; index++) {
+      octets.push(ret.substring(index * 3, index + 3))
+    }
     ret =
       octets[0] +
       '.' +

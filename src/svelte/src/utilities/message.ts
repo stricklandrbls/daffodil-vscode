@@ -49,3 +49,19 @@ export type EditorMessage = {
   command: MessageCommand
   data: Record<string, any>
 }
+export interface DataEditorMsg {}
+export type FileInfoMsg = {
+  filename: string
+}
+export interface DataEditorMsg {
+  fileInfo: FileInfoMsg
+}
+
+export type ViewportRefresh = {
+  data: Uint8Array
+  fileOffset: number
+  bytesLeft: number
+}
+export interface DataEditorMsg {
+  viewportRefresh: ViewportRefresh
+}

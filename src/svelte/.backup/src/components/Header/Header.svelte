@@ -22,8 +22,10 @@ limitations under the License.
   import { UIThemeCSSClass } from '../../utilities/colorScheme'
   import { fileMetrics } from '../../stores'
   import Tooltip from '../layouts/Tooltip.svelte'
+  import { getContext } from 'svelte'
 
   let hideChildren = false
+  getContext('messageEventListeners').listenFor('')
 </script>
 
 {#if hideChildren}

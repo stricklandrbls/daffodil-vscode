@@ -1,21 +1,16 @@
 <script lang="ts">
   import Header from './components/sections/header/Header.svelte'
-  import { createMessenger, WindowListener } from './utilities/Messenger'
-  import { FileMetrics } from './components/sections/header/fieldsets/FileMetrics'
-
-  createMessenger<WindowListener>(new WindowListener(window))
-  let title = $state<string>('')
+  import BinaryDisplay from './components/sections/data/BinaryDisplay.svelte'
+  import Main from './Main.svelte'
 
   // <Header /> Required Stores:
   // - ViewportDisplayConfig: For modifying the viewport display in the <Settings> Component
 </script>
 
-<main>
-  <Header title={'FIlename'}>
-    <FileMetrics />
-  </Header>
-  <!-- <DataDisplay /> -->
-</main>
+<Main>
+  <Header />
+  <BinaryDisplay />
+</Main>
 
 <style>
   @font-face {
