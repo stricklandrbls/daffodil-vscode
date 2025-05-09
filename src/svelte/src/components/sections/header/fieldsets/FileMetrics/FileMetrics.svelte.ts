@@ -1,4 +1,4 @@
-export type FileMetricsData = {
+export type FileMetrics_t = {
   fileName: string
   type: string
   language: string
@@ -7,7 +7,15 @@ export type FileMetricsData = {
   changeCount: number
   undoCount: number
 }
-
+export const FileMetricsData = $state<FileMetrics_t>({
+  fileName: '',
+  type: '',
+  language: '',
+  diskFileSize: 0,
+  computedSize: 0,
+  changeCount: 0,
+  undoCount: 0,
+})
 export enum BinaryBytePrefixes {
   'B',
   'KB',
