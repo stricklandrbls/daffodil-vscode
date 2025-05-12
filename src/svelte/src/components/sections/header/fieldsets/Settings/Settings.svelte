@@ -13,6 +13,7 @@
     getDataDisplaySettings,
     RadixStr,
     RadixStrToValue,
+    RadixValueToStr,
     setDataDisplaySettings,
   } from 'utilities'
 
@@ -28,6 +29,7 @@
       >
       <!-- <select id="radix" class={$UIThemeCSSClass} bind:value={$displayRadix}> -->
       <select
+      value={RadixValueToStr[getDataDisplaySettings().dataRadix]}
         id="radix"
         onchange={(event) => {
           const selectedRadix = event.currentTarget.value as RadixStr
@@ -51,8 +53,9 @@
           bind:value={$editorEncoding}
         > -->
       <select
+        value={getDataDisplaySettings().editorEncoding}
         id="encoding"
-        onselect={(event) => {
+        onchange={(event) => {
           const selectedEncoding = event.currentTarget
             .value as AvailableStrEncodings
           setDataDisplaySettings('editorEncoding', selectedEncoding)
@@ -76,8 +79,9 @@
           bind:value={$editorActionsAllowed}
         > -->
       <select
+        value={getDataEditSettings().allowedEdit}
         id="allowed-editing-actions"
-        onselect={(event) => {
+        onchange={(event) => {
           const selectedActionRestriction = parseInt(
             event.currentTarget.value
           ) as EditActionRestrictions
