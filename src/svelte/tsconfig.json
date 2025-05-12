@@ -18,12 +18,12 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "inlineSourceMap": true,
     "inlineSources": true,
     "baseUrl": "./src",
     "paths": {
       "utilities": ["utilities"],
-      "layout/*": ["components/layout/*"]
+      "layout/*": ["components/layout/*"],
+      "editor_components/*": ["components/sections/*"]
     },
     // "allowImportingTsExtensions": true,
     "target": "ES6",

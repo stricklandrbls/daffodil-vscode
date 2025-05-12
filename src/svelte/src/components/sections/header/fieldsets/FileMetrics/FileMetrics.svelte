@@ -8,12 +8,12 @@
   import { humanReadableByteLength } from 'utilities/display.svelte'
 
   addMessageListener(MessageCommand.fileInfo, (msg) => {
-    switch (msg.data.command) {
-      case MessageCommand.fileInfo:
-        const metricsMsg = msg.data.data as FileMetrics_t
-        setFileMetrics(metricsMsg)
-        break
-    }
+    // switch (msg.data.command) {
+    //   case MessageCommand.fileInfo:
+    const metricsMsg = msg.data.data as FileMetrics_t
+    setFileMetrics(metricsMsg)
+    //     break
+    // }
   })
 </script>
 

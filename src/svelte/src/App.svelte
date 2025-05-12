@@ -1,7 +1,8 @@
 <script lang="ts">
+  import BinaryDisplay from 'editor_components/data/BinaryDisplay.svelte'
   import Header from './components/sections/header/Header.svelte'
-  import BinaryDisplay from './components/sections/data/BinaryDisplay.svelte'
   import Main from './Main.svelte'
+  import ViewportDisplay from 'editor_components/data/ViewportDisplay.svelte'
 
   // <Header /> Required Stores:
   // - ViewportDisplayConfig: For modifying the viewport display in the <Settings> Component
@@ -9,7 +10,8 @@
 
 <Main>
   <Header />
-  <BinaryDisplay />
+  <!-- <ViewportDisplay /> -->
+  <ViewportDisplay />
 </Main>
 
 <style>

@@ -10,7 +10,9 @@ export interface ComponentMessenger {
 export class WindowListener implements ComponentMessenger {
   constructor(readonly window: Window) {}
   addListener(type: MessageCommand, callback: (msg: any) => void): void {
-    this.window.addEventListener('message', callback)
+    this.window.addEventListener('message', (msg) => {
+      if (msg.data.command == type) callback(msg)
+    })
   }
 }
 export class BrowserListener implements ComponentMessenger {

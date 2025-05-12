@@ -8,6 +8,7 @@ export default defineConfig({
     alias: {
       utilities: path.resolve(__dirname, 'src/utilities'),
       layout: path.resolve(__dirname, 'src/components/layout'),
+      editor_components: path.resolve(__dirname, 'src/components/sections'),
     },
   },
   plugins: [
