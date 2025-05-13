@@ -6,14 +6,12 @@
   import { addMessageListener } from 'utilities/Messenger'
   import { MessageCommand } from 'utilities/message'
   import { humanReadableByteLength } from 'utilities/display.svelte'
+  import { ViewportController } from 'editor_components/data'
 
   addMessageListener(MessageCommand.fileInfo, (msg) => {
-    // switch (msg.data.command) {
-    //   case MessageCommand.fileInfo:
     const metricsMsg = msg.data.data as FileMetrics_t
     setFileMetrics(metricsMsg)
-    //     break
-    // }
+    ViewportController.updateOffsetInfo(metricsMsg.computedFileSize)
   })
 </script>
 

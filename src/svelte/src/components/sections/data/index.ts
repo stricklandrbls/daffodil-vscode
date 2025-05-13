@@ -1,3 +1,3 @@
 export * from './ViewportDisplay.svelte'
-export * from './DataDisplay'
-export * from './ViewportDisplay'
+export * from './ViewportData.svelte'
+export * from './ViewportController.svelte'

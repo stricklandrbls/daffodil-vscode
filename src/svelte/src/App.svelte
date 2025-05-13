@@ -1,8 +1,8 @@
 <script lang="ts">
-  import BinaryDisplay from 'editor_components/data/BinaryDisplay.svelte'
   import Header from './components/sections/header/Header.svelte'
   import Main from './Main.svelte'
   import ViewportDisplay from 'editor_components/data/ViewportDisplay.svelte'
+  import DebugInfo from './testing/DebugInfo.svelte'
 
   // <Header /> Required Stores:
   // - ViewportDisplayConfig: For modifying the viewport display in the <Settings> Component
@@ -13,6 +13,7 @@
   <!-- <ViewportDisplay /> -->
   <ViewportDisplay />
 </Main>
+<DebugInfo />
 
 <style>
   @font-face {

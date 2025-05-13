@@ -16,8 +16,10 @@
     RadixValueToStr,
     setDataDisplaySettings,
   } from 'utilities'
+  import { addToDebug } from '../../../../../testing'
 
   let { bom }: { bom: ByteOrderMark } = $props()
+  addToDebug({ attribute: 'Settings', value: getDataDisplaySettings() })
 </script>
 
 <fieldset>
@@ -29,7 +31,7 @@
       >
       <!-- <select id="radix" class={$UIThemeCSSClass} bind:value={$displayRadix}> -->
       <select
-      value={RadixValueToStr[getDataDisplaySettings().dataRadix]}
+        value={RadixValueToStr[getDataDisplaySettings().dataRadix]}
         id="radix"
         onchange={(event) => {
           const selectedRadix = event.currentTarget.value as RadixStr

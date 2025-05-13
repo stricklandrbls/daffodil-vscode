@@ -18,6 +18,8 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "inlineSources": true,
     "baseUrl": "./src",
     "paths": {

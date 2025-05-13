@@ -1,23 +1,40 @@
 <script lang="ts">
   import { addMessageListener } from 'utilities/Messenger'
-  import { Byte } from './DataDisplay'
   import { MessageCommand } from 'utilities/message'
   import {
+    getLastViewportOffset,
     Viewport,
-    ViewportDisplayController,
+    ViewportController,
     ViewportLineData,
     ViewportMsg,
-  } from './ViewportData.svelte'
-  import ByteDisplay from './ByteDisplay.svelte'
-  import { getDataDisplaySettings } from 'utilities'
+  } from '.'
   import DataLine from './DataLine.svelte'
+  import ViewportTraversal from './ViewportTraversal.svelte'
+  import { addToDebug } from '../../../testing'
 
-  let viewport = $state<Viewport>(new Viewport())
+  let viewport = $state(new Viewport())
   let iterableDisplay = $state<ViewportLineData[]>([])
-
+  addToDebug({
+    attribute: 'Viewport Info',
+    value: viewport.getSettings(),
+  })
+  addToDebug({
+    attribute: 'Legacy Boundaries',
+    value: {
+      upper: viewport.getBoundaries().upper,
+      lower: viewport.getBoundaries().lower,
+    },
+  })
+  addToDebug({
+    attribute: 'Viewport Boundaries',
+    value: {
+      startOffset: viewport.getData().getOffset(),
+      endOffset: viewport.getData().getEndOffset(),
+      fetchable: viewport.isFetchable(),
+      lastViewportStartAt: getLastViewportOffset(),
+    },
+  })
   addMessageListener(MessageCommand.viewportRefresh, (msg) => {
-    // switch (msg.data.command) {
-    //   case MessageCommand.viewportRefresh:
     const msgContent: ViewportMsg = {
       data: msg.data.data.data,
       srcOffset: msg.data.data.fileOffset,
@@ -25,17 +42,16 @@
     }
 
     viewport.updateViewportFromMsg(msgContent)
-    const display = ViewportDisplayController.generateByteDisplay(viewport)
+    const display = ViewportController.generateByteDisplay(viewport)
     viewport.getIterableDisplayContent().then((data) => {
       iterableDisplay = data
     })
-
-    //     break
-    // }
+    console.log('Boundaries:', ViewportController.getBoundaries(viewport))
   })
 </script>
 
 <div class="container">
+  Upper: {viewport.getBoundaries().upper}
   {#each iterableDisplay as vpLine}
     <div class="line">
       <div class="address">
@@ -48,6 +64,7 @@
     </div>
   {/each}
 </div>
+<ViewportTraversal />
 
 <style lang="scss">
   span {
