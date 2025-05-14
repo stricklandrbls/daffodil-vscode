@@ -19,7 +19,6 @@
   import { addToDebug } from '../../../../../testing'
 
   let { bom }: { bom: ByteOrderMark } = $props()
-  addToDebug({ attribute: 'Settings', value: getDataDisplaySettings() })
 </script>
 
 <fieldset>

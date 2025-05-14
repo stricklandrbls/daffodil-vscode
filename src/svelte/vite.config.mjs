@@ -16,6 +16,11 @@ export default defineConfig({
     {
       name: 'nonce',
       transformIndexHtml(html) {
+        html = html.replace(
+          /<link rel="stylesheet" crossorigin href="\/style.css">/g,
+          `<link rel="stylesheet" crossorigin href="/style.css" nonce="__nonce__"/> `
+        )
+
         return html.replace(
           /<script type="module" crossorigin src="(.*?)"><\/script>/g,
           `<script type="module" crossorigin src="$1" nonce="__nonce__"></script>`
@@ -28,7 +33,7 @@ export default defineConfig({
   build: {
     sourcemap: true,
     minify: false,
-    cssCodeSplit: true,
+    cssCodeSplit: false,
     rollupOptions: {
       output: {
         assetFileNames: (info) => {

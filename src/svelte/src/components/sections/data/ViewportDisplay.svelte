@@ -12,28 +12,11 @@
   import ViewportTraversal from './ViewportTraversal.svelte'
   import { addToDebug } from '../../../testing'
 
-  let viewport = $state(new Viewport())
+  let viewport = $state.raw(ViewportController.CurrentViewport())
+
   let iterableDisplay = $state<ViewportLineData[]>([])
-  addToDebug({
-    attribute: 'Viewport Info',
-    value: viewport.getSettings(),
-  })
-  addToDebug({
-    attribute: 'Legacy Boundaries',
-    value: {
-      upper: viewport.getBoundaries().upper,
-      lower: viewport.getBoundaries().lower,
-    },
-  })
-  addToDebug({
-    attribute: 'Viewport Boundaries',
-    value: {
-      startOffset: viewport.getData().getOffset(),
-      endOffset: viewport.getData().getEndOffset(),
-      fetchable: viewport.isFetchable(),
-      lastViewportStartAt: getLastViewportOffset(),
-    },
-  })
+
+  $inspect(viewport.getBoundaries()).with(console.log)
   addMessageListener(MessageCommand.viewportRefresh, (msg) => {
     const msgContent: ViewportMsg = {
       data: msg.data.data.data,
@@ -42,11 +25,9 @@
     }
 
     viewport.updateViewportFromMsg(msgContent)
-    const display = ViewportController.generateByteDisplay(viewport)
     viewport.getIterableDisplayContent().then((data) => {
       iterableDisplay = data
     })
-    console.log('Boundaries:', ViewportController.getBoundaries(viewport))
   })
 </script>
 

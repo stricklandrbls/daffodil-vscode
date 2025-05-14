@@ -1,6 +1,6 @@
 export type DebugItem = {
   attribute: string
-  value: any
+  value: () => any
 }
 
 export let DebugData = $state<DebugItem[]>([])

@@ -35,19 +35,19 @@ export class SvelteWebviewInitializer {
     const scriptUri = webView.asWebviewUri(
       this.getSvelteAppDistributionIndexJsUri(context, view)
     )
-    // const stylesUri = webView.asWebviewUri(this.getStylesUri(context))
-    const indexHTML = this.injectNonce(
+    const stylesUri = webView.asWebviewUri(this.getStylesUri(context))
+    let indexHTML = this.injectNonce(
       this.getIndexHTML(context),
       webView,
       nonce,
       scriptUri
     )!
-    const withNonce = indexHTML.replaceAll(
-      'src="/index.js" nonce="__nonce__"',
-      `src="${scriptUri.toString()}" nonce="${nonce}"`
-    )
-    console.log(withNonce)
-    return withNonce
+    indexHTML = indexHTML
+      .replaceAll('src="/index.js"', `src="${scriptUri.toString()}"`)
+      .replaceAll('/style.css', stylesUri.toString())
+      .replaceAll('nonce="__nonce__"', `nonce="${nonce}"`)
+    console.log(indexHTML)
+    return indexHTML
   }
 
   private injectNonce(
@@ -58,7 +58,7 @@ export class SvelteWebviewInitializer {
   ) {
     let ret = html.replaceAll(
       '<head>',
-      `<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webView.cspSource}; style-src 'unsafe-inline'; img-src ${webView.cspSource}; script-src 'nonce-${nonce}';">`
+      `<head><meta http-equiv="Content-Security-Policy" content="default-src 'nonce-${nonce}'; font-src ${webView.cspSource}; style-src-elem 'nonce-${nonce}'; img-src ${webView.cspSource}; script-src 'nonce-${nonce}';">`
     )
     return ret
   }
@@ -128,7 +128,13 @@ export class SvelteWebviewInitializer {
   }
 
   // get the styles uri
-  // private getStylesUri(context: vscode.ExtensionContext): vscode.Uri {
-  //   return vscode.Uri.joinPath(context.extensionUri, 'dist', 'styles.css')
-  // }
+  private getStylesUri(context: vscode.ExtensionContext): vscode.Uri {
+    return vscode.Uri.joinPath(
+      context.extensionUri,
+      'dist',
+      'views',
+      'dataEditor',
+      'style.css'
+    )
+  }
 }

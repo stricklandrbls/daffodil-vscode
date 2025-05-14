@@ -106,15 +106,14 @@ export class Viewport {
     bytesPerLine: 16,
   })
   private _topLine = $state(0)
-  // private _boundaries = $derived(ViewportController.getBoundaries(this)) // Doesn't work
+
   private _boundaries = $state<ViewportFetchBoundaries>({
     lower: -1,
     upper: -1,
-  }) // Works
-  public getBoundaries() {
-    return this._boundaries
-  }
-  private _lastViewportStartOffset = 0
+  })
+
+  public getBoundaries = () => this._boundaries
+
   public updateViewportFromMsg(msg: ViewportMsg) {
     this._data.update(msg)
     this._boundaries = ViewportController.getBoundaries(this)
