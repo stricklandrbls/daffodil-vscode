@@ -1,4 +1,6 @@
+import { totalBytesDisplayed, ViewportDisplaySettings_t } from '.'
 import {
+  getBoundaries,
   ViewportController,
   ViewportFetchBoundaries,
 } from './ViewportController.svelte'
@@ -93,18 +95,14 @@ export class Viewport {
   protected static activeViewportCount = 0
   public readonly id: string = ''
 
-  constructor() {
-    this.id = 'vp' + Viewport.activeViewportCount.toString()
+  constructor(id?: string) {
+    this.id = id ? id : 'vp' + Viewport.activeViewportCount.toString()
     Viewport.activeViewportCount++
   }
 
   private _data = $state<ViewportData>(new ViewportData())
   private _display = $state<ViewportDisplayContent>()
-  private _settings = $state<ViewportDisplaySettings_t>({
-    lineCount: 32,
-    numLinesDisplayed: 16,
-    bytesPerLine: 16,
-  })
+  private _displaySettings = $state<ViewportDisplaySettings_t>()
   private _topLine = $state(0)
 
   private _boundaries = $state<ViewportFetchBoundaries>({
@@ -116,7 +114,6 @@ export class Viewport {
 
   public updateViewportFromMsg(msg: ViewportMsg) {
     this._data.update(msg)
-    this._boundaries = ViewportController.getBoundaries(this)
   }
 
   public updateDisplayContent(content: ViewportDisplayContent) {
@@ -127,18 +124,18 @@ export class Viewport {
     return this._display
   }
 
-  public getIterableDisplayContent(): Promise<ViewportLineData[]> {
-    return new Promise((res) => {
-      let ret: ViewportLineData[] = []
-      for (let l = this._topLine; l < this._settings.numLinesDisplayed; l++) {
-        ret.push({
-          srcOffset: this._display![l][0].offsets.src,
-          data: this._display![l],
-        })
-      }
-      res(ret)
-    })
-  }
+  // public getIterableDisplayContent(): Promise<ViewportLineData[]> {
+  //   return new Promise((res) => {
+  //     let ret: ViewportLineData[] = []
+  //     for (let l = this._topLine; l < this._settings.numLinesDisplayed; l++) {
+  //       ret.push({
+  //         srcOffset: this._display![l][0].offsets.src,
+  //         data: this._display![l],
+  //       })
+  //     }
+  //     res(ret)
+  //   })
+  // }
 
   public getData() {
     return this._data
@@ -150,16 +147,11 @@ export class Viewport {
     return this._data.byteAt(index)
   }
 
-  public getSettings() {
-    return this._settings
-  }
+  // public getSettings() {
+  //   return this._settings
+  // }
 
   public isFetchable() {}
-}
-export type ViewportDisplaySettings_t = {
-  lineCount: number
-  numLinesDisplayed: number
-  bytesPerLine: number
 }
 
 export function determineEndOffset(data: ViewportData) {}

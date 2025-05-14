@@ -3,6 +3,7 @@
   import { MessageCommand } from 'utilities/message'
   import {
     getLastViewportOffset,
+    getMainViewport,
     Viewport,
     ViewportController,
     ViewportLineData,
@@ -10,9 +11,10 @@
   } from '.'
   import DataLine from './DataLine.svelte'
   import ViewportTraversal from './ViewportTraversal.svelte'
-  import { addToDebug } from '../../../testing'
-
-  let viewport = $state.raw(ViewportController.CurrentViewport())
+  import { ViewportDisplayType } from './ViewportDisplayer.svelte'
+  let { displayType = 'physical' }: { displayType: ViewportDisplayType } =
+    $props()
+  let viewport = $state.raw(getMainViewport())
 
   let iterableDisplay = $state<ViewportLineData[]>([])
 
@@ -25,9 +27,9 @@
     }
 
     viewport.updateViewportFromMsg(msgContent)
-    viewport.getIterableDisplayContent().then((data) => {
-      iterableDisplay = data
-    })
+    // viewport.getIterableDisplayContent().then((data) => {
+    //   iterableDisplay = data
+    // })
   })
 </script>
 

@@ -11,7 +11,7 @@
   addMessageListener(MessageCommand.fileInfo, (msg) => {
     const metricsMsg = msg.data.data as FileMetrics_t
     setFileMetrics(metricsMsg)
-    ViewportController.updateOffsetInfo(metricsMsg.computedFileSize)
+    // ViewportController.updateOffsetInfo(metricsMsg.computedFileSize)
   })
 </script>
 
