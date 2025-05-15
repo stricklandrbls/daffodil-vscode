@@ -62,11 +62,14 @@ const InitialViewportState: ViewportDataState = {
   },
 }
 class ValidViewportState implements ViewportDataState {
+  private _data = $state<Uint8Array>()
   constructor(
-    private _data: Uint8Array,
+    data: Uint8Array,
     private _srcOffset: number,
     private _srcBytesRemaining: number
-  ) {}
+  ) {
+    this._data = Uint8Array.from(data)
+  }
   getBytesRemaining(): number {
     return this._srcBytesRemaining
   }
@@ -85,10 +88,10 @@ class ValidViewportState implements ViewportDataState {
     }
   }
   getData(): Uint8Array {
-    return this._data
+    return this._data!
   }
   at(index: number): number {
-    return this._data[index]
+    return this._data![index]
   }
   byteAt(index: number): Byte {
     const localOffset = index
@@ -97,7 +100,7 @@ class ValidViewportState implements ViewportDataState {
     const value =
       localOffset > this._srcBytesRemaining - this._srcOffset
         ? -1
-        : this._data[localOffset]
+        : this._data![localOffset]
     return {
       offsets,
       value,
