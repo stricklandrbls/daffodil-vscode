@@ -1,13 +1,14 @@
 <script lang="ts">
   import { getDataDisplaySettings } from 'utilities'
-  import { Byte } from '.'
+  import { Byte, DisplayByte } from '.'
 
-  let { lineOffset, bytes }: { lineOffset: number; bytes: Byte[] } = $props()
+  let { lineOffset, bytes }: { lineOffset: number; bytes: DisplayByte[] } =
+    $props()
 </script>
 
 {#each bytes as byte}
   <div class="byte">
-    {byte.value.toString(getDataDisplaySettings().dataRadix)}
+    {byte.str}
   </div>
 {/each}
 

@@ -1,15 +1,5 @@
 <script lang="ts">
-  import FlexContainer from '../../layout/FlexContainer.svelte'
-  import { Byte, ViewportData, ViewportMsg } from './DataDisplay'
-  import {
-    ByteDisplay,
-    ByteRadix,
-    ByteRadixDisplays,
-    createViewportConfig,
-    ViewportDisplayConfig,
-    ViewportDisplayContent,
-  } from './ViewportDisplay'
-  import { viewportDisplayConfig } from './index.svelte'
+  import FlexContainer from '../../../layout/FlexContainer.svelte'
 
   export class ViewportDisplay {
     static NullByte = 'NULL'

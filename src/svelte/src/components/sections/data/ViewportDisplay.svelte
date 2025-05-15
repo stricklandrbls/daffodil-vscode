@@ -11,14 +11,28 @@
   } from '.'
   import DataLine from './DataLine.svelte'
   import ViewportTraversal from './ViewportTraversal.svelte'
-  import { ViewportDisplayType } from './ViewportDisplayer.svelte'
+  import {
+    RadixDisplays,
+    ViewportDisplayStrategy,
+    ViewportDisplayType,
+  } from './ViewportDisplayer.svelte'
+  import { getDataDisplaySettings } from 'utilities'
   let { displayType = 'physical' }: { displayType: ViewportDisplayType } =
     $props()
-  let viewport = $state.raw(getMainViewport())
-
+  let viewport = $state(getMainViewport())
+  let displayRadix = $derived(getDataDisplaySettings().dataRadix)
+  let displayer = $state(() => RadixDisplays[displayRadix])
   let iterableDisplay = $state<ViewportLineData[]>([])
 
-  $inspect(viewport.getBoundaries()).with(console.log)
+  // $effect(() => {
+  //   displayer()
+  //     .generateByteDisplay(
+  //       getMainViewport().getData(),
+  //       getMainViewport().getSettings()
+  //     )
+  //     .then((displayData) => (iterableDisplay = displayData))
+  // })
+
   addMessageListener(MessageCommand.viewportRefresh, (msg) => {
     const msgContent: ViewportMsg = {
       data: msg.data.data.data,
@@ -26,15 +40,18 @@
       srcBytesRemaining: msg.data.data.bytesLeft,
     }
 
-    viewport.updateViewportFromMsg(msgContent)
-    // viewport.getIterableDisplayContent().then((data) => {
-    //   iterableDisplay = data
-    // })
+    getMainViewport().updateViewportFromMsg(msgContent)
+    displayer()
+      .generateByteDisplay(
+        getMainViewport().getData(),
+        getMainViewport().getSettings()
+      )
+      .then((displayData) => (iterableDisplay = displayData))
   })
 </script>
 
 <div class="container">
-  Upper: {viewport.getBoundaries().upper}
+  radix: {displayer().radix}
   {#each iterableDisplay as vpLine}
     <div class="line">
       <div class="address">

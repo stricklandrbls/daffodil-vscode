@@ -44,7 +44,11 @@
     "src/**/*.svelte",
     "src/tests/**/*.test.ts",
     ".backup/_Header.svelte",
-    ".backup/_Header.svelte"
+    ".backup/_Header.svelte",
+    "src/components/sections/data/.old/ByteDisplay.svelte",
+    "src/components/sections/data/.old/BinaryDisplay.svelte",
+    "src/components/sections/data/.old/DataDisplay.ts",
+    "src/components/sections/data/.old/ViewportDisplay.ts"
   ],
   "exclude": ["node_modules/*"],
   "strict": true /* enable all strict type-checking options */,

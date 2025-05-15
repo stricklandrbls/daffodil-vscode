@@ -1,8 +1,8 @@
 import { Viewport } from '.'
-import { ViewportDisplaySettings_t } from './ViewportDisplayer.svelte'
+import { ViewportWindowSettings_t } from './ViewportDisplayer.svelte'
 
 const MainViewport = new Viewport()
-const MainViewportDisplaySettings = $state<ViewportDisplaySettings_t>({
+const MainViewportDisplaySettings = $state<ViewportWindowSettings_t>({
   bytesPerLine: 16,
   lineCount: 32,
   numLinesDisplayed: 16,

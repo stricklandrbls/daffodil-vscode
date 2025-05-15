@@ -46,7 +46,6 @@ export class SvelteWebviewInitializer {
       .replaceAll('src="/index.js"', `src="${scriptUri.toString()}"`)
       .replaceAll('/style.css', stylesUri.toString())
       .replaceAll('nonce="__nonce__"', `nonce="${nonce}"`)
-    console.log(indexHTML)
     return indexHTML
   }
 

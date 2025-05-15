@@ -1,4 +1,4 @@
-import { totalBytesDisplayed, ViewportDisplaySettings_t } from '.'
+import { RadixDisplays, totalBytesDisplayed, ViewportWindowSettings_t } from '.'
 import {
   getBoundaries,
   ViewportController,
@@ -17,11 +17,6 @@ export type ViewportOffsets = {
 export interface Byte {
   offsets: Offset
   value: number
-}
-
-export type ViewportLineData = {
-  srcOffset: number
-  data: Byte[]
 }
 
 export type ViewportMsg = {
@@ -101,9 +96,13 @@ export class Viewport {
   }
 
   private _data = $state<ViewportData>(new ViewportData())
-  private _display = $state<ViewportDisplayContent>()
-  private _displaySettings = $state<ViewportDisplaySettings_t>()
-  private _topLine = $state(0)
+
+  private _displaySettings = $state<ViewportWindowSettings_t>({
+    lineCount: 32,
+    topLineIndex: 0,
+    numLinesDisplayed: 16,
+    bytesPerLine: 16,
+  })
 
   private _boundaries = $state<ViewportFetchBoundaries>({
     lower: -1,
@@ -116,40 +115,17 @@ export class Viewport {
     this._data.update(msg)
   }
 
-  public updateDisplayContent(content: ViewportDisplayContent) {
-    this._display = content
-  }
-
-  public getDisplayContent() {
-    return this._display
-  }
-
-  // public getIterableDisplayContent(): Promise<ViewportLineData[]> {
-  //   return new Promise((res) => {
-  //     let ret: ViewportLineData[] = []
-  //     for (let l = this._topLine; l < this._settings.numLinesDisplayed; l++) {
-  //       ret.push({
-  //         srcOffset: this._display![l][0].offsets.src,
-  //         data: this._display![l],
-  //       })
-  //     }
-  //     res(ret)
-  //   })
-  // }
-
   public getData() {
     return this._data
   }
-
-  public getByteRange(start: number, end: number) {}
 
   public getByteAt(index: number) {
     return this._data.byteAt(index)
   }
 
-  // public getSettings() {
-  //   return this._settings
-  // }
+  public getSettings() {
+    return this._displaySettings
+  }
 
   public isFetchable() {}
 }

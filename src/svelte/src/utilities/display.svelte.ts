@@ -14,6 +14,7 @@
 // limitations under the License.
 
 import { BytesPerRow, EditByteModes, RadixValues } from './data.svelte'
+import EventEmitter from 'events'
 export type Viewport = 'physical' | 'address' | 'logical'
 
 export type ValidationResponse = {
@@ -83,18 +84,33 @@ export type DataDisplaySettings_t = {
   dataRadix: RadixValues
   editorEncoding: AvailableStrEncodings
 }
+type EventTypes = {
+  changed: (settings: DataDisplaySettings_t) => void
+}
+class DataDisplayEvents {
+  private static emitter = new EventEmitter()
+  public static on<T extends keyof EventTypes>(
+    event: T,
+    callback: EventTypes[T]
+  ) {
+    DataDisplayEvents.emitter.on(event, callback)
+  }
+}
 
 let DataDisplaySettingsState = $state<DataDisplaySettings_t>({
   dataRadix: 16,
   editorEncoding: 'hex',
 })
+
 export const getDataDisplaySettings = () => DataDisplaySettingsState
+
 export function setDataDisplaySettings<K extends keyof DataDisplaySettings_t>(
   setting: K,
   value: DataDisplaySettings_t[K]
 ) {
   DataDisplaySettingsState[setting] = value
 }
+
 export function radixBytePad(radix: RadixValues): number {
   switch (radix) {
     case 2:

@@ -1,20 +1,28 @@
 import { RadixValues } from 'utilities'
-import { Viewport, ViewportLineData } from '.'
+import { Byte, ViewportData } from '.'
 
 export type ViewportDisplayType = 'physical' | 'logical'
+export interface DisplayByte extends Byte {
+  str: string
+}
+export type ViewportLineData = {
+  srcOffset: number
+  data: DisplayByte[]
+}
+export interface ViewportDisplayStrategy {
+  generateByteDisplay(
+    viewport: ViewportData,
+    settings: ViewportWindowSettings_t
+  ): Promise<ViewportLineData[]>
+}
 
-export type ViewportDisplaySettings_t = {
+export type ViewportWindowSettings_t = {
   lineCount: number
+  topLineIndex: number
   numLinesDisplayed: number
   bytesPerLine: number
 }
 
-export interface ViewportDisplayStrategy {
-  generateByteDisplay(
-    viewport: Viewport,
-    settings: ViewportDisplaySettings_t
-  ): Promise<ViewportLineData[]>
-}
 class RadixDisplayStrategy implements ViewportDisplayStrategy {
   private constructor(readonly radix: RadixValues) {}
 
@@ -24,31 +32,50 @@ class RadixDisplayStrategy implements ViewportDisplayStrategy {
   static BinaryDisplay = new RadixDisplayStrategy(2)
 
   generateByteDisplay(
-    viewport: Viewport,
-    settings: ViewportDisplaySettings_t
+    viewport: ViewportData,
+    settings: ViewportWindowSettings_t
   ): Promise<ViewportLineData[]> {
     return new Promise((res) => {
       let ret: ViewportLineData[] = []
-      for (let l = this._topLine; l < this._settings.numLinesDisplayed; l++) {
+      let currentLineOffset = 0
+      let currentLineData: DisplayByte[] = []
+      let currentByte: Byte = {
+        offsets: {
+          viewport: 0,
+          src: 0,
+        },
+        value: 0,
+      }
+
+      for (let l = settings.topLineIndex; l < settings.numLinesDisplayed; l++) {
+        currentLineOffset = l * settings.bytesPerLine
+        for (let b = 0; b < settings.bytesPerLine; b++) {
+          currentByte = viewport.byteAt(currentLineOffset + b)
+          currentLineData.push({
+            ...currentByte,
+            str: currentByte.value.toString(this.radix),
+          })
+        }
         ret.push({
-          srcOffset: this._display![l][0].offsets.src,
-          data: this._display![l],
+          srcOffset: currentLineData[0].offsets.src,
+          data: currentLineData,
         })
+        currentLineData = []
       }
       res(ret)
     })
   }
 }
+
 export const RadixDisplays: {
-  [radix in RadixValues]: ViewportDisplayStrategy
+  [radix in RadixValues]: RadixDisplayStrategy
 } = {
   16: RadixDisplayStrategy.HexDisplay,
   10: RadixDisplayStrategy.DecimalDisplay,
   8: RadixDisplayStrategy.OctalDisplay,
   2: RadixDisplayStrategy.BinaryDisplay,
 }
-export function totalBytesDisplayed(
-  displaySettings: ViewportDisplaySettings_t
-) {
+
+export function totalBytesDisplayed(displaySettings: ViewportWindowSettings_t) {
   return displaySettings.lineCount * displaySettings.bytesPerLine
 }
