@@ -1,37 +1,24 @@
 <script lang="ts">
   import { addMessageListener } from 'utilities/Messenger'
   import { MessageCommand } from 'utilities/message'
-  import {
-    getLastViewportOffset,
-    getMainViewport,
-    Viewport,
-    ViewportController,
-    ViewportLineData,
-    ViewportMsg,
-  } from '.'
+  import { getMainViewport, ViewportLineData, ViewportMsg } from '.'
   import DataLine from './DataLine.svelte'
   import ViewportTraversal from './ViewportTraversal.svelte'
   import {
     RadixDisplays,
-    ViewportDisplayStrategy,
     ViewportDisplayType,
   } from './ViewportDisplayer.svelte'
   import { getDataDisplaySettings } from 'utilities'
   let { displayType = 'physical' }: { displayType: ViewportDisplayType } =
     $props()
   let viewport = $state(getMainViewport())
-  let displayRadix = $derived(getDataDisplaySettings().dataRadix)
-  let displayer = $state(() => RadixDisplays[displayRadix])
-  let iterableDisplay = $state<ViewportLineData[]>([])
+  let dataDisplayPromise = $state<Promise<ViewportLineData[]>>()
 
-  // $effect(() => {
-  //   displayer()
-  //     .generateByteDisplay(
-  //       getMainViewport().getData(),
-  //       getMainViewport().getSettings()
-  //     )
-  //     .then((displayData) => (iterableDisplay = displayData))
-  // })
+  $effect(() => {
+    dataDisplayPromise = RadixDisplays[
+      getDataDisplaySettings().dataRadix
+    ].generateByteDisplay(viewport.getData(), viewport.getSettings())
+  })
 
   addMessageListener(MessageCommand.viewportRefresh, (msg) => {
     const msgContent: ViewportMsg = {
@@ -40,29 +27,31 @@
       srcBytesRemaining: msg.data.data.bytesLeft,
     }
 
-    getMainViewport().updateViewportFromMsg(msgContent)
-    displayer()
-      .generateByteDisplay(
-        getMainViewport().getData(),
-        getMainViewport().getSettings()
-      )
-      .then((displayData) => (iterableDisplay = displayData))
+    viewport.updateViewportFromMsg(msgContent)
   })
 </script>
 
 <div class="container">
-  radix: {displayer().radix}
-  {#each iterableDisplay as vpLine}
-    <div class="line">
-      <div class="address">
-        {vpLine.srcOffset}
-      </div>
+  {#if dataDisplayPromise != undefined}
+    {#await dataDisplayPromise}
+      Awaiting Data generation..
+    {:then dataDisplay}
+      {#each dataDisplay as vpLine}
+        <div class="line">
+          <div class="address">
+            {vpLine.srcOffset}
+          </div>
 
-      <div class="byte-line">
-        <DataLine bytes={vpLine.data} lineOffset={vpLine.srcOffset} />
-      </div>
-    </div>
-  {/each}
+          <div class="byte-line">
+            <DataLine bytes={vpLine.data} lineOffset={vpLine.srcOffset} />
+          </div>
+        </div>
+      {/each}
+    {:catch rejectedGeneration}
+      No Data to display
+    {/await}
+  {/if}
+  radix: {getDataDisplaySettings().dataRadix}
 </div>
 <ViewportTraversal />
 

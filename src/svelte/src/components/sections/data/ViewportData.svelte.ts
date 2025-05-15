@@ -27,46 +27,75 @@ export type ViewportMsg = {
 
 export type ViewportDisplayContent = { [line: number]: Byte[] }
 
-export class ViewportData {
-  static Capacity = 128
-
-  private _data = new Uint8Array(ViewportData.Capacity)
-  private _srcStartOffset = -1
-  private _srcBytesRemaining = -1
-
-  public getSize() {
-    return this._data.length
-  }
-  public getOffset() {
-    return this._srcStartOffset
-  }
-
-  public getBytesRemaining() {
+export interface ViewportDataState {
+  readonly State: string
+  getData(): Uint8Array | undefined
+  update(msg: ViewportMsg): ViewportDataState
+  at(index: number): number
+  byteAt(index: number): Byte
+  getOffsets(): { start: number; end: number }
+  getBytesRemaining(): number
+}
+const InitialViewportState: ViewportDataState = {
+  State: 'INIT',
+  update: function (msg: ViewportMsg): ViewportDataState {
+    return new ValidViewportState(
+      msg.data,
+      msg.srcOffset,
+      msg.srcBytesRemaining
+    )
+  },
+  at: function (index: number): number {
+    throw new Error('Function not implemented.')
+  },
+  byteAt: function (index: number): Byte {
+    throw new Error('Function not implemented.')
+  },
+  getData: function (): Uint8Array | undefined {
+    throw new Error('Function not implemented.')
+  },
+  getOffsets: function (): { start: number; end: number } {
+    throw new Error('Function not implemented.')
+  },
+  getBytesRemaining: function (): number {
+    throw new Error('Function not implemented.')
+  },
+}
+class ValidViewportState implements ViewportDataState {
+  constructor(
+    private _data: Uint8Array,
+    private _srcOffset: number,
+    private _srcBytesRemaining: number
+  ) {}
+  getBytesRemaining(): number {
     return this._srcBytesRemaining
   }
-
-  public update(viewport: ViewportMsg) {
-    this._data = viewport.data
-    this._srcStartOffset = viewport.srcOffset
-    this._srcBytesRemaining = viewport.srcBytesRemaining
+  State = 'VALID'
+  update(msg: ViewportMsg): ViewportDataState {
+    this._data = msg.data
+    return this
   }
-
-  public getEndOffset() {
-    return this._srcBytesRemaining > ViewportData.Capacity
-      ? this._srcStartOffset + ViewportData.Capacity
-      : this._srcBytesRemaining
+  getOffsets(): { start: number; end: number } {
+    return {
+      start: this._srcOffset,
+      end:
+        this._srcBytesRemaining > ViewportData.Capacity
+          ? this._srcOffset + ViewportData.Capacity
+          : this._srcBytesRemaining,
+    }
   }
-
-  public at(index: number): number {
+  getData(): Uint8Array {
+    return this._data
+  }
+  at(index: number): number {
     return this._data[index]
   }
-
-  public byteAt(index: number): Byte {
+  byteAt(index: number): Byte {
     const localOffset = index
-    const srcOffset = this._srcStartOffset + localOffset
+    const srcOffset = this._srcOffset + localOffset
     const offsets: Offset = { viewport: localOffset, src: srcOffset }
     const value =
-      localOffset > this._srcBytesRemaining - this._srcStartOffset
+      localOffset > this._srcBytesRemaining - this._srcOffset
         ? -1
         : this._data[localOffset]
     return {
@@ -74,15 +103,37 @@ export class ViewportData {
       value,
     }
   }
+}
+export class ViewportData {
+  static Capacity = 128
 
-  public hasData() {
-    return this._srcStartOffset > -1
+  private _state = $state<ViewportDataState>(InitialViewportState)
+
+  public getSize() {
+    return this._state.getData()?.length
+  }
+  public getOffsets() {
+    return this._state.getOffsets()
   }
 
-  public isValidByte(byte: Byte) {
-    if (byte.offsets.src > this._srcBytesRemaining - this._srcStartOffset)
-      return false
-    return true
+  public getBytesRemaining() {
+    return this._state.getBytesRemaining()
+  }
+
+  public update(viewport: ViewportMsg) {
+    this._state = this._state.update(viewport)
+  }
+
+  public at(index: number): number {
+    return this._state.at(index)
+  }
+
+  public byteAt(index: number): Byte {
+    return this._state.byteAt(index)
+  }
+
+  public isValid() {
+    return this._state.State === 'VALID'
   }
 }
 
@@ -113,6 +164,20 @@ export class Viewport {
 
   public updateViewportFromMsg(msg: ViewportMsg) {
     this._data.update(msg)
+    const dataOffsets = this._data.getOffsets()
+    const dataSize = this._data.getSize()!
+
+    this._boundaries.lower = dataOffsets.start
+
+    const byteDisplayCount =
+      this._displaySettings.numLinesDisplayed *
+      this._displaySettings.bytesPerLine
+    const upper =
+      dataSize > byteDisplayCount
+        ? dataOffsets.start + dataSize - byteDisplayCount
+        : dataSize
+
+    this._boundaries.upper = upper!
   }
 
   public getData() {
@@ -127,7 +192,11 @@ export class Viewport {
     return this._displaySettings
   }
 
-  public isFetchable() {}
+  public isFetchableAt(offset: number) {
+    return offset > this._boundaries.lower
+      ? this._data.getBytesRemaining() > 0
+      : this._boundaries.lower > 0
+  }
 }
 
 export function determineEndOffset(data: ViewportData) {}

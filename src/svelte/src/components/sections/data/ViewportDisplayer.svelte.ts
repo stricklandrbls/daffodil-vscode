@@ -35,7 +35,8 @@ class RadixDisplayStrategy implements ViewportDisplayStrategy {
     viewport: ViewportData,
     settings: ViewportWindowSettings_t
   ): Promise<ViewportLineData[]> {
-    return new Promise((res) => {
+    return new Promise((res, rej) => {
+      if (!viewport.isValid()) rej()
       let ret: ViewportLineData[] = []
       let currentLineOffset = 0
       let currentLineData: DisplayByte[] = []

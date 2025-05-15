@@ -10,6 +10,8 @@ import {
   ViewportWindowSettings_t,
 } from '.'
 import { getFileMetrics } from 'editor_components/header/fieldsets/FileMetrics'
+import { vscode } from 'utilities/vscode'
+import { MessageCommand } from 'utilities/message'
 
 export type ViewportFetchBoundaries = {
   lower: number
@@ -33,10 +35,19 @@ export function getBoundaries(
 export class ViewportController {
   static NullByteStr = 'NULL'
   static DisplayConfig = getDataDisplaySettings()
-  static CurrentSrcOffset = 0
 
-  public static getStartOffset = () => this.CurrentSrcOffset
-  public static seekViewport = (viewport: Viewport, offset: number) => {}
+  public static seekViewport = (viewport: Viewport, offset: number) => {
+    if (viewport.isFetchableAt(offset))
+      vscode.postMessage({
+        command: MessageCommand.scrollViewport,
+        data: {
+          scrollOffset: offset,
+          bytesPerRow: viewport.getSettings().bytesPerLine,
+          numLinesDisplayed: viewport.getSettings().numLinesDisplayed,
+        },
+      })
+    else console.log(`Offset ${offset} is NOT fetchable`)
+  }
   public static incrementViewport = (viewport: Viewport) => {}
 }
 
