@@ -8,15 +8,12 @@ import {
   ViewportLineData,
   totalBytesDisplayed,
   ViewportWindowSettings_t,
+  lineIndexOfOffset,
 } from '.'
 import { getFileMetrics } from 'editor_components/header/fieldsets/FileMetrics'
 import { vscode } from 'utilities/vscode'
 import { MessageCommand } from 'utilities/message'
 
-export type ViewportFetchBoundaries = {
-  lower: number
-  upper: number
-}
 export function getBoundaries(
   viewportLength: number,
   viewportSrcOffset: number,
@@ -37,7 +34,7 @@ export class ViewportController {
   static DisplayConfig = getDataDisplaySettings()
 
   public static seekViewport = (viewport: Viewport, offset: number) => {
-    if (viewport.isFetchableAt(offset))
+    if (viewport.shouldFetchContent(offset))
       vscode.postMessage({
         command: MessageCommand.scrollViewport,
         data: {
@@ -46,7 +43,14 @@ export class ViewportController {
           numLinesDisplayed: viewport.getSettings().numLinesDisplayed,
         },
       })
-    else console.log(`Offset ${offset} is NOT fetchable`)
+    else {
+      console.log(`Offset ${offset} is NOT fetchable`)
+      viewport.getSettings().topLineIndex = lineIndexOfOffset(
+        viewport.getBoundaries().lower,
+        offset,
+        viewport.getSettings().bytesPerLine
+      )
+    }
   }
   public static incrementViewport = (viewport: Viewport) => {}
 }

@@ -25,6 +25,7 @@
     "paths": {
       "utilities": ["utilities"],
       "layout/*": ["components/layout/*"],
+      "HTMLWrappers/*": ["components/html/*"],
       "editor_components/*": ["components/sections/*"]
     },
     // "allowImportingTsExtensions": true,

@@ -9,3 +9,11 @@
 <main>
   {@render children()}
 </main>
+
+<style lang="scss">
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+</style>

@@ -5,6 +5,7 @@
   import DataLine from './DataLine.svelte'
   import ViewportTraversal from './ViewportTraversal.svelte'
   import {
+    LogicalDisplay,
     RadixDisplays,
     ViewportDisplayType,
   } from './ViewportDisplayer.svelte'
@@ -15,9 +16,16 @@
   let dataDisplayPromise = $state<Promise<ViewportLineData[]>>()
 
   $effect(() => {
-    dataDisplayPromise = RadixDisplays[
-      getDataDisplaySettings().dataRadix
-    ].generateByteDisplay(viewport.getData(), viewport.getSettings())
+    dataDisplayPromise =
+      displayType === 'physical'
+        ? RadixDisplays[getDataDisplaySettings().dataRadix].generateByteDisplay(
+            viewport.getData(),
+            viewport.getSettings()
+          )
+        : LogicalDisplay.generateByteDisplay(
+            viewport.getData(),
+            viewport.getSettings()
+          )
   })
 
   addMessageListener(MessageCommand.viewportRefresh, (msg) => {
@@ -53,7 +61,6 @@
   {/if}
   radix: {getDataDisplaySettings().dataRadix}
 </div>
-<ViewportTraversal />
 
 <style lang="scss">
   span {

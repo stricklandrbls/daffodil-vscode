@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FlexContainer from 'layout/FlexContainer.svelte'
   import Header from './components/sections/header/Header.svelte'
   import Main from './Main.svelte'
   import ViewportDisplay from 'editor_components/data/ViewportDisplay.svelte'
@@ -9,8 +10,10 @@
 
 <Main>
   <Header />
-  <!-- <ViewportDisplay /> -->
-  <ViewportDisplay />
+  <FlexContainer --dir="row">
+    <ViewportDisplay displayType={'physical'} />
+    <ViewportDisplay displayType={'logical'} />
+  </FlexContainer>
 </Main>
 
 <style>
