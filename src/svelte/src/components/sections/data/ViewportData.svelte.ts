@@ -1,9 +1,4 @@
-import { RadixDisplays, totalBytesDisplayed, ViewportWindowSettings_t } from '.'
-import {
-  getBoundaries,
-  ViewportController,
-  ViewportFetchBoundaries,
-} from './ViewportController.svelte'
+import { totalBytesDisplayed, ViewportWindowSettings_t } from '.'
 
 export type Offset = {
   viewport: number
@@ -25,6 +20,10 @@ export type ViewportMsg = {
   srcBytesRemaining: number
 }
 
+export type ViewportFetchBoundaries = {
+  lower: number
+  upper: number
+}
 export type ViewportDisplayContent = { [line: number]: Byte[] }
 
 export interface ViewportDataState {
@@ -76,6 +75,8 @@ class ValidViewportState implements ViewportDataState {
   State = 'VALID'
   update(msg: ViewportMsg): ViewportDataState {
     this._data = msg.data
+    this._srcOffset = msg.srcOffset
+    this._srcBytesRemaining = msg.srcBytesRemaining
     return this
   }
   getOffsets(): { start: number; end: number } {
@@ -108,7 +109,7 @@ class ValidViewportState implements ViewportDataState {
   }
 }
 export class ViewportData {
-  static Capacity = 128
+  static Capacity = 1024
 
   private _state = $state<ViewportDataState>(InitialViewportState)
 
@@ -200,6 +201,46 @@ export class Viewport {
       ? this._data.getBytesRemaining() > 0
       : this._boundaries.lower > 0
   }
+  public isOffsetWithinViewport(offset: number) {
+    return offset > this._boundaries.lower && offset < this._boundaries.upper
+  }
+  public shouldFetchContent(offset: number) {
+    const offsetLineIndex = lineIndexOfOffset(
+      this._boundaries.lower,
+      offset,
+      this._displaySettings.bytesPerLine
+    )
+    if (
+      offsetLineIndex + this._displaySettings.numLinesDisplayed >
+      this._displaySettings.lineCount - offsetLineIndex
+    )
+      return true
+
+    if (!this.isOffsetWithinViewport(offset)) return true
+
+    const upperFetchBoundary =
+      this._boundaries.upper - totalBytesDisplayed(this._displaySettings)
+    if (offset > upperFetchBoundary) return true
+
+    if (offset < this._boundaries.lower) return true
+
+    return false
+  }
 }
 
 export function determineEndOffset(data: ViewportData) {}
+
+export function lineIndexOfOffset(
+  vpStartOffset: number,
+  targetOffset: number,
+  bytesPerRow: number
+) {
+  const nearestDivisibleTargetOffset =
+    Math.floor(targetOffset / bytesPerRow) * bytesPerRow
+  const nearestDivisibleViewportOffset =
+    Math.floor(vpStartOffset / bytesPerRow) * bytesPerRow
+  return (
+    (nearestDivisibleTargetOffset - nearestDivisibleViewportOffset) /
+    bytesPerRow
+  )
+}

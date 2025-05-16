@@ -8,6 +8,7 @@ export default defineConfig({
     alias: {
       utilities: path.resolve(__dirname, 'src/utilities'),
       layout: path.resolve(__dirname, 'src/components/layout'),
+      HTMLWrappers: path.resolve(__dirname, 'src/components/html'),
       editor_components: path.resolve(__dirname, 'src/components/sections'),
     },
   },

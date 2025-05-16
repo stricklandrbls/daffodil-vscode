@@ -1,6 +1,7 @@
 <script lang="ts">
   import FlexContainer from '../../layout/FlexContainer.svelte'
   import { FileMetrics, getFileMetrics } from './fieldsets/FileMetrics'
+  import SearchReplace from './fieldsets/SearchReplace/SearchReplace.svelte'
   import Settings from './fieldsets/Settings/Settings.svelte'
   /// Responsible only for rendering the fieldset children and toggling their visibility
   let hide = $state(false)
@@ -19,6 +20,7 @@
     <header>
       <FlexContainer --height="fit-content">
         <FileMetrics />
+        <SearchReplace />
         <Settings bom={getFileMetrics().byteOrderMark} />
         <!-- <FileMetrics {...metrics} /> -->
         <!-- <FileMetrics on:clearChangeStack on:redo on:undo /> -->

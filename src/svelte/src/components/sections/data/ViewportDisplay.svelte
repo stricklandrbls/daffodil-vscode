@@ -1,23 +1,45 @@
 <script lang="ts">
   import { addMessageListener } from 'utilities/Messenger'
   import { MessageCommand } from 'utilities/message'
-  import { getMainViewport, ViewportLineData, ViewportMsg } from '.'
+  import {
+    getCurrentByteSelection,
+    getMainViewport,
+    selectionLengthDelta,
+    ViewportLineData,
+    ViewportMsg,
+  } from '.'
   import DataLine from './DataLine.svelte'
   import ViewportTraversal from './ViewportTraversal.svelte'
   import {
+    LogicalDisplay,
     RadixDisplays,
     ViewportDisplayType,
   } from './ViewportDisplayer.svelte'
   import { getDataDisplaySettings } from 'utilities'
-  let { displayType = 'physical' }: { displayType: ViewportDisplayType } =
-    $props()
+  let {
+    displayType = 'physical',
+    addrShow = true,
+  }: { displayType: ViewportDisplayType; addrShow: boolean } = $props()
   let viewport = $state(getMainViewport())
   let dataDisplayPromise = $state<Promise<ViewportLineData[]>>()
-
+  let selectionOffsets = $state(getCurrentByteSelection().getOffsets())
+  let selectionRange = $state<number[]>(
+    Array.from(
+      { length: selectionLengthDelta(selectionOffsets) },
+      (_, i) => selectionOffsets.start.viewport + i
+    )
+  )
   $effect(() => {
-    dataDisplayPromise = RadixDisplays[
-      getDataDisplaySettings().dataRadix
-    ].generateByteDisplay(viewport.getData(), viewport.getSettings())
+    dataDisplayPromise =
+      displayType === 'physical'
+        ? RadixDisplays[getDataDisplaySettings().dataRadix].generateByteDisplay(
+            viewport.getData(),
+            viewport.getSettings()
+          )
+        : LogicalDisplay.generateByteDisplay(
+            viewport.getData(),
+            viewport.getSettings()
+          )
   })
 
   addMessageListener(MessageCommand.viewportRefresh, (msg) => {
@@ -31,29 +53,50 @@
   })
 </script>
 
-<div class="container">
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+  class="container"
+  onclick={(e) => {
+    const target = e.target as HTMLDivElement
+    const targetOffsetId = target.getAttribute('id')
+    if (!targetOffsetId) throw 'Selection is not within the viewport window'
+
+    const selectedVPOffset = parseInt(targetOffsetId)
+    getCurrentByteSelection().setSelected(selectedVPOffset)
+    console.log(
+      `Selected byte at VP index: ${getCurrentByteSelection().getOffsets().start.viewport}`
+    )
+    selectionRange = Array.from(
+      { length: selectionLengthDelta(selectionOffsets) },
+      (_, i) => selectionOffsets.start.viewport + i
+    )
+    console.log(selectionRange)
+  }}
+>
   {#if dataDisplayPromise != undefined}
     {#await dataDisplayPromise}
       Awaiting Data generation..
     {:then dataDisplay}
-      {#each dataDisplay as vpLine}
-        <div class="line">
-          <div class="address">
-            {vpLine.srcOffset}
+      {#if getCurrentByteSelection().isActive()}
+        Byte @ {getCurrentByteSelection().getOffsets().start.src} Selected.
+      {:else}
+        {#each dataDisplay as vpLine}
+          <div class="line">
+            <div class="byte-line">
+              <DataLine
+                bytes={vpLine.data}
+                lineOffset={addrShow ? vpLine.srcOffset : undefined}
+              />
+            </div>
           </div>
-
-          <div class="byte-line">
-            <DataLine bytes={vpLine.data} lineOffset={vpLine.srcOffset} />
-          </div>
-        </div>
-      {/each}
+        {/each}
+      {/if}
     {:catch rejectedGeneration}
       No Data to display
     {/await}
   {/if}
-  radix: {getDataDisplaySettings().dataRadix}
 </div>
-<ViewportTraversal />
 
 <style lang="scss">
   span {

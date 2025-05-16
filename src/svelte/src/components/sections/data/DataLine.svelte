@@ -2,17 +2,28 @@
   import { getDataDisplaySettings } from 'utilities'
   import { Byte, DisplayByte } from '.'
 
-  let { lineOffset, bytes }: { lineOffset: number; bytes: DisplayByte[] } =
+  let { lineOffset, bytes }: { lineOffset?: number; bytes: DisplayByte[] } =
     $props()
 </script>
 
+{#if lineOffset != undefined}
+  <div class="address">
+    {lineOffset.toString(getDataDisplaySettings().addrRadix)}
+  </div>
+{/if}
 {#each bytes as byte}
-  <div class="byte">
+  <div class="byte" id={byte.offsets.viewport.toString()}>
     {byte.str}
   </div>
 {/each}
 
 <style>
+  div.address {
+    min-width: 110px;
+    direction: rtl;
+    justify-content: right;
+    letter-spacing: 4px;
+  }
   div.byte {
     background-color: transparent;
     display: flex;

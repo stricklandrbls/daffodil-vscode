@@ -82,6 +82,7 @@ export const ENCODING_GROUPS = [
 ]
 export type DataDisplaySettings_t = {
   dataRadix: RadixValues
+  addrRadix: RadixValues
   editorEncoding: AvailableStrEncodings
 }
 type EventTypes = {
@@ -100,6 +101,7 @@ class DataDisplayEvents {
 let DataDisplaySettingsState = $state<DataDisplaySettings_t>({
   dataRadix: 16,
   editorEncoding: 'hex',
+  addrRadix: 16,
 })
 
 export const getDataDisplaySettings = () => DataDisplaySettingsState
@@ -253,7 +255,6 @@ export function viewport_offset_to_line_num(
 ): number {
   return Math.max(0, Math.floor((offset - vpStartOffset) / bytesPerRow))
 }
-
 export function line_num_to_file_offset(
   lineNum: number,
   viewportStartOffset: number,

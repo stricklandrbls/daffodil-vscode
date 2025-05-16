@@ -1,7 +1,9 @@
 <script lang="ts">
+  import FlexContainer from 'layout/FlexContainer.svelte'
   import Header from './components/sections/header/Header.svelte'
   import Main from './Main.svelte'
   import ViewportDisplay from 'editor_components/data/ViewportDisplay.svelte'
+  import MainViewports from 'editor_components/data/MainViewports.svelte'
 
   // <Header /> Required Stores:
   // - ViewportDisplayConfig: For modifying the viewport display in the <Settings> Component
@@ -9,8 +11,10 @@
 
 <Main>
   <Header />
-  <!-- <ViewportDisplay /> -->
-  <ViewportDisplay />
+  <MainViewports>
+    <ViewportDisplay displayType={'physical'} addrShow={true} />
+    <ViewportDisplay displayType={'logical'} addrShow={false} />
+  </MainViewports>
 </Main>
 
 <style>
@@ -19,6 +23,20 @@
     font-style: normal;
     font-weight: normal bold;
     src: url(./src/resources/icons/material-icons.woff2) format('woff2');
+  }
+
+  @font-face {
+    font-family: 'Red Hat Mono';
+    font-style: normal;
+    font-weight: normal bold;
+    src: url(./src/resources/fonts/RedHatMono-Regular.woff2) format('woff2');
+  }
+
+  @font-face {
+    font-family: 'Space Grotesk';
+    font-style: normal;
+    font-weight: normal bold;
+    src: url(./src/resources/fonts/SpaceGrotesk-Variable.woff2) format('woff2');
   }
   .logo {
     height: 6em;
