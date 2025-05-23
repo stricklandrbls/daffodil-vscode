@@ -44,7 +44,6 @@ export class ViewportController {
         },
       })
     else {
-      console.log(`Offset ${offset} is NOT fetchable`)
       viewport.getSettings().topLineIndex = lineIndexOfOffset(
         viewport.getBoundaries().lower,
         offset,

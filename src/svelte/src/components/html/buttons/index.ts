@@ -1,7 +1,7 @@
 import type { Snippet } from 'svelte'
 
 export interface ButtonProps {
-  clickCallback: () => void
+  clickCallback: (event: Event) => void
   disabled?: boolean
   width?: string
   fixedWidth?: string
@@ -20,4 +20,5 @@ export type IconButtonProps = {
   clickCallback: () => void
   icon: Icon
   text: string
+  disableIf: () => boolean
 }

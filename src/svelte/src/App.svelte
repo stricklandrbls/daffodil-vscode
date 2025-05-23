@@ -4,6 +4,11 @@
   import Main from './Main.svelte'
   import ViewportDisplay from 'editor_components/data/ViewportDisplay.svelte'
   import MainViewports from 'editor_components/data/MainViewports.svelte'
+  import {
+    getCurrentByteSelection,
+    selectionOffsetsToStr,
+  } from 'editor_components/data'
+  import { seekErr } from 'editor_components/header/fieldsets/SearchReplace'
 
   // <Header /> Required Stores:
   // - ViewportDisplayConfig: For modifying the viewport display in the <Settings> Component
@@ -16,6 +21,26 @@
     <ViewportDisplay displayType={'logical'} addrShow={false} />
   </MainViewports>
 </Main>
+<hr />
+<h3>Debug Info</h3>
+<div class="debuginfo">
+  <div>Selections</div>
+  <div>
+    <div>
+      start: {selectionOffsetsToStr(getCurrentByteSelection().getOffsets())
+        .start}
+    </div>
+    <div>
+      end.unedited: {selectionOffsetsToStr(
+        getCurrentByteSelection().getOffsets()
+      ).end.unedited}
+    </div>
+  </div>
+  <div>Seek Error</div>
+  <div>
+    {seekErr.hasErrored() ? seekErr.getValues().errMessage : 'No errors'}
+  </div>
+</div>
 
 <style>
   @font-face {
@@ -37,6 +62,13 @@
     font-style: normal;
     font-weight: normal bold;
     src: url(./src/resources/fonts/SpaceGrotesk-Variable.woff2) format('woff2');
+  }
+  .debuginfo {
+    display: grid;
+    grid-template-columns: auto auto;
+    padding: 10px;
+    border: 2px solid grey;
+    align-items: center;
   }
   .logo {
     height: 6em;

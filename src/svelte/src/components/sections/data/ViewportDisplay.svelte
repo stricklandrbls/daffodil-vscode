@@ -9,7 +9,6 @@
     ViewportMsg,
   } from '.'
   import DataLine from './DataLine.svelte'
-  import ViewportTraversal from './ViewportTraversal.svelte'
   import {
     LogicalDisplay,
     RadixDisplays,
@@ -22,13 +21,6 @@
   }: { displayType: ViewportDisplayType; addrShow: boolean } = $props()
   let viewport = $state(getMainViewport())
   let dataDisplayPromise = $state<Promise<ViewportLineData[]>>()
-  let selectionOffsets = $state(getCurrentByteSelection().getOffsets())
-  let selectionRange = $state<number[]>(
-    Array.from(
-      { length: selectionLengthDelta(selectionOffsets) },
-      (_, i) => selectionOffsets.start.viewport + i
-    )
-  )
   $effect(() => {
     dataDisplayPromise =
       displayType === 'physical'
@@ -57,41 +49,39 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class="container"
-  onclick={(e) => {
+  onmousedown={(e) => {
     const target = e.target as HTMLDivElement
     const targetOffsetId = target.getAttribute('id')
     if (!targetOffsetId) throw 'Selection is not within the viewport window'
 
-    const selectedVPOffset = parseInt(targetOffsetId)
-    getCurrentByteSelection().setSelected(selectedVPOffset)
-    console.log(
-      `Selected byte at VP index: ${getCurrentByteSelection().getOffsets().start.viewport}`
-    )
-    selectionRange = Array.from(
-      { length: selectionLengthDelta(selectionOffsets) },
-      (_, i) => selectionOffsets.start.viewport + i
-    )
-    console.log(selectionRange)
+    const selectedVPOffset =
+      parseInt(targetOffsetId) + viewport.getBoundaries().lower
+    getCurrentByteSelection().setSelected('start', selectedVPOffset)
+  }}
+  onmouseup={(e) => {
+    const target = e.target as HTMLDivElement
+    const targetOffsetId = target.getAttribute('id')
+    if (!targetOffsetId) throw 'Selection is not within the viewport window'
+
+    const selectedVPOffset =
+      parseInt(targetOffsetId) + viewport.getBoundaries().lower
+    getCurrentByteSelection().setSelected('end', selectedVPOffset)
   }}
 >
   {#if dataDisplayPromise != undefined}
     {#await dataDisplayPromise}
       Awaiting Data generation..
     {:then dataDisplay}
-      {#if getCurrentByteSelection().isActive()}
-        Byte @ {getCurrentByteSelection().getOffsets().start.src} Selected.
-      {:else}
-        {#each dataDisplay as vpLine}
-          <div class="line">
-            <div class="byte-line">
-              <DataLine
-                bytes={vpLine.data}
-                lineOffset={addrShow ? vpLine.srcOffset : undefined}
-              />
-            </div>
+      {#each dataDisplay as vpLine}
+        <div class="line">
+          <div class="byte-line">
+            <DataLine
+              bytes={vpLine.data}
+              lineOffset={addrShow ? vpLine.srcOffset : undefined}
+            />
           </div>
-        {/each}
-      {/if}
+        </div>
+      {/each}
     {:catch rejectedGeneration}
       No Data to display
     {/await}

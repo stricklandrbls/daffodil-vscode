@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { handleFocus, InputProps } from '.'
+  import { InputProps } from '.'
   let {
     id,
     type,
@@ -10,46 +10,33 @@
   }: InputProps = $props()
 
   let thisInputElement = $state<HTMLInputElement>()
-
-  const handleKeyPress = (event: KeyboardEvent) => {
-    switch (event.key) {
-      case 'Enter':
-        const parsedValue = parseInt(thisInputElement!.value)
-        onInputEnter({
-          id,
-          valueStr: thisInputElement!.value,
-          valueInt: Number.isNaN(parsedValue) ? -1 : parsedValue,
-        })
-        break
-    }
-  }
 </script>
 
 {#if type === 'text' || type === 'search'}
-  <span
-    {id}
-    onfocusin={handleFocus}
-    onfocusout={handleFocus}
-    style={`width: ${width}`}
-  >
+  <span {id} style={`width: ${width}`}>
     <span>
       <input
-        class={type}
+        class="custom {type}"
         bind:this={thisInputElement}
         bind:value={valueBind}
         {placeholder}
-        onkeydown={handleKeyPress}
+        oninput={onInputEnter}
       />
     </span>
-    <div>
-      value: {valueBind}
-    </div>
   </span>
 {/if}
 
 <style lang="scss">
   .checkbox {
     width: auto;
+  }
+  span input.custom {
+    width: var(--width, -webkit-fill-available);
+    height: var(--height, 'auto');
+    border-radius: 5px;
+    margin: 1pt 2pt 1pt 2px;
+    padding: 4px;
+    display: inline-block;
   }
   span.input-actions {
     height: 20px;

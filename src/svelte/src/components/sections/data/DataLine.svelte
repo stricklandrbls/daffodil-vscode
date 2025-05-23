@@ -12,9 +12,14 @@
   </div>
 {/if}
 {#each bytes as byte}
-  <div class="byte" id={byte.offsets.viewport.toString()}>
-    {byte.str}
-  </div>
+  {#key byte.isSelected}
+    <div
+      class="byte {byte.isSelected ? 'selected' : ''}"
+      id={byte.offsets.viewport.toString()}
+    >
+      {byte.str}
+    </div>
+  {/key}
 {/each}
 
 <style>

@@ -1,4 +1,3 @@
-export function handleFocus(event: FocusEvent) {}
 export type InputTypes = 'search' | 'text' | 'checkbox'
 export type OnEnterEvent = {
   id: string
@@ -7,7 +6,11 @@ export type OnEnterEvent = {
 }
 export type InputProps = {
   type: InputTypes
-  onInputEnter: (event: OnEnterEvent) => void
+  onInputEnter?: (
+    event: Event & {
+      currentTarget: EventTarget & HTMLInputElement
+    }
+  ) => void
   id: string
   placeholder: string
   width?: string
