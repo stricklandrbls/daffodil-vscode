@@ -1,6 +1,11 @@
 <script lang="ts">
   import { getDataDisplaySettings } from 'utilities'
-  import { Byte, DisplayByte } from '.'
+  import {
+    Byte,
+    DisplayByte,
+    getCurrentByteSelection,
+    getMainViewport,
+  } from '.'
 
   let { lineOffset, bytes }: { lineOffset?: number; bytes: DisplayByte[] } =
     $props()
@@ -12,10 +17,15 @@
   </div>
 {/if}
 {#each bytes as byte}
-  {#key byte.isSelected}
+  {#key byte.isSelected && getCurrentByteSelection().getSelectionType() !== 'single'}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
-      class="byte {byte.isSelected ? 'selected' : ''}"
-      id={byte.offsets.viewport.toString()}
+      class="byte {byte.isSelected
+        ? 'selected'
+        : ''} {getCurrentByteSelection().isIndexSelected(byte.offsets.src)
+        ? 'selecting'
+        : ''}"
+      id={getMainViewport().id + byte.offsets.viewport.toString()}
     >
       {byte.str}
     </div>
@@ -45,6 +55,9 @@
     border-radius: 5px;
     user-select: none;
     width: 100%;
+  }
+  div.byte.selecting {
+    border-color: var(--color-secondary-light);
   }
   div.byte.selected {
     background-color: var(--color-secondary-light);

@@ -4,14 +4,14 @@
     icon,
     text,
     clickCallback,
-    disableIf = () => false,
+    disabled = false,
   }: IconButtonProps = $props()
 </script>
 
-{@render buttonContent({ icon, text, clickCallback, disableIf })}
+{@render buttonContent({ icon, text, clickCallback, disabled })}
 
 {#snippet buttonContent(content: IconButtonProps)}
-  <button onclick={clickCallback} disabled={content.disableIf()}>
+  <button onclick={clickCallback} disabled={content.disabled}>
     <span class="material-symbols-outlined">{icon}</span>
     {text}
   </button>

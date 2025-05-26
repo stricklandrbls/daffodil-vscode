@@ -47,27 +47,49 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_mouse_events_have_key_events -->
 <div
   class="container"
-  onmousedown={(e) => {
-    const target = e.target as HTMLDivElement
-    const targetOffsetId = target.getAttribute('id')
-    if (!targetOffsetId) throw 'Selection is not within the viewport window'
+  onmousedown={getCurrentByteSelection().isActive()
+    ? undefined
+    : (e) => {
+        const target = e.target as HTMLDivElement
+        const targetOffsetId = target.getAttribute('id')?.split('vp')
+        if (!targetOffsetId) throw 'Selection is not within the viewport window'
 
-    const selectedVPOffset =
-      parseInt(targetOffsetId) + viewport.getBoundaries().lower
-    getCurrentByteSelection().setSelected('start', selectedVPOffset)
-  }}
-  onmouseup={(e) => {
-    const target = e.target as HTMLDivElement
-    const targetOffsetId = target.getAttribute('id')
-    if (!targetOffsetId) throw 'Selection is not within the viewport window'
+        const selectedVPOffset =
+          parseInt(targetOffsetId[1]) + viewport.getBoundaries().lower
+        getCurrentByteSelection().setSelected('start', selectedVPOffset)
+      }}
+  onmouseup={getCurrentByteSelection().isActive()
+    ? undefined
+    : (e) => {
+        const target = e.target as HTMLDivElement
+        const targetOffsetId = target.getAttribute('id')?.split('vp')
+        if (!targetOffsetId) throw 'Selection is not within the viewport window'
 
-    const selectedVPOffset =
-      parseInt(targetOffsetId) + viewport.getBoundaries().lower
-    getCurrentByteSelection().setSelected('end', selectedVPOffset)
-  }}
+        const selectedVPOffset =
+          parseInt(targetOffsetId[1]) + viewport.getBoundaries().lower
+        getCurrentByteSelection().setSelected('end', selectedVPOffset)
+      }}
+  onmouseover={getCurrentByteSelection().isActive()
+    ? undefined
+    : (e) => {
+        if (getCurrentByteSelection().isSelectionInProgress()) {
+          const target = e.target as HTMLDivElement
+          const targetOffsetId = target.getAttribute('id')?.split('vp')
+          if (!targetOffsetId)
+            throw 'Selection is not within the viewport window'
+
+          const selectedVPOffset =
+            parseInt(targetOffsetId[1]) + viewport.getBoundaries().lower
+          getCurrentByteSelection().setSelected('add', selectedVPOffset)
+        }
+      }}
 >
+  {@render displayViewport()}
+</div>
+{#snippet displayViewport()}
   {#if dataDisplayPromise != undefined}
     {#await dataDisplayPromise}
       Awaiting Data generation..
@@ -86,7 +108,7 @@
       No Data to display
     {/await}
   {/if}
-</div>
+{/snippet}
 
 <style lang="scss">
   span {

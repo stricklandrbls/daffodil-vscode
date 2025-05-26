@@ -38,3 +38,6 @@ export enum BinaryBytePrefixes {
   'GB',
   'TB',
 }
+
+let saveable = $derived(FileMetricsState.changeCount > 0)
+export const isContentSaveable = () => saveable

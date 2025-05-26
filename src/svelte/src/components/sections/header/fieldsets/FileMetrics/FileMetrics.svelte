@@ -1,18 +1,45 @@
 <script lang="ts">
   import IconButton from '../../../../html/buttons/IconButton.svelte'
   import FlexContainer from '../../../../layout/FlexContainer.svelte'
-  import { FileMetrics_t, getFileMetrics, setFileMetrics } from '.'
+  import {
+    FileMetrics_t,
+    getFileMetrics,
+    isContentSaveable,
+    setFileMetrics,
+  } from '.'
   import ISO6391 from 'iso-639-1'
   import { addMessageListener } from 'utilities/Messenger'
   import { MessageCommand } from 'utilities/message'
   import { humanReadableByteLength } from 'utilities/display.svelte'
-  import { ViewportController } from 'editor_components/data'
+  import { vscode } from 'utilities/vscode'
 
   addMessageListener(MessageCommand.fileInfo, (msg) => {
     const metricsMsg = msg.data.data as FileMetrics_t
     setFileMetrics(metricsMsg)
-    // ViewportController.updateOffsetInfo(metricsMsg.computedFileSize)
   })
+  function saveAs() {
+    vscode.postMessage({
+      command: MessageCommand.saveAs,
+    })
+    // displayOpts = false
+  }
+
+  function save() {
+    vscode.postMessage({
+      command: MessageCommand.save,
+    })
+    // displayOpts = false
+  }
+
+  function toggleSaveDisplay() {
+    // displayOpts = !displayOpts
+    // if (displayOpts) {
+    //   // set displayOpts to false after 10 seconds
+    //   setTimeout(() => {
+    //     displayOpts = false
+    //   }, 10000)
+    // }
+  }
 </script>
 
 <fieldset class="file-metrics">
@@ -39,7 +66,12 @@
     <span>{humanReadableByteLength(getFileMetrics().computedFileSize)}</span>
   </FlexContainer>
   <FlexContainer --dir="row" --align-items="center">
-    <IconButton clickCallback={() => {}} icon="start" text="Save"></IconButton>
+    <IconButton
+      clickCallback={save}
+      icon="start"
+      text="Save"
+      disabled={!isContentSaveable()}
+    ></IconButton>
     <!-- <Button clickCallback={(e)=>{}} description="Save to Disk" dsabled={false} >
             <span slot="left" class="btn-icon material-symbols-outlined">save</span>
             <span slot="default">&nbsp;Save</span>

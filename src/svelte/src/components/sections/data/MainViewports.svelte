@@ -15,6 +15,7 @@
   import FlexContainer from 'layout/FlexContainer.svelte'
   import DataLine from './DataLine.svelte'
   import { getCurrentByteSelection } from './SelectedByte.svelte'
+  import SingleByteEdit from './SingleByteEdit.svelte'
 
   let { children } = $props()
   let lineWidth = $state('100%')
@@ -71,6 +72,9 @@
     </div>
   </div>
   <div class="container">
+    <SingleByteEdit
+      active={getCurrentByteSelection().getSelectionType() === 'single'}
+    />
     <div class="hdr-line">
       <div class="byte-line">
         <DataLine bytes={generate_offset_headers()} />

@@ -23,6 +23,20 @@ const InitialSelectionOffsets: SelectionOffsets = {
   },
 }
 
+export type Actions = 'input' | 'insert-before' | 'insert-after' | 'delete'
+export type ActionElementPosition = {
+  viewportLine: number
+  viewportByteIndex: number
+}
+export type ActionElement = {
+  id: string
+  position: ActionElementPosition
+  HTMLRef?: HTMLDivElement | HTMLInputElement
+  render: boolean
+}
+export type ActionElements = {
+  [k in Actions]: ActionElement
+}
 export function selectionOffsetsToStr(offsets: SelectionOffsets) {
   const { start, end } = offsets
   let ret = {
@@ -65,17 +79,27 @@ export class ByteSelectionData_t {
   private _offsets = $state<SelectionOffsets>(InitialSelectionOffsets)
   private _active = $state(false)
   private _selectionRange = $state<number[]>([])
+  private _selectionType = $state<'single' | 'multi' | 'none'>('none')
+  private _selectionInProgress = $state(false)
 
   public getOffsets = () => this._offsets
   public isActive = () => this._active
+  public getSelectionType = () => this._selectionType
+  public isSelectionInProgress = () => this._selectionInProgress
 
-  public setSelected = (type: 'start' | 'end', vpIndex: number) => {
+  public setSelected = (type: 'start' | 'end' | 'add', vpIndex: number) => {
     switch (type) {
       case 'start':
+        this.clear()
         this._offsets.start.src = vpIndex
+        this._selectionInProgress = true
         break
       case 'end':
+        this._selectionInProgress = false
+        this._active = true
+      case 'add':
         this._offsets.end.unedited.src = vpIndex
+
         break
     }
     this._selectionRange = Array.from(
@@ -84,7 +108,10 @@ export class ByteSelectionData_t {
       },
       (_, i) => this._offsets.start.src + i
     )
-    this._active = true
+    this._selectionType =
+      this._offsets.start.src === this._offsets.end.unedited.src
+        ? 'single'
+        : 'multi'
   }
   public getSelectionRange = () => {
     return typeof this._selectionRange == 'object'
@@ -99,6 +126,7 @@ export class ByteSelectionData_t {
     this._active = false
     this._selectionRange = []
     this._offsets = InitialSelectionOffsets
+    this._selectionType = 'none'
   }
 }
 

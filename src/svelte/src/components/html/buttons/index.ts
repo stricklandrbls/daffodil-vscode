@@ -20,5 +20,5 @@ export type IconButtonProps = {
   clickCallback: () => void
   icon: Icon
   text: string
-  disableIf: () => boolean
+  disabled?: boolean
 }

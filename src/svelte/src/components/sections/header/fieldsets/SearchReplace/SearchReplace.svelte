@@ -50,6 +50,7 @@
       clickCallback={() => {
         ViewportController.seekViewport(getMainViewport(), getSeekToValue())
       }}
+      disabled={seekErr.hasErrored()}
       --width="inherit"
       --height="-webkit-fill-available"
       --font-size="smaller"

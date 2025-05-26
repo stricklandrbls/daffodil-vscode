@@ -6,10 +6,17 @@
   import MainViewports from 'editor_components/data/MainViewports.svelte'
   import {
     getCurrentByteSelection,
+    SelectionOffsets,
     selectionOffsetsToStr,
   } from 'editor_components/data'
   import { seekErr } from 'editor_components/header/fieldsets/SearchReplace'
+  import { isContentSaveable } from 'editor_components/header/fieldsets/FileMetrics'
 
+  let byteSelection = $derived(
+    getCurrentByteSelection().getSelectionType() === 'single'
+      ? getCurrentByteSelection().getOffsets().start.src
+      : -1
+  )
   // <Header /> Required Stores:
   // - ViewportDisplayConfig: For modifying the viewport display in the <Settings> Component
 </script>
@@ -40,6 +47,10 @@
   <div>
     {seekErr.hasErrored() ? seekErr.getValues().errMessage : 'No errors'}
   </div>
+  <div>Content Saveable</div>
+  <div>{isContentSaveable()}</div>
+  <div>Byte Selection</div>
+  <div>{getCurrentByteSelection().getSelectionType()}</div>
 </div>
 
 <style>
