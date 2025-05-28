@@ -79,14 +79,14 @@ limitations under the License.
   const eventDispatcher = createEventDispatcher()
 
   function OFFSET_FETCH_ADJUSTMENT(
-    direction: ViewportScrollDirection,
+    direction: ViewportScrollDirections,
     numLinesToScroll: number
   ) {
     const newLineTopOffset =
       numLinesToScroll * $bytesPerRow + $dataFeedLineTop * $bytesPerRow
     let scroll_count = Math.floor(newLineTopOffset / VIEWPORT_SCROLL_INCREMENT)
 
-    if (direction === ViewportScrollDirection.INCREMENT) {
+    if (direction === 'INCREMENT') {
       const fetchBound =
         viewportData.fileOffset + scroll_count * VIEWPORT_SCROLL_INCREMENT
       if (fetchBound > $fileMetrics.computedSize)
@@ -170,12 +170,17 @@ limitations under the License.
     bytes: Array<ByteValue>
     highlight: 'even' | 'odd'
   }
-
-  enum ViewportScrollDirection {
-    DECREMENT = -1,
-    NONE = 0,
-    INCREMENT = 1,
+  type ViewportScrollDirections = 'DECREMENT' | 'NONE' | 'INCREMENT'
+  const viewportScrollDirection = (delta: number):ViewportScrollDirections  => {
+    if(delta < 0) return 'DECREMENT'
+    if(delta === 0) return 'NONE'
+    return 'INCREMENT'
   }
+  // enum ViewportScrollDirection {
+  //   DECREMENT = -1,
+  //   NONE = 0,
+  //   INCREMENT = 1,
+  // }
 
   let height = `calc(${$dataDislayLineAmount} * 20)px`
   let viewportLines: Array<ViewportLineData> = []
@@ -315,22 +320,21 @@ limitations under the License.
 
     scrollDebounce = setTimeout(() => {
       scrollDebounce = null
-      const direction: ViewportScrollDirection = Math.sign(event.deltaY)
-
-      handle_navigation(direction)
+      
+      handle_navigation(Math.sign(event.deltaY))
     }, DEBOUNCE_TIMEOUT_MS)
   }
 
-  function at_scroll_boundary(direction: ViewportScrollDirection): boolean {
-    return direction === ViewportScrollDirection.DECREMENT
+  function at_scroll_boundary(direction: ViewportScrollDirections): boolean {
+    return direction === 'DECREMENT'
       ? atViewportHead && atFileHead
       : atViewportTail && atFileTail
   }
 
   function direction_of_scroll(
     numLinesToScroll: number
-  ): ViewportScrollDirection {
-    return Math.sign(numLinesToScroll) as ViewportScrollDirection
+  ): ViewportScrollDirections {
+    return viewportScrollDirection(Math.sign(numLinesToScroll))
   }
 
   function handle_navigation(numLinesToScroll: number) {
@@ -361,15 +365,15 @@ limitations under the License.
   }
 
   function at_fetch_boundary(
-    direction: ViewportScrollDirection,
-    linesToMove: number = direction
+    direction: ViewportScrollDirections,
+    linesToMove: number
   ): boolean {
-    if (linesToMove != direction)
-      return direction === ViewportScrollDirection.INCREMENT
+    if (viewportScrollDirection(linesToMove) != direction)
+      return direction === 'INCREMENT'
         ? $dataFeedLineTop + linesToMove >= lineTopMaxViewport && !atFileTail
         : $dataFeedLineTop + linesToMove <= 0 && !atFileHead
 
-    return direction === ViewportScrollDirection.INCREMENT
+    return direction === 'INCREMENT'
       ? atViewportTail && !atFileTail
       : atViewportHead && !atFileHead
   }

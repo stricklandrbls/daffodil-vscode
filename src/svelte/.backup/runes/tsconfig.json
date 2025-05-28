@@ -18,15 +18,39 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "module": "esnext",
-    "moduleResolution": "Node10",
-    "baseUrl": "../../",
-    "target": "es6",
-    "outDir": "out",
-    "lib": ["es6", "es2021", "DOM"],
-    "ignoreDeprecations": "5.0"
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "inlineSources": true,
+    "baseUrl": "./src",
+    "paths": {
+      "utilities": ["utilities"],
+      "layout/*": ["components/layout/*"],
+      "HTMLWrappers/*": ["components/html/*"],
+      "editor_components/*": ["components/sections/*"]
+    },
+    // "allowImportingTsExtensions": true,
+    "target": "ES6",
+    "useDefineForClassFields": true,
+    "module": "CommonJS",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": true,
+    "isolatedModules": true,
+    "outDir": "tsout",
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": false
   },
-  "include": ["src/svelte/src/**/*"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.svelte",
+    "src/tests/**/*.test.ts",
+    ".backup/_Header.svelte",
+    ".backup/_Header.svelte",
+    "src/components/sections/data/.old/ByteDisplay.svelte",
+    "src/components/sections/data/.old/BinaryDisplay.svelte",
+    "src/components/sections/data/.old/DataDisplay.ts",
+    "src/components/sections/data/.old/ViewportDisplay.ts"
+  ],
   "exclude": ["node_modules/*"],
   "strict": true /* enable all strict type-checking options */,
   "noImplicitAny": false,
@@ -35,7 +59,7 @@
   "noImplicitThis": true,
   "inlineSourceMap": false,
   "preserveConstEnums": true,
-  "strictNullChecks": true,
+  "strictNullChecks": false,
   "noUnusedParameters": false,
   "esModuleInterop": true
 }

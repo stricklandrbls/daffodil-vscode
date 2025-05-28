@@ -6,5 +6,6 @@ export default {
   preprocess: vitePreprocess(),
   compilerOptions: {
     css: 'external',
+    runes: false,
   },
 }

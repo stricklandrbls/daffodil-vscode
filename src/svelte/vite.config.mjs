@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import path from 'path'
+import { sveltePreprocess } from 'svelte-preprocess'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -13,7 +14,11 @@ export default defineConfig({
     },
   },
   plugins: [
-    svelte(),
+    sveltePreprocess(),
+    svelte({
+      configFile: './svelte.config.mjs',
+      compilerOptions: { runes: false },
+    }),
     {
       name: 'nonce',
       transformIndexHtml(html) {

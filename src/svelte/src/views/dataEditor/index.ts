@@ -15,10 +15,14 @@
  * limitations under the License.
  */
 
+// import { mount } from 'svelte'
 import App from '../../components/dataEditor.svelte'
 
 const app = new App({
   target: document.body,
 })
 
+// const app = mount(App, {
+//   target: document.getElementById('app')!,
+// })
 export default app

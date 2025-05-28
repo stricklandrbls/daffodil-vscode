@@ -54,7 +54,7 @@
 			"@svelte/html": ["./src/svelte/src/components/html"]
 		}
 	},
-	"include": ["src/**/*"],
+	"include": ["src/**/*", "src/svelte/.backup/runes/webpack.config.mjs", "src/svelte/.backup/runes/tsconfig.json"],
 	"exclude": [
 		"node_modules",
 		"node_modules/svelte",

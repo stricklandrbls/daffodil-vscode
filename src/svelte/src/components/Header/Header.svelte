@@ -25,7 +25,7 @@ limitations under the License.
   import { getContext } from 'svelte'
 
   let hideChildren = false
-  getContext('messageEventListeners').listenFor('')
+  getContext('messageEventListeners')
 </script>
 
 {#if hideChildren}
