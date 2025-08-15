@@ -23,7 +23,7 @@ import { addToAppDataPath, rootPath } from './Extract'
 
 const portDefault = 9000
 const logFileDefault = addToAppDataPath('dataEditor-${omegaEditPort}.log')
-const logLevelDefault = 'info'
+const logLevelDefault = 'debug'
 const checkpointPathDefault = addToAppDataPath(`.checkpoint-${portDefault}`)
 
 export type ConfigJSON = {

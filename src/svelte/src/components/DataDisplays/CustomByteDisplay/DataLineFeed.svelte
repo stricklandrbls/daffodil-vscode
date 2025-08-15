@@ -171,10 +171,15 @@ limitations under the License.
     highlight: 'even' | 'odd'
   }
 
-  enum ViewportScrollDirection {
-    DECREMENT = -1,
-    NONE = 0,
-    INCREMENT = 1,
+  // enum ViewportScrollDirection {
+  //   DECREMENT = -1,
+  //   NONE = 0,
+  //   INCREMENT = 1,
+  // }
+  class ViewportScrollDirection {
+    public static readonly DECREMENT = -1
+    public static readonly NONE = 0
+    public static readonly INCREMENT = 1
   }
 
   let height = `calc(${$dataDislayLineAmount} * 20)px`
@@ -315,7 +320,7 @@ limitations under the License.
 
     scrollDebounce = setTimeout(() => {
       scrollDebounce = null
-      const direction: ViewportScrollDirection = Math.sign(event.deltaY)
+      const direction: number = Math.sign(event.deltaY)
 
       handle_navigation(direction)
     }, DEBOUNCE_TIMEOUT_MS)
@@ -329,8 +334,10 @@ limitations under the License.
 
   function direction_of_scroll(
     numLinesToScroll: number
-  ): ViewportScrollDirection {
-    return Math.sign(numLinesToScroll) as ViewportScrollDirection
+  ): number {
+    if(Math.sign(numLinesToScroll) > 0)  return ViewportScrollDirection.INCREMENT
+    if(Math.sign(numLinesToScroll) < 0)  return ViewportScrollDirection.DECREMENT
+    return ViewportScrollDirection.NONE
   }
 
   function handle_navigation(numLinesToScroll: number) {
@@ -361,7 +368,7 @@ limitations under the License.
   }
 
   function at_fetch_boundary(
-    direction: ViewportScrollDirection,
+    direction: number,
     linesToMove: number = direction
   ): boolean {
     if (linesToMove != direction)

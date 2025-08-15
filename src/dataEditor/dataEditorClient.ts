@@ -282,16 +282,8 @@ export class DataEditorClient implements vscode.Disposable {
         createSessionResponse.hasFileSize()
           ? (createSessionResponse.getFileSize() as number)
           : 0
-    } catch (err) {
-      // Error message obtained from https://github.com/ctc-oss/omega-edit/commit/b85ecc4579a77469bf29181a2e6ab7f839ee8a52#diff-59917b7537d1a13d123e6c53315fd9f8eebb9a037c8e92142b8caefa64c5e1cbR84
-      const isEmojiWindowsError =
-        err ==
-        'createSession error: 13 INTERNAL: Emojis in filenames is not supported on Windows'
-
-      const msg = isEmojiWindowsError
-        ? `Unable to open ${this.fileToEdit}! Data editor doesn't support Emojis in filename on Windows.`
-        : `Failed to create session for ${this.fileToEdit}`
-
+    } catch {
+      const msg = `Failed to create session for ${this.fileToEdit}`
       getLogger().error({
         err: {
           msg: msg,
@@ -299,11 +291,6 @@ export class DataEditorClient implements vscode.Disposable {
         },
       })
       vscode.window.showErrorMessage(msg)
-
-      if (isEmojiWindowsError) {
-        // fine to return early here and not remove session b/c addActiveSession doesn't get called for this error. createSession() errors out.
-        return
-      }
     }
 
     // create the viewport
@@ -930,11 +917,11 @@ async function sendViewportRefresh(
     command: MessageCommand.viewportRefresh,
     data: {
       viewportId: viewportDataResponse.getViewportId(),
-      viewportOffset: viewportDataResponse.getOffset(),
-      viewportLength: viewportDataResponse.getLength(),
-      viewportFollowingByteCount: viewportDataResponse.getFollowingByteCount(),
-      viewportData: viewportDataResponse.getData_asU8(),
-      viewportCapacity: VIEWPORT_CAPACITY_MAX,
+      fileOffset: viewportDataResponse.getOffset(),
+      length: viewportDataResponse.getLength(),
+      bytesLeft: viewportDataResponse.getFollowingByteCount(),
+      data: viewportDataResponse.getData_asU8(),
+      capacity: VIEWPORT_CAPACITY_MAX,
     },
   })
 }
@@ -1125,7 +1112,7 @@ function removeDirectory(dirPath: string): void {
   }
 }
 
-export async function serverStop() {
+async function serverStop() {
   const serverPidFile = getPidFile(omegaEditPort)
   if (fs.existsSync(serverPidFile)) {
     const pid = parseInt(fs.readFileSync(serverPidFile).toString())
@@ -1135,28 +1122,14 @@ export async function serverStop() {
         new Promise((resolve) => {
           setTimeout(() => {
             resolve(true)
-          }, 4000)
+          }, 2000)
         })
       )
       removeDirectory(checkpointPath)
     } else {
-      // Check again if the process has stopped after a short delay
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      if (!(await stopProcessUsingPID(pid))) {
-        vscode.window.showErrorMessage(
-          `Ωedit server on port ${omegaEditPort} with PID ${pid} failed to stop`
-        )
-      } else {
-        vscode.window.setStatusBarMessage(
-          `Ωedit server stopped on port ${omegaEditPort} with PID ${pid}`,
-          new Promise((resolve) => {
-            setTimeout(() => {
-              resolve(true)
-            }, 4000)
-          })
-        )
-        removeDirectory(checkpointPath)
-      }
+      vscode.window.showErrorMessage(
+        `Ωedit server on port ${omegaEditPort} with PID ${pid} failed to stop`
+      )
     }
   }
 }

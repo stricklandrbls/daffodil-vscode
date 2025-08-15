@@ -14,21 +14,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { destroySession } from '@omega-edit/client'
-import { updateHeartbeatInterval } from './heartbeat'
 
-let activeSessions: string[] = []
-
-export function addActiveSession(sessionId: string): void {
-  if (!activeSessions.includes(sessionId)) {
-    activeSessions.push(sessionId)
-    // scale the heartbeat interval based on the number of active sessions to reduce load on the server
-    updateHeartbeatInterval(activeSessions)
-  }
-}
-export async function removeActiveSession(sessionId: string) {
-  const index = activeSessions.indexOf(sessionId)
-  activeSessions.splice(index, 1)
-  updateHeartbeatInterval(activeSessions)
-  await destroySession(sessionId)
-}
+/// <reference types="svelte" />
