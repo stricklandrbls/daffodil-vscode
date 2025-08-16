@@ -15,3 +15,56 @@
  * limitations under the License.
  */
 export * from './dataEditorClient'
+
+import * as vscode from 'vscode'
+import * as editor from './editor'
+
+let Manager: DataEditorManager
+const DataEditorCommands = {
+  standalone: 'extension.data.editor.standalone',
+  debugger: 'extension.data.editor.dfdl',
+}
+
+function RegisterEditorCommands(ctx: vscode.ExtensionContext) {
+  ctx.subscriptions.push(vscode.commands.registerCommand())
+}
+
+export function activate(ctx: vscode.ExtensionContext) {
+  if (Manager.isInitialized()) Manager = new DataEditorManager(ctx)
+
+  // registerAllEditorCommands(ctx)
+  // ctx.subscriptions.push(OmegaEditServerManager.disposeAllServers())
+}
+
+class DataEditorManager implements vscode.Disposable {
+  private editors: editor.DataEditor[] = []
+  private disposables: vscode.Disposable[] = []
+  private initialized: boolean = false
+
+  constructor(readonly ctx: vscode.ExtensionContext) {
+    ctx.subscriptions.push(this)
+
+    RegisterEditor(DefaultEditorCommand)
+    this.initialized = true
+  }
+  dispose(): void {
+    this.editors = []
+    this.disposables.forEach((item) => {
+      item.dispose()
+    })
+  }
+
+  isInitialized(): boolean {
+    return this.initialized
+  }
+
+  async Run<D extends editor.DataEditor>(
+    initializer: editor.DataEditorInitializer<D>
+  ): Promise<void> {
+    return new Promise(async (resolve, reject) => {
+      const editor = await initializer.Initialize(this.ctx)
+      this.editors.push(editor)
+      resolve()
+    })
+  }
+}
