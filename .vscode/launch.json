@@ -29,7 +29,8 @@
 			"outFiles": [
 				"${workspaceFolder}/dist/ext/**/*.js"
 			],
-			"preLaunchTask": "npm: watch"
+			"preLaunchTask": "npm: watch",
+			"smartStep": true
 		},
 		{
 			"name": "Tests",

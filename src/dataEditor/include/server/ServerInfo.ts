@@ -18,7 +18,9 @@
 import * as editor_config from '../../config'
 import * as fs from 'fs'
 import assert from 'assert'
+import net from 'net'
 import { IServerInfo } from '@omega-edit/client'
+import { ServerConnection } from '.'
 
 export class ServerInfo implements IServerInfo {
   serverHostname: string = 'unknown'
@@ -32,8 +34,8 @@ export class ServerInfo implements IServerInfo {
 
 const OMEGA_EDIT_MAX_PORT: number = 65535
 const OMEGA_EDIT_MIN_PORT: number = 1024
-export function configureOmegaEditPort(configVars: editor_config.Config): void {
-  let omegaEditPort = configVars.port
+export function checkOmegaEditPort(conf: editor_config.IConfig): void {
+  let omegaEditPort = conf.port
   if (omegaEditPort === 0) {
     if (
       omegaEditPort <= OMEGA_EDIT_MIN_PORT ||
@@ -43,13 +45,10 @@ export function configureOmegaEditPort(configVars: editor_config.Config): void {
       omegaEditPort = 0
       throw new Error(message)
     }
-    if (!fs.existsSync(configVars.checkpointPath)) {
-      fs.mkdirSync(configVars.checkpointPath, { recursive: true })
+    if (!fs.existsSync(conf.checkpointPath)) {
+      fs.mkdirSync(conf.checkpointPath, { recursive: true })
     }
-    assert(
-      fs.existsSync(configVars.checkpointPath),
-      'checkpoint path does not exist'
-    )
+    assert(fs.existsSync(conf.checkpointPath), 'checkpoint path does not exist')
     assert(omegaEditPort !== 0, 'omegaEditPort is not set')
   }
 }

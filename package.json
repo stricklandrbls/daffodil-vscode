@@ -47,6 +47,7 @@
     "pretest": "yarn compile && yarn webpack",
     "test": "sbt test && yarn test:svelte && node ./out/tests/runTest.js",
     "test:svelte": "mocha -r ts-node/register ./src/svelte/tests/**/*.test.ts",
+    "test:dataeditor-modules": "mocha -r ts-node/register ./src/dataEditor/tests/**/*.test.ts",
     "sbt": "sbt debugger/Universal/packageBin",
     "svelte:check": "svelte-check --tsconfig ./tsconfig.json",
     "update-version": "run-func build/yarn-scripts.ts updateVersion"
@@ -123,7 +124,8 @@
     "onCommand:extension.dfdl-debug.getValidatedTDMLPath",
     "onCommand:extension.dfdl-debug.getValidatedTDMLCopyPath",
     "onCommand:launch.config",
-    "onCommand:extension.data.edit",
+    "onCommand:extension.data.edit.standalone",
+    "onCommand:extension.data.edit.dfdl",
     "onCommand:extension.dfdl-debug.debugLastEditorContents",
     "onView:commandsView"
   ],
@@ -297,7 +299,11 @@
           "when": "resourceLangId == dfdl"
         },
         {
-          "command": "extension.data.edit"
+          "command": "extension.data.edit.standalone"
+        },
+        {
+          "command": "extension.data.edit.dfdl",
+          "when": "debugState == active"
         },
         {
           "command": "extension.dfdl-debug.debugLastEditorContents",
@@ -414,8 +420,13 @@
         "icon": "$(debug-configure)"
       },
       {
-        "command": "extension.data.edit",
-        "title": "Data Editor",
+        "command": "extension.data.edit.standalone",
+        "title": "Data Editor Standalone",
+        "category": "Daffodil Debug"
+      },
+      {
+        "command": "extension.data.edit.dfdl",
+        "title": "Data Editor DFDL Attached",
         "category": "Daffodil Debug"
       },
       {

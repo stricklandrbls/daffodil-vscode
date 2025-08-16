@@ -74,7 +74,7 @@ import {
   MessageLevel,
 } from '../svelte/src/utilities/message'
 import * as editor_config from './config'
-import { configureOmegaEditPort, ServerInfo } from './include/server/ServerInfo'
+import { checkOmegaEditPort, ServerInfo } from './include/server/ServerInfo'
 import { isDFDLDebugSessionActive } from './include/utils'
 import { SvelteWebviewInitializer } from './svelteWebviewInitializer'
 import {
@@ -834,7 +834,7 @@ async function createDataEditorWebviewPanel(
   assert(fs.existsSync(APP_DATA_PATH), 'app data path does not exist')
 
   // make sure the omega edit port is configured
-  configureOmegaEditPort(launchConfigVars)
+  checkOmegaEditPort(launchConfigVars)
   omegaEditPort = launchConfigVars.port
 
   // only start up the server if one is not already running
