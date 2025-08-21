@@ -69,6 +69,12 @@ limitations under the License.
     categoryCSSSelectors,
   } from '../../../utilities/highlights'
   import { bytesPerRow } from '../../../stores'
+  import { addVarToDebug, getDebugVarContext } from '../../Debug'
+  const debugVarsCtx = getDebugVarContext()
+  debugVarsCtx.add(
+    { id: 'bytes / row', valueStr: () => $bytesPerRow.toString() },
+    { id: 'feed line top', valueStr: () => $dataFeedLineTop.toString() }
+  )
   export let awaitViewportSeek: boolean
   export let dataRadix: RadixValues = 16
   export let addressRadix: RadixValues = 16
@@ -332,11 +338,11 @@ limitations under the License.
       : atViewportTail && atFileTail
   }
 
-  function direction_of_scroll(
-    numLinesToScroll: number
-  ): number {
-    if(Math.sign(numLinesToScroll) > 0)  return ViewportScrollDirection.INCREMENT
-    if(Math.sign(numLinesToScroll) < 0)  return ViewportScrollDirection.DECREMENT
+  function direction_of_scroll(numLinesToScroll: number): number {
+    if (Math.sign(numLinesToScroll) > 0)
+      return ViewportScrollDirection.INCREMENT
+    if (Math.sign(numLinesToScroll) < 0)
+      return ViewportScrollDirection.DECREMENT
     return ViewportScrollDirection.NONE
   }
 

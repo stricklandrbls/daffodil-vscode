@@ -29,7 +29,11 @@ limitations under the License.
   import { UIThemeCSSClass } from '../../../utilities/colorScheme'
   import ViewportVisibilityIcon from '../../Icons/ViewportVisibilityIcon.svelte'
   import { MessageCommand } from '../../../utilities/message'
-
+  import { addVarToDebug, debugVars } from '../../Debug/'
+  addVarToDebug(
+    { id: 'display radix', valueStr: () => $displayRadix.toString() },
+    { id: 'editor encoding', valueStr: () => $editorEncoding }
+  )
   window.addEventListener('message', (msg) => {
     switch (msg.data.command) {
       case MessageCommand.fileInfo: {

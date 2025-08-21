@@ -29,7 +29,7 @@
     "check-missing-license-data": "run-func build/yarn-scripts.ts checkMissingLicenseData",
     "check-license-compatibility": "run-func build/yarn-scripts.ts checkLicenseCompatibility",
     "clean": "yarn nodeclean && yarn scalaclean",
-    "precompile": "yarn nodeclean && yarn gen-version-ts && yarn webpack:svelte && yarn compile:tdmlEditorJS",
+    "precompile": "yarn nodeclean && yarn gen-version-ts && yarn svelte:build && yarn compile:tdmlEditorJS",
     "compile": "tsc -p ./ && yarn sbt",
     "lint": "yarn prettier src -c",
     "lint:fix": "yarn prettier src -w",
@@ -42,7 +42,7 @@
     "webpack:pkg": "webpack --mode production --config ./webpack/ext-package.webpack.config.js",
     "webpack:svelte": "webpack -c ./src/svelte/webpack.config.js",
     "compile:tdmlEditorJS": "esbuild src/tdmlEditor/webview/webview.js --outfile=dist/views/tdmlEditor/webview/webview.js --bundle --platform=node --format=cjs",
-    "prepackage": "yarn install && yarn compile && yarn webpack:pkg",
+    "prepackage": "yarn install && yarn compile && yarn vite:pkg",
     "package": "run-func build/yarn-scripts.ts package && yarn --cwd dist/package install && yarn --cwd dist/package vsce package --out ../../",
     "pretest": "yarn compile && yarn webpack",
     "test": "sbt test && yarn test:svelte && node ./out/tests/runTest.js",
@@ -51,6 +51,7 @@
     "svelte:check": "svelte-check --tsconfig ./src/svelte/.kit/tsconfig.json",
     "svelte:build": "cd src/svelte && vite build --config ./vite.config.mjs --mode development --emptyOutDir",
     "svelte:test": "tsc src/svelte/src/tests/driver.ts && node src/svelte/src/tests/driver.js",
+    "vite:pkg": "yarn vite build -c ./webpack/ext-dev.vite.config.mjs",
     "update-version": "run-func build/yarn-scripts.ts updateVersion"
   },
   "dependencies": {

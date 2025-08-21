@@ -15,17 +15,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
+  import { createEventDispatcher} from 'svelte'
   import { bytesPerRow } from '../../../stores'
   const eventDispatcher = createEventDispatcher()
 
   export let totalLines = 0
   export let currentLine = 0
   export let fileOffset = 0
-  export let percentageTraversed
+  export let percentageTraversed: number
   export let maxDisplayLines = 20
   export let selectionActive: boolean
 
+  
   let indicatorContainer: HTMLElement
   let indicatorClickDisabled: boolean = false
 

@@ -35,8 +35,8 @@ const serverPackage = `daffodil-debugger-${daffodilVersion}-${pkg_version}`
 const zipFilePath = path.resolve(
   `debugger/target/universal/${serverPackage}.zip`
 )
-
-module.exports = /** @type WebpackConfig */ {
+/** @type WebpackConfig */
+module.exports = {
   context: path.dirname(__dirname),
   mode: 'none', // this leaves the source code as close as possible to the original (when packaging we set this to 'production')
   target: 'node', // vscode extensions run in a Node.js-context

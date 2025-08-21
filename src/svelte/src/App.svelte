@@ -64,6 +64,8 @@ limitations under the License.
   } from './components/DataDisplays/CustomByteDisplay/BinaryData'
   import { byte_count_divisible_offset } from './utilities/display'
   import Help from './components/layouts/Help.svelte'
+  import Debug from './components/Debug/Debug.svelte'
+  import { addVarToDebug } from './components/Debug'
 
   $: $UIThemeCSSClass = $darkUITheme ? CSSThemeClass.Dark : CSSThemeClass.Light
 
@@ -299,14 +301,13 @@ limitations under the License.
         break
       case MessageCommand.viewportRefresh:
         // the viewport has been refreshed, so the editor views need to be updated
-        const {data, fileOffset, length, bytesLeft} = msg.data.data
+        const { data, fileOffset, length, bytesLeft } = msg.data.data
         $viewport = {
           data: data,
           fileOffset: fileOffset,
           length: length,
           bytesLeft: bytesLeft,
         } as ViewportData_t
-
         break
     }
   })
@@ -314,25 +315,28 @@ limitations under the License.
 
 <svelte:window on:keydown|nonpassive={handleKeyBind} />
 <!-- <body class={$UIThemeCSSClass}> -->
-  <Header
-    on:clearChangeStack={clearChangeStack}
-    on:seek={seekEventHandler}
-    on:clearDataDisplays={clearDataDisplays}
-    on:redo={redo}
-    on:undo={undo}
-  />
+<Debug>
+<Header
+  on:clearChangeStack={clearChangeStack}
+  on:seek={seekEventHandler}
+  on:clearDataDisplays={clearDataDisplays}
+  on:redo={redo}
+  on:undo={undo}
+/>
 
-  <Main
-    on:clearDataDisplays={clearDataDisplays}
-    on:applyChanges={custom_apply_changes}
-    on:handleEditorEvent={handleEditorEvent}
-    on:traverse-file={traversalEventHandler}
-    on:seek={seekEventHandler}
-  />
+<Main
+  on:clearDataDisplays={clearDataDisplays}
+  on:applyChanges={custom_apply_changes}
+  on:handleEditorEvent={handleEditorEvent}
+  on:traverse-file={traversalEventHandler}
+  on:seek={seekEventHandler}
+/>
 
-  <Help />
-  <hr />
-  <ServerMetrics />
+<Help />
+<hr />
+</Debug>
+<ServerMetrics />
+
 <!-- </body> -->
 
 <!-- svelte-ignore css-unused-selector -->
