@@ -14,6 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import XDGAppPaths from 'xdg-app-paths'
+import fs from 'fs'
+import assert from 'assert'
+
+export const APP_DATA_PATH: string = XDGAppPaths({ name: 'omega_edit' }).data()
+
+export function verifyAppDataDir() {
+  fs.mkdirSync(APP_DATA_PATH, { recursive: true })
+  assert(fs.existsSync(APP_DATA_PATH), 'app data path does not exist')
+}
+
 export * from './Config'
 export * from './Extract'
 export {

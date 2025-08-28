@@ -14,13 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { getServerHeartbeat, IServerHeartbeat } from '@omega-edit/client'
+import {
+  getServerHeartbeat,
+  getServerHeartbeatFor,
+  IHeartbeatReceiver,
+  IServerHeartbeat,
+} from '@omega-edit/client'
 import { HeartbeatInfo } from './HeartBeatInfo'
 
 const HEARTBEAT_INTERVAL_MS: number = 1000 // 1 second (1000 ms)
 let heartbeatInfo: IServerHeartbeat = new HeartbeatInfo()
 let getHeartbeatIntervalId: NodeJS.Timeout | number | undefined = undefined
 
+const Receivers: IHeartbeatReceiver[] = []
+
+export function registerReceiver(recv: IHeartbeatReceiver) {
+  if (getHeartbeatIntervalId) {
+    clearInterval(getHeartbeatIntervalId)
+  }
+  getHeartbeatIntervalId = setInterval(async () => {
+    const intervalTimeMs =
+      Receivers.length > 0
+        ? HEARTBEAT_INTERVAL_MS * Receivers.length
+        : HEARTBEAT_INTERVAL_MS
+
+    heartbeatInfo = await getServerHeartbeatFor(recv, intervalTimeMs)
+    Receivers.forEach((hbRxer) => {
+      hbRxer.process(heartbeatInfo)
+    })
+  })
+  Receivers.push(recv)
+}
 export function updateHeartbeatInterval(activeSessions: string[]) {
   if (getHeartbeatIntervalId) {
     clearInterval(getHeartbeatIntervalId)
