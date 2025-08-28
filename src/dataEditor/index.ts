@@ -14,4 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export * from './dataEditorClient'
+import * as vscode from 'vscode'
+import {
+  DataEditorActivationCommand,
+  StandaloneEditorActivation,
+} from './editors/dataEditor'
+import { DataEditor } from './editors'
+export function activate(ctx: vscode.ExtensionContext) {
+  DataEditor.setExtensionCtx(ctx)
+
+  ctx.subscriptions.push(
+    vscode.commands.registerCommand(
+      StandaloneEditorActivation.command,
+      StandaloneEditorActivation.callback
+      // StandaloneEditorActivation.callback // Need ctx passed in
+    )
+  )
+}
+// type CommandArgs<T> =
+//   T extends DataEditorActivationCommand<infer Args> ? Args : never
+// function executeEditorCommand<A extends keyof DataEditorCommand>(
+//   cmd: DataEditorCommand[A],
+//   args: CommandArgs<A>
+// ) {
+//   vscode.commands.executeCommand()
+// }
+// DataEditorCommands.execute()
