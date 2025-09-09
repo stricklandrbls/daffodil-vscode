@@ -104,9 +104,6 @@
     "vite": "^6.2.0",
     "vscode-extension-tester": "5.9.1"
   },
-  "extensionDependencies": [
-    "wmanth.jar-viewer"
-  ],
   "main": "./dist/ext/extension.js",
   "activationEvents": [
     "onLanguage:dfdl",
