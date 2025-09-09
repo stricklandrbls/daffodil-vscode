@@ -40,6 +40,7 @@ import {
   getServerInfo,
   getViewportData,
   IOFlags,
+  IServerHeartbeat,
   modifyViewport,
   numAscii,
   profileSession,
@@ -81,7 +82,7 @@ import {
   addActiveSession,
   removeActiveSession,
 } from './include/server/Sessions'
-import { getCurrentHeartbeatInfo } from './include/server/heartbeat'
+import { registerRecevier } from './include/server/heartbeat'
 
 // *****************************************************************************
 // global constants
@@ -96,7 +97,7 @@ export const APP_DATA_PATH: string = XDGAppPaths({ name: 'omega_edit' }).data()
 // file-scoped constants
 // *****************************************************************************
 
-const HEARTBEAT_INTERVAL_MS: number = 1000 // 1 second (1000 ms)
+// const HEARTBEAT_INTERVAL_MS: number = 1000 // 1 second (1000 ms)
 const MAX_LOG_FILES: number = 5 // Maximum number of log files to keep TODO: make this configurable
 
 // *****************************************************************************
@@ -212,10 +213,18 @@ export class DataEditorClient implements vscode.Disposable {
       }
     }
     // send and initial heartbeat, then send the heartbeat to the webview at regular intervals
-    await this.sendHeartbeat()
-    this.sendHeartbeatIntervalId = setInterval(() => {
-      this.sendHeartbeat()
-    }, HEARTBEAT_INTERVAL_MS)
+    this.disposables.push(
+      registerRecevier({
+        id: this.omegaSessionId,
+        process: (hb) => {
+          this.sendHeartbeat(hb)
+        },
+      })
+    )
+    // await this.sendHeartbeat()
+    // this.sendHeartbeatIntervalId = setInterval(() => {
+    //   this.sendHeartbeat()
+    // }, HEARTBEAT_INTERVAL_MS)
   }
 
   sessionId(): string {
@@ -338,18 +347,16 @@ export class DataEditorClient implements vscode.Disposable {
     })
   }
 
-  private async sendHeartbeat() {
-    const heartbeatInfo = getCurrentHeartbeatInfo()
-
+  private async sendHeartbeat(hb: IServerHeartbeat) {
     await this.panel.webview.postMessage({
       command: MessageCommand.heartbeat,
       data: {
-        latency: heartbeatInfo.latency,
+        latency: hb.latency,
         omegaEditPort: this.configVars.port,
-        serverCpuLoadAverage: heartbeatInfo.serverCpuLoadAverage,
-        serverUptime: heartbeatInfo.serverUptime,
-        serverUsedMemory: heartbeatInfo.serverUsedMemory,
-        sessionCount: heartbeatInfo.sessionCount,
+        serverCpuLoadAverage: hb.serverCpuLoadAverage,
+        serverUptime: hb.serverUptime,
+        serverUsedMemory: hb.serverUsedMemory,
+        sessionCount: hb.sessionCount,
         serverInfo: {
           omegaEditPort: this.configVars.port,
           serverVersion: serverInfo.serverVersion,

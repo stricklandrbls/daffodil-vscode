@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 import { destroySession, getSessionCount } from '@omega-edit/client'
-import { updateHeartbeatInterval } from './heartbeat'
 import { serverStop } from '../../dataEditorClient'
 
 let activeSessions: string[] = []
@@ -24,13 +23,13 @@ export function addActiveSession(sessionId: string): void {
   if (!activeSessions.includes(sessionId)) {
     activeSessions.push(sessionId)
     // scale the heartbeat interval based on the number of active sessions to reduce load on the server
-    updateHeartbeatInterval(activeSessions)
+    // updateHeartbeatInterval(activeSessions)
   }
 }
 export async function removeActiveSession(sessionId: string) {
   const index = activeSessions.indexOf(sessionId)
   activeSessions.splice(index, 1)
-  updateHeartbeatInterval(activeSessions)
+  // updateHeartbeatInterval(activeSessions)
   await destroySession(sessionId)
 
   // Only stop the server if there are no active sessions
