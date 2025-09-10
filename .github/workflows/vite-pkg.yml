@@ -1,0 +1,42 @@
+name: Vite_Pkg
+on: 
+  push:
+    branches: ["stricklandrbls/dataeditor-svelte5-update"]
+  status: 
+jobs:
+  package-debug:
+    name: Package Project w/ Debugged Data Editor
+    strategy:
+      matrix:
+        java_distribution: [temurin]
+        java_version: [8, 11, 17]
+        os: [macos-13, ubuntu-22.04, windows-2022]
+        node: ["20.19.4", "22.14.0"]
+        vscode: ["1.90.0", "stable"] # v1.90.0 is the first version of VSCode to use Node 20
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out Repo
+        uses: actions/checkout@v5.0.0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4.7.1
+        with:
+          distribution: ${{ matrix.java_distribution }}
+          java-version: ${{ matrix.java_version }}
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install node dependencies
+        run: yarn install
+
+      - name: Build w/ Svelte5 Debug Flag
+        run: yarn watch && [[ $? -ne 0 ]] && { exit 1 ; }
