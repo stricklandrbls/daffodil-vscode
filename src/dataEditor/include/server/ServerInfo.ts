@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-import * as editor_config from '../../config'
 import * as fs from 'fs'
 import assert from 'assert'
 import { IServerInfo } from '@omega-edit/client'
+import { IConfig } from '../../config'
 
 export class ServerInfo implements IServerInfo {
   serverHostname: string = 'unknown'
@@ -32,7 +32,7 @@ export class ServerInfo implements IServerInfo {
 
 const OMEGA_EDIT_MAX_PORT: number = 65535
 const OMEGA_EDIT_MIN_PORT: number = 1024
-export function configureOmegaEditPort(configVars: editor_config.Config): void {
+export function configureOmegaEditConfig(configVars: IConfig): IConfig {
   let omegaEditPort = configVars.port
   if (omegaEditPort === 0) {
     if (
@@ -52,5 +52,11 @@ export function configureOmegaEditPort(configVars: editor_config.Config): void {
     )
     assert(omegaEditPort !== 0, 'omegaEditPort is not set')
   }
+  return {
+    checkpointPath: configVars.checkpointPath,
+    logFile: configVars.logFile,
+    logLevel: configVars.logLevel,
+    port: omegaEditPort,
+  } as IConfig
 }
 export type ServerStopPredicate = (context?: any) => boolean
