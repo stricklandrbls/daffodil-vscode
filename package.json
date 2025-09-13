@@ -673,7 +673,7 @@
                           "critical"
                         ],
                         "description": "Data Editor Logging Level",
-                        "default": "info"
+                        "default": "debug"
                       }
                     },
                     "default": {

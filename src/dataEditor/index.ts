@@ -14,4 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export * from './dataEditorClient'
+import * as vscode from 'vscode'
+import { DataEditorCtx } from './manager'
+import { initLogger } from './logger'
+export function activate(ctx: vscode.ExtensionContext) {
+  initLogger()
+  DataEditorCtx.Manager(ctx)
+}

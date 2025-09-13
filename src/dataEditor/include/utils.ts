@@ -14,6 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {
+  CreateSessionResponse,
+  getByteOrderMark,
+  getContentType,
+  getLanguage,
+} from '@omega-edit/client'
 import { debug } from 'vscode'
 
 export function isDFDLDebugSessionActive(): boolean {
@@ -21,4 +27,55 @@ export function isDFDLDebugSessionActive(): boolean {
     debug.activeDebugSession !== undefined &&
     debug.activeDebugSession.type === 'dfdl'
   )
+}
+
+export type ServerFileMetrics = {
+  byteOrderMark: string
+  changeCount: number
+  computedFileSize: number
+  diskFileSize: number
+  fileName: string
+  language: string
+  type: string
+  undoCount: number
+}
+export const ServerFileMetrics: ServerFileMetrics = {
+  byteOrderMark: '',
+  changeCount: 0,
+  computedFileSize: 0,
+  diskFileSize: 0,
+  fileName: '',
+  language: '',
+  type: '',
+  undoCount: 0,
+}
+
+export async function getServerFileMetrics(
+  sessionResponse: CreateSessionResponse,
+  sessionId?: string
+): Promise<ServerFileMetrics> {
+  return new Promise(async (res, rej) => {
+    const id = sessionId ? sessionId : sessionResponse.getSessionId()
+    const data: ServerFileMetrics = ServerFileMetrics
+    data.diskFileSize = data.computedFileSize = sessionResponse.hasFileSize()
+      ? sessionResponse.getFileSize()!
+      : 0
+    await getContentType(id, 0, Math.min(1024, data.computedFileSize)).then(
+      (typeResp) => {
+        data.type = typeResp.getContentType()
+      }
+    )
+    await getByteOrderMark(id).then((bomResp) => {
+      data.byteOrderMark = bomResp.getByteOrderMark()
+    })
+    await getLanguage(
+      id,
+      0,
+      Math.min(1024, data.computedFileSize),
+      data.byteOrderMark
+    ).then((resp) => {
+      data.language = resp.getLanguage()
+    })
+    res(data)
+  })
 }
