@@ -31,14 +31,14 @@
     // "allowImportingTsExtensions": true,
     "target": "ES6",
     "useDefineForClassFields": true,
-    "module": "commonjs",
+    "module": "esnext",
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": true,
     "isolatedModules": true,
     "outDir": "tsout",
     "esModuleInterop": true,
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": false
   },
   "include": ["src/**/*.ts", "src/**/*.svelte", "src/tests/**/*.test.ts"],
   "exclude": ["node_modules/*"],

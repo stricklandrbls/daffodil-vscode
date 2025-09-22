@@ -81,7 +81,11 @@ const scalaclean = () => {
 
 function watch() {
   concurrently(
-    ['yarn watch:vite-dev', 'yarn watch:svelte', 'yarn watch:tdmlEditorJS'],
+    [
+      { command: 'yarn vite:dev', env: { DEBUG_DATAEDITOR: 'on' } },
+      'yarn watch:svelte',
+      'yarn watch:tdmlEditorJS',
+    ],
     {
       killOthersOn: ['failure'],
       restartTries: 1,

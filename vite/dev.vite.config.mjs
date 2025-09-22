@@ -78,42 +78,37 @@ function unzipAfterBuild() {
 
 const shouldMinify = process.env.MINIFY === '1'
 
-export default defineConfig(({ mode }) => {
-  return {
-    resolve: {
-      preserveSymlinks: true,
-      alias: {
-        ...localModuleAliases,
+export default defineConfig({
+  resolve: {
+    preserveSymlinks: true,
+    alias: {
+      ...localModuleAliases,
+    },
+    extensions: ['.ts', '.js'],
+  },
+
+  build: {
+    sourcemap: true,
+
+    minify: shouldMinify ? 'esbuild' : false,
+    outDir: path.resolve(__dirname, '../dist/ext'),
+    emptyOutDir: true,
+
+    rollupOptions: {
+      input: {
+        extension: path.resolve(__dirname, '../src/adapter/extension.ts'),
       },
-      extensions: ['.ts', '.js'],
+      external: ['vscode', ...builtinModules, /^node:.*/],
+      output: {
+        entryFileNames: 'extension.js',
+        format: 'cjs',
+        exports: 'auto',
+      },
+      preserveEntrySignatures: 'strict',
     },
 
-    build: {
-      sourcemap: true,
+    target: 'node18',
+  },
 
-      minify: shouldMinify ? 'esbuild' : false,
-      outDir: path.resolve(__dirname, '../dist/ext'),
-      emptyOutDir: true,
-
-      rollupOptions: {
-        input: {
-          extension: path.resolve(__dirname, '../src/adapter/extension.ts'),
-        },
-        external: ['vscode', ...builtinModules, /^node:.*/],
-        output: {
-          entryFileNames: 'extension.js',
-          format: 'cjs',
-          exports: 'auto',
-        },
-        preserveEntrySignatures: 'strict',
-      },
-
-      target: 'node18',
-    },
-
-    plugins: [
-      unzipAfterBuild(),
-      // svelte({ configFile: './src/svelte/svelte.config.mjs' }),
-    ],
-  }
+  plugins: [unzipAfterBuild(), svelte({ onwarn: undefined })],
 })

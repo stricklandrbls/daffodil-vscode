@@ -20,17 +20,19 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 import path from 'path'
 import strip from 'rollup-plugin-strip-code'
 import { fileURLToPath } from 'url'
-import { loadEnvFile } from 'node:process'
-import * as fs from 'fs'
-const r = (p) => fileURLToPath(new URL(p, import.meta.url))
-const envFilePath = path.resolve(__dirname, '.env')
 
+const r = (p) => fileURLToPath(new URL(p, import.meta.url))
+const stripDebugPlugin = (debugEnabled) => {
+  return {
+    name: 'strip-debug-component-usage',
+    apply: 'build',
+    async transform(code, index) {},
+  }
+}
 /** @type {import('vite').UserConfig} */
 export default defineConfig(({ mode }) => {
-  if (fs.existsSync(envFilePath)) loadEnvFile(envFilePath)
   const debugDataEditor =
-    process.env.DEBUG_DATAEDITOR == 'on' && mode === 'development'
-
+    process.env.DEBUG_DATAEDITOR === 'on' && mode === 'development'
   return {
     define: {
       __DEBUG_DATAEDITOR__: JSON.stringify(debugDataEditor),
@@ -49,7 +51,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     plugins: [
-      svelte({ configFile: './svelte.config.mjs' }),
+      svelte({ onwarn: undefined }),
       {
         name: 'nonce',
         transformIndexHtml(html) {

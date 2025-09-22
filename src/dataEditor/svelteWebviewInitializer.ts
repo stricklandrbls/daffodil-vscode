@@ -17,6 +17,7 @@
 
 import * as vscode from 'vscode'
 import * as fs from 'fs'
+// import path from 'path'
 export class SvelteWebviewInitializer {
   constructor(private context: vscode.ExtensionContext) {}
 
@@ -32,14 +33,10 @@ export class SvelteWebviewInitializer {
     webView: vscode.Webview
   ): string {
     const nonce = this.getNonce()
-
-    const scriptUri = this.getResourceUri('js', context, (uri) => {
-      return webView.asWebviewUri(uri)
-    })
-    const stylesUri = this.getResourceUri('css', context, (uri) => {
-      return webView.asWebviewUri(uri)
-    })
-    const indexPath = this.getResourceUri('index', context)
+    const scriptUri = webView.asWebviewUri(
+      this.getSvelteAppDistributionIndexJsUri(context, view)
+    )
+    const stylesUri = webView.asWebviewUri(this.getStylesUri(context))
     let indexHTML = this.injectNonce(
       this.getIndexHTML(context),
       webView,
@@ -47,7 +44,16 @@ export class SvelteWebviewInitializer {
       scriptUri
     )!
     indexHTML = fs
-      .readFileSync(indexPath!.fsPath, 'utf-8')
+      .readFileSync(
+        vscode.Uri.joinPath(
+          context.extensionUri,
+          'dist',
+          'views',
+          view,
+          'index.html'
+        ).path,
+        'utf-8'
+      )
       .replace(/src="\.\/index.js"/, `src="${scriptUri.toString()}"`)
       .replace(/href="\.\/style.css"/, `href="${stylesUri.toString()}"`)
       .replaceAll(/nonce="__nonce__"/g, `nonce="${nonce}""`)
@@ -116,41 +122,28 @@ export class SvelteWebviewInitializer {
     return vscode.Uri.joinPath(context.extensionUri, 'dist', 'views', view)
   }
 
-  private getResourceUri(
-    item: 'index' | 'css' | 'js',
+  // get the svelte app distribution index.js uri
+  private getSvelteAppDistributionIndexJsUri(
     context: vscode.ExtensionContext,
-    uriDecorator?: (uriPath: vscode.Uri) => any
-  ): vscode.Uri
+    view: string
+  ): vscode.Uri {
+    return vscode.Uri.joinPath(
+      context.extensionUri,
+      'dist',
+      'views',
+      view,
+      'index.js'
+    )
+  }
 
-  private getResourceUri<R>(
-    item: 'index' | 'css' | 'js',
-    context: vscode.ExtensionContext,
-    uriDecorator: (uriPath: vscode.Uri) => R
-  ): R
-  private getResourceUri<R>(
-    item: 'index' | 'css' | 'js',
-    context: vscode.ExtensionContext,
-    uriDecorator?: (uriPath: vscode.Uri) => R
-  ): vscode.Uri | R {
-    let resourceFile = ''
-    switch (item) {
-      case 'index':
-        resourceFile = item + '.html'
-        break
-      case 'css':
-        resourceFile = 'style.css'
-        break
-      case 'js':
-        resourceFile = 'index.js'
-        break
-    }
-    let ret = vscode.Uri.joinPath(
+  // get the styles uri
+  private getStylesUri(context: vscode.ExtensionContext): vscode.Uri {
+    return vscode.Uri.joinPath(
       context.extensionUri,
       'dist',
       'views',
       'dataEditor',
-      resourceFile
+      'style.css'
     )
-    return uriDecorator ? uriDecorator(ret) : ret
   }
 }

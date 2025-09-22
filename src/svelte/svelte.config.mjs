@@ -16,21 +16,10 @@
  */
 
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
-import { sveltePreprocess } from 'svelte-preprocess'
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-  preprocess: [
-    vitePreprocess(),
-    sveltePreprocess({ sourceMap: true, typescript: true }),
-  ],
+export default {
+  preprocess: vitePreprocess(),
   compilerOptions: {
     css: 'external',
   },
-  onwarn(w, defaultHandler) {
-    if (w.code.includes('a11y')) return
-    defaultHandler(w)
-  },
 }
-
-export default config
