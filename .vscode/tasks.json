@@ -33,6 +33,14 @@
             "script": "watch",
             "group": "build",
             "isBackground": true,
+        },
+        {
+            "label": "watch:svelte-tests",
+            "type": "shell",
+            "command": "yarn concurrently --kill-others --names \"CJS,ESM\" --prefix-colors \"blue,magenta\" \"yarn test:svelte\"",
+            "group": "test",
+            "isBackground": true,
+            "problemMatcher": [],
         }
     ]
 }

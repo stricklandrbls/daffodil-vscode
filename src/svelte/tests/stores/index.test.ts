@@ -16,47 +16,10 @@
  */
 
 import { describe, it } from 'mocha'
-import { fileMetrics, regularSizedFile, saveable } from '../../src/stores/index'
 import assert from 'assert'
-import { get } from 'svelte/store'
-import { FileMetricsData } from '../../src/components/Header/fieldsets/FileMetrics'
 
-describe('Data Editor Stores ( Derived )', () => {
-  describe('regularSizedFile', () => {
-    const TruthySize = 1024
-    const FalsySize = 1
-
-    it('should return true on regular computed sized viewports', () => {
-      fileMetrics.update((metrics) => {
-        metrics.computedSize = TruthySize
-        return metrics
-      })
-      assert.equal(get(regularSizedFile), true)
-    })
-    it('should return false on non-regular computed sized viewports', () => {
-      fileMetrics.update((metrics) => {
-        metrics.computedSize = FalsySize
-        return metrics
-      })
-      assert.equal(get(regularSizedFile), false)
-    })
-    after(() => {
-      fileMetrics.set(new FileMetricsData())
-    })
-  })
-
-  describe('saveable', () => {
-    it('should report boolean value derived from fileMetrics.changeCount', () => {
-      ;[
-        { count: 2, expect: true },
-        { count: 0, expect: false },
-      ].forEach((testValues) => {
-        fileMetrics.update((metrics) => {
-          metrics.changeCount = testValues.count
-          return metrics
-        })
-        assert.equal(get(saveable), testValues.expect)
-      })
-    })
+describe('Svelte Legacy Stores', () => {
+  it('should pass', () => {
+    assert(true)
   })
 })

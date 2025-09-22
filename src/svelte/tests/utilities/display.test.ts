@@ -16,8 +16,8 @@
  */
 
 import { describe, it } from 'mocha'
-import { radixBytePad, radixToString } from '../../src/utilities/display'
-import { RadixValues } from '../../src/stores/configuration'
+import { radixBytePad, radixToString } from '../../src/utilities/display.ts'
+import { RadixValues } from '../../src/stores/configuration.ts'
 import assert from 'assert'
 
 describe('Display Functions', () => {
