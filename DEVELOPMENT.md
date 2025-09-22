@@ -64,10 +64,12 @@
       - [Yarn Test Issues](#yarn-test-issues)
         - [Data Editor Opens Test Case Failing](#data-editor-opens-test-case-failing)
         - [TLS Certificate Issues](#tls-certificate-issues)
+        - [Tests Failing When Connected Through SSH](#tests-failing-when-connected-through-ssh)
       - [Debugging Issues](#debugging-issues)
         - [SELinux Port Functionality](#selinux-port-functionality)
         - [Windows Yarn Test Window Not Loading Extensions](#windows-yarn-test-window-not-loading-extensions)
         - [Variable Values Not Displaying in VSCode Debugger](#variable-values-not-displaying-in-vscode-debugger)
+        - [Using Symlink Paths](#using-symlink-paths)
       - [Re-trying Verification After Errors](#re-trying-verification-after-errors)
   - [Building the Documentation](#building-the-documentation)
     - [Install Pandoc](#install-pandoc)
@@ -219,11 +221,13 @@ There are multiple ways of opening the repository that you have cloned in VSCode
 
 #### Recommended VSCode Extensions
 
-Upon opening, VSCode may prompt you to install recommended extensions. Go ahead and accept installing the recommended extensions.
+Upon opening, VSCode may prompt you to install recommended extensions. Below are the following reasons why you may need to install the recommended extensions.
 
-- [Prettier - Code formatter - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+- [Prettier - Code formatter - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) - Code formatter needed to pass CI formatting checks for PRs
 
-- [JAR Viewer - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=wmanth.jar-viewer)
+- [JAR Viewer - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=wmanth.jar-viewer) - DFDL schema files can be packed in jar files when passed to Daffodil. This extension allows the debugger to show these schema files while stepping through them.
+
+- [Highlight Matching Tag - Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=vincaslt.highlight-matching-tag) - Convenience extension to better highlight opening and closing tags in DFDL schema files
 
 ### Verifying Setup Can Build
 
@@ -472,6 +476,10 @@ node ./out/tests/runTest.js --disable_cert_verification
 
 **WARNING:** Do not `export NODE_TLS_REJECT_UNAUTHORIZED=0` into your environment as it will disable TLS certificate verification on _all_ node HTTPS connections done in that shell session.
 
+##### Tests Failing When Connected Through SSH
+
+Unit tests may not work when connected through SSH.
+
 #### Debugging Issues
 
 ##### SELinux Port Functionality
@@ -520,6 +528,10 @@ When debugging in VSCode, if you're noticing that it's not possible to view vari
 
 the yarn script `"vite:dev"`, under `"scripts"` in `package.json`, should be utilized for building the
 extension for debugging capabilities.
+
+##### Using Symlink Paths
+
+Another important issue to note when choosing working directories is that VSCode, like many IDEs, seems to not like projects that are on paths reachable via symlinks. Using symlinks in paths is highly likely to cause problems and thus should be avoided.
 
 #### Re-trying Verification After Errors
 
