@@ -1,60 +1,28 @@
-import * as Attributes from '../../src/utilities/ByteCategories/BitAttribute.ts'
+// import * as Attributes from '../../src/utilities/ByteCategories/index.ts'
 import { describe, it } from 'mocha'
 import assert from 'assert'
+import {
+  type Attribute,
+  ViewportBitAttributes,
+} from '../../src/utilities/ByteCategories/index.ts'
 
-const IsSelected: Attributes.Attribute<number> = {
+const IsSelected: Attribute<number> = {
   attributeValue: (): number => {
     return 0b01
   },
 }
-const SearchResultAttribute: Attributes.Attribute<number> = {
+const SelectedCSS: Attribute<string> = {
+  attributeValue: function (): string {
+    return 'selected'
+  }
+}
+
+const SearchResultAttribute: Attribute<number> = {
   attributeValue: (): number => {
     return 0b10
   },
 }
 
-class BitApplicator implements Attributes.AttributeApplicator<Uint8Array> {
-  bitPos: number
-  bitLength: number
-
-  constructor(bitPos: number, bitLength: number) {}
-  apply<T>(
-    attribute: Attributes.Attribute<T extends number ? T : never>,
-    to: Uint8Array<ArrayBufferLike>
-  ): void {
-    to.forEach((val, i) => {
-      to[i] = (val | attribute.attributeValue()) << this.bitPos
-    })
-  }
-  clear<T>(
-    attribute: Attributes.Attribute<T extends number ? T : never>,
-    to: Uint8Array
-  ) {
-    to.forEach((val, i) => {
-      to[i] = (val & ~attribute.attributeValue()) << this.bitPos
-    })
-  }
-}
-type AttributeRange = { from: number; to: number }
-class ViewportBitAttributes {
-  group1 = new BitApplicator(0, 2)
-  data = new Uint8Array(32)
-  setAttribute(attribute: Attributes.Attribute<number>, range: AttributeRange) {
-    this.group1.apply(attribute, this.data.subarray(range.from, range.to + 1))
-  }
-  removeAttribute(
-    attribute: Attributes.Attribute<number>,
-    range?: AttributeRange
-  ) {
-    range
-      ? this.group1.clear(
-          attribute,
-          this.data.subarray(range.from, range.to + 1)
-        )
-      : this.group1.clear(attribute, this.data.subarray(0))
-  }
-  removeAll(attribute: Attributes.Attribute<number>) {}
-}
 const mockSelection = (from: number, to: number) => {
   return { from, to }
 }
@@ -68,6 +36,7 @@ describe('Viewport Bit Attributes', () => {
       assert.equal(val, 0b1)
     })
   })
+
   it('Should be able to applied multiple attributes', () => {
     const searchIndicies = { from: 2, to: 8 }
     VPAttributes.setAttribute(SearchResultAttribute, {
@@ -88,6 +57,7 @@ describe('Viewport Bit Attributes', () => {
         )
     })
   })
+
   it('Should clear a specific attribute while retaining others', () => {
     const clearIndicies = { from: 0, to: 32 }
     VPAttributes.removeAttribute(IsSelected)
@@ -95,6 +65,7 @@ describe('Viewport Bit Attributes', () => {
       assert.equal(val, val & ~0b1, i.toString())
     })
   })
+
   it('Should be able to clear an attribute with a range', () => {
     const clear = { from: 2, to: 4 }
     VPAttributes.removeAttribute(SearchResultAttribute, clear)
@@ -103,4 +74,25 @@ describe('Viewport Bit Attributes', () => {
     })
   })
   it('Should define a value characteristic for a given type', () => {})
+})
+
+interface AttributeProcessor<T, R>{
+  
+}
+interface AttributeFilter<T>{
+  matches(val: T, value: Attribute<T>): boolean
+}
+const SelectedFilter: AttributeFilter<number> = {
+  matches: function (val: number, value: Attribute<number>): boolean {
+    return val == value.attributeValue()
+  }
+}
+describe("Attribute Processor", ()=>{
+  const VPAttributes = new ViewportBitAttributes()
+  it("Should read bit attributes and output css attributes", ()=>{
+    VPAttributes.setAttribute(IsSelected, {from: 0, to: 8})
+    VPAttributes.data.subarray(0, 16).forEach((val, i) =>{
+
+    })
+  })
 })
