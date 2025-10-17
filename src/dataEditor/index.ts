@@ -14,10 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import { DataEditorFactory } from './editor/DataEditorFactory'
+import { DataEditorManager } from './manager'
 import * as vscode from 'vscode'
-import { DataEditorCtx } from './manager'
-import { initLogger } from './logger'
+
 export function activate(ctx: vscode.ExtensionContext) {
-  initLogger()
-  DataEditorCtx.Manager(ctx)
+  const factory = new DataEditorFactory()
+  const manager = new DataEditorManager(factory)
+
+  manager.registerCommands(ctx)
+
+  // ctx.subscriptions.push(
+  //   vscode.debug.onDidStartDebugSession((session)=>{
+  //     manager.handleDebugSession()
+  //   })
+  // )
 }
