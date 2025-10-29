@@ -16,3 +16,13 @@
  */
 
 /// <reference types="svelte" />
+import UiToEditorMsg from '../dataEditor/message/messages' 
+export {}
+interface DataEditorAPI{
+  createMessage<K in keyof 
+}
+declare global{
+  interface Window{
+    dataeditor: 
+  }
+}

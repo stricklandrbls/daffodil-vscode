@@ -65,6 +65,8 @@ limitations under the License.
   import { byte_count_divisible_offset } from './utilities/display'
   import Help from './components/layouts/Help.svelte'
 
+  $: $UIThemeCSSClass = $darkUITheme ? CSSThemeClass.Dark : CSSThemeClass.Light
+
   function requestEditedData() {
     if ($requestable) {
       vscode.postMessage({
@@ -294,9 +296,6 @@ limitations under the License.
 
       case MessageCommand.setUITheme:
         $darkUITheme = msg.data.theme === 2
-        $UIThemeCSSClass = $darkUITheme
-          ? CSSThemeClass.Dark
-          : CSSThemeClass.Light
         break
       case MessageCommand.viewportRefresh:
         // the viewport has been refreshed, so the editor views need to be updated

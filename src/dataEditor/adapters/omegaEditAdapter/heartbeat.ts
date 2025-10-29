@@ -14,17 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { IServerHeartbeat } from '@omega-edit/client'
+import {
+  getServerHeartbeat,
+  IServerHeartbeat,
+  IServerInfo,
+} from '@omega-edit/client'
 
-export class HeartbeatInfo implements IServerHeartbeat {
-  omegaEditPort: number = 0 // Ωedit server port
-  latency: number = 0 // latency in ms
-  serverCommittedMemory: number = 0 // committed memory in bytes
-  serverCpuCount: number = 0 // cpu count
-  serverCpuLoadAverage: number = 0 // cpu load average
-  serverMaxMemory: number = 0 // max memory in bytes
-  serverTimestamp: number = 0 // timestamp in ms
-  serverUptime: number = 0 // uptime in ms
-  serverUsedMemory: number = 0 // used memory in bytes
-  sessionCount: number = 0 // session count
+const HEARTBEAT_INTERVAL_MS: number = 1000 // 1 second (1000 ms)
+
+let getHeartbeatIntervalId: NodeJS.Timeout | number | undefined = undefined
+let currentHeartbeat: IServerHeartbeat | undefined = undefined
+
+export function updateHeartbeatInterval(activeSessions: string[]) {
+  if (getHeartbeatIntervalId) {
+    clearInterval(getHeartbeatIntervalId)
+  }
+  getHeartbeatIntervalId =
+    activeSessions.length > 0
+      ? setInterval(async () => {
+          currentHeartbeat = await getServerHeartbeat(
+            activeSessions,
+            HEARTBEAT_INTERVAL_MS * activeSessions.length
+          )
+        })
+      : undefined
+}
+export function getCurrentHeartbeatInfo() {
+  return currentHeartbeat
 }
