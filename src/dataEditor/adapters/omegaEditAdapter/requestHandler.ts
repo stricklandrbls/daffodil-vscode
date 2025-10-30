@@ -1,25 +1,14 @@
 import {
-  ServiceRequestKeys,
-  RequestMap,
-  ResponseMap,
+  ServiceRequestTypes,
+  ServiceResponseTypes,
+  IServiceRequestHandler,
 } from 'dataEditor/service/requestHandler'
 
-export type OmegaEditRequests = {
+export interface OmegaEditRequests extends ServiceRequestTypes {
   Profile: { offset: number; length: number }
   DestroySession: { id: string }
 }
-export type OmegaEditResponses = {
+export interface OmegaEditResponses extends ServiceResponseTypes {
   Profile: { request: { offset: number }; response: { data: number[] } }
   DestroySession: never
-}
-
-export function handleRequest<
-  K extends ServiceRequestKeys | keyof OmegaEditRequests,
->(
-  type: K,
-  request: RequestMap<OmegaEditRequests>[K]
-): K extends ServiceRequestKeys | keyof OmegaEditResponses
-  ? Promise<ResponseMap<OmegaEditResponses>[K]>
-  : never {
-  throw new Error('Method not implemented.')
 }

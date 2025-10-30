@@ -1,5 +1,10 @@
 import * as vscode from 'vscode'
-import { EditorToUi, ExtensionMsgCommands, UiToEditor } from './messages'
+import {
+  EditorToUi,
+  ExtensionMsgCommands,
+  UiToEditor,
+  UiToEditorMsgs,
+} from './messages'
 import { MappedType } from 'dataEditor/service/requestHandler'
 import {
   OmegaEditRequests,
@@ -12,7 +17,9 @@ export type EditorToUIHandler = (m: EditorToUi) => Thenable<boolean>
 
 export interface MessageBus<In, Out> {
   post(message: Out): void
-  onMessage(handler: (msg: In) => Promise<void>): () => void // unsubscribe
+  onMessage(
+    handler: <K extends keyof In>(type: K, content: In[K]) => Promise<void>
+  ): () => void // unsubscribe
 }
 
 // Implementations contain member for sending content when processed.
@@ -34,16 +41,19 @@ export interface ServiceBus<
 }
 
 // Extension host side (Editor <-> Webview)
-export class WebviewBusHost implements MessageBus<UiToEditor, EditorToUi> {
+export class WebviewBusHost implements MessageBus<UiToEditorMsgs, EditorToUi> {
   private disposable?: vscode.Disposable
   constructor(private readonly panel: vscode.WebviewPanel) {}
   onMessage(
-    handler: (msg: { [K in keyof UiToEditor]: UiToEditor[K] }) => Promise<void>
+    handler: <K extends keyof UiToEditorMsgs>(
+      type: K,
+      msg: UiToEditorMsgs[K]
+    ) => Promise<void>
   ): () => void {
     // unsubscribe
 
     this.panel.webview.onDidReceiveMessage((msg) => {
-      handler(msg)
+      handler(msg.type, msg.content)
     })
 
     return () => {

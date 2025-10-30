@@ -3,6 +3,7 @@ import {
   replaceOneSession,
   searchSession,
 } from '@omega-edit/client'
+import { ExtensionMsgCommands } from 'dataEditor/message/messages'
 export type LookupOptions = {
   caseInsensitive: boolean
   reverse: boolean
@@ -11,8 +12,13 @@ export type LookupOptions = {
   limit?: number
 }
 export type SearchOptions = LookupOptions & {
-  data: Buffer<ArrayBufferLike>
   encoding: BufferEncoding
+  searchStr: string | Uint8Array
+  is_case_insensitive?: boolean
+  is_reverse?: boolean
+  offset?: number
+  length?: number
+  limit?: number
 }
 export type ReplaceOptions = LookupOptions & {
   pattern: Uint8Array | string
@@ -36,122 +42,36 @@ type ReadResponse = {
   data: Uint8Array
   capacity: number
 }
-export enum ServiceRequests {
-  'Read',
-  'Save',
-  'Write',
-  'Undo',
-  'Redo',
-  'Search',
-  'Replace',
-  'FillData',
-}
-export type ServiceRequestKeys =
-  | 'Read'
-  | 'Save'
-  | 'Write'
-  | 'Undo'
-  | 'Redo'
-  | 'Search'
-  | 'Replace'
-  | 'FillData'
-
-// export type RequestMap<Keys extends ServiceRequestKeys> = {
-//   [K in Keys]: ServiceRequestTypes[K]
-// }
 export interface ServiceRequestTypes {
-  Read: ReadRequest
-  Save: { method: 'as' | undefined }
-  Write: never
-  Undo: { method: 'all' | 'last' }
-  Redo: never
-  Search: SearchOptions
-  Replace: ReplaceOptions
-  FillData: FillDataOptions
-}
-export type BaseRequestMap = {
-  [K in ServiceRequestKeys]: ServiceRequestTypes[K]
-}
-export type BaseResponseMap = {
-  [K in ServiceRequestKeys]: ServiceResponseTypes[K]
+  read: ReadRequest
+  applyChanges: never
+  undo: { method: 'all' | 'last' }
+  redo: never
+  search: SearchOptions
+  replace: ReplaceOptions
+  fillData: FillDataOptions
+  clearChanges: never
 }
 export type MappedType = { [K: string]: any }
-export type ResponseMap<M extends MappedType> = BaseResponseMap & M
-export type RequestMap<M extends MappedType> = BaseRequestMap & M
 // const fn = <K extends keyof RequestMap<TestMap>>(t: K, req: RequestMap<TestMap>[K]): Promise<ResponseMap<TestMap>[K]>=>{throw ''}
 
 export interface ServiceResponseTypes {
-  Read: ReadResponse
-  Save: boolean
-  Write: never
-  Undo: boolean
-  Redo: never
-  Search: number[]
-  Replace: number
-  FillData: { bytes: Uint8Array; byteStr: string }
+  read: ReadResponse
+  applyChanges: never
+  undo: boolean
+  redo: never
+  search: number[]
+  replace: number
+  fillData: { bytes: Uint8Array; byteStr: string }
+  clearChanges: never
 }
-
-export abstract class ServiceRequestHandler<
-  ReqMap extends { [K: string]: any },
-  ResMap extends { [K: string]: any },
-> {
-  abstract request<K extends keyof RequestMap<ReqMap>>(
+export interface IServiceRequestHandler {
+  request<K extends keyof ServiceRequestTypes>(
     type: K,
-    request: RequestMap<ReqMap>[K]
-  ): K extends keyof ResponseMap<ResMap>
-    ? Promise<ResponseMap<ResMap>[K]>
-    : never
+    data: ServiceRequestTypes[K]
+  ): Promise<ServiceResponseTypes[K]>
+  canHandle(type: string): boolean
+  getRequestType<K extends keyof ServiceRequestTypes>(
+    type: K
+  ): ServiceRequestTypes[K]
 }
-export class BaseRequestHandler extends ServiceRequestHandler<
-  MappedType,
-  MappedType
-> {
-  request<K extends string | number>(
-    type: K,
-    request: RequestMap<MappedType>[K]
-  ): K extends string | number ? Promise<ResponseMap<MappedType>[K]> : never {
-    throw new Error('Method not implemented.')
-  }
-}
-// export interface ServiceRequestTypes {
-//   Read: { request: ReadRequest; response: ReadResponse }
-//   Save: { request: { method: 'as' | undefined }; response: boolean }
-//   Write: { request: never; response: never }
-//   Undo: { request: { method: 'all' | 'last' }; response: boolean }
-//   Redo: { request: never; response: boolean }
-//   Search: { request: SearchOptions; response: number[] }
-//   Replace: { request: ReplaceOptions; response: number }
-//   FillData: {
-//     request: FillDataOptions
-//     response: { bytes: Uint8Array; byteStr: string }
-//   }
-// }
-
-// export type ServiceRequests =
-//   | 'Read'
-//   | 'Save'
-//   | 'Write'
-//   | 'Undo'
-//   | 'Redo'
-//   | 'Search'
-//   | 'Replace'
-//   | 'FillData'
-// export type ServiceRequestMap = {[K in keyof ServiceRequests]: ServiceResponseKeys[K]['payload']}
-// export type ServiceRequestKeys =
-//   | {type: ServiceRequests., payload: ReadRequest}
-//   | {type: 'Save', payload:  { method: 'as' | undefined}}
-//   | {type: 'Write', payload: never}
-//   | {type: 'Undo', payload: { method: 'all' | 'last' }}
-//   | {type: 'Redo', payload: never}
-//   | {type: 'Search', payload: SearchOptions}
-//   | {type: 'Replace', payload: ReplaceOptions}
-//   | {type: 'FillData', payload: FillDataOptions}
-// export type ServiceResponseKeys =
-//   | {type: 'Read', payload: ReadResponse}
-//   | {type: 'Save', payload:  boolean}
-//   | {type: 'Write', payload: never}
-//   | {type: 'Undo', payload: boolean}
-//   | {type: 'Redo', payload: never}
-//   | {type: 'Search', payload: number[]}
-//   | {type: 'Replace', payload: number}
-//   | {type: 'FillData', payload: { bytes: Uint8Array; byteStr: string }}

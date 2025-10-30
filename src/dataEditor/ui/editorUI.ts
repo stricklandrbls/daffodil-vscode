@@ -1,8 +1,14 @@
 import { MessageBus } from 'dataEditor/message/messageBus'
-import { UiToEditor, EditorToUi } from 'dataEditor/message/messages'
+import {
+  UiToEditor,
+  EditorToUi,
+  UiToEditorMsg,
+  UiToEditorMsgs,
+  ExtensionMsgCommands,
+} from 'dataEditor/message/messages'
 
 export interface EditorUI {
-  attach(bus: MessageBus<UiToEditor, EditorToUi>): void
+  attach(bus: MessageBus<ExtensionMsgCommands, EditorToUi>): void
   detach(): void
   notify(msg: EditorToUi): void // Editor -> UI push
 }

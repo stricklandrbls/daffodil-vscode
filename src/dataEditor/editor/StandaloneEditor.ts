@@ -1,20 +1,84 @@
 import { MessageBus } from 'dataEditor/message/messageBus'
-import { UiToEditor, EditorToUi } from 'dataEditor/message/messages'
+import {
+  UiToEditor,
+  EditorToUi,
+  UiToEditorMsg,
+  UiToEditorMsgs,
+  UiToEditorMsgId,
+  ExtensionMsgCommands,
+} from 'dataEditor/message/messages'
 import { DataEditorService } from 'dataEditor/service/editorService'
 import { EditorUI } from 'dataEditor/ui/editorUI'
-import { BaseHandler, IDataEditor } from './AbstractEditor'
+import { IDataEditor } from './AbstractEditor'
 import { EditorType } from '.'
 import { DataEditorArgMap } from './editorRegistry'
-
+import * as vscode from 'vscode'
+import {
+  IServiceRequestHandler,
+  ServiceRequestTypes,
+} from 'dataEditor/service/requestHandler'
+interface SInMsgs extends UiToEditorMsgs {
+  standaloneOnly: { type: 'standalone' }
+}
 export class StandaloneDataEditor extends IDataEditor {
-  protected processUICommand(cmd: UiToEditor) {
-    throw new Error('Method not implemented.')
+  protected async serviceConnect(): Promise<IServiceRequestHandler> {
+    let statusBarIntervalId: NodeJS.Timeout | undefined = undefined
+    const statusBarItem = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Left
+    )
+    this.opts.service.on('status', (msg) => {
+      clearInterval(statusBarIntervalId)
+
+      statusBarIntervalId = showServiceStatus(msg, statusBarItem)
+    })
+    this.opts.service.on('connected', (info) => {
+      clearInterval(statusBarIntervalId)
+    })
+    this.opts.service.on('error', (err) => {
+      clearInterval(statusBarIntervalId)
+    })
+    return new Promise(async (res, rej) => {
+      res(await this.opts.service.connect())
+    })
+  }
+  protected messageHandler<K extends keyof ExtensionMsgCommands>(
+    type: K,
+    msg: ExtensionMsgCommands[K],
+    isServiceRequestable: boolean
+  ): Promise<any> {
+    return new Promise((res, rej) => {
+      if (isServiceRequestable) {
+        switch (type as keyof ServiceRequestTypes) {
+          case 'read':
+            this.serviceRequestHandler?.request(
+              'read',
+              msg as ServiceRequestTypes['read']
+            )
+            res(undefined)
+          case 'applyChanges':
+            res(undefined)
+          case 'clearChanges':
+            res(undefined)
+          case 'fillData':
+            res(undefined)
+          case 'redo':
+            res(undefined)
+          case 'replace':
+            res(undefined)
+          case 'search':
+            res(undefined)
+          case 'undo':
+            res(undefined)
+        }
+      } else {
+      }
+    })
   }
   constructor(
     config: DataEditorArgMap[EditorType.Standalone],
     service: DataEditorService,
     ui: EditorUI,
-    bus: MessageBus<UiToEditor, EditorToUi>
+    bus: MessageBus<ExtensionMsgCommands, EditorToUi>
   ) {
     super({
       config,
@@ -23,14 +87,28 @@ export class StandaloneDataEditor extends IDataEditor {
       bus,
     })
   }
-  open(): Promise<void> {
-    throw new Error('Method not implemented.')
-  }
-  close(): Promise<void> {
-    throw new Error('Method not implemented.')
+}
+
+class StandaloneMessageHandlers {
+  cmdFnMap: { [K: string]: (msg: UiToEditorMsg) => Promise<any> } = {}
+  handle<K extends UiToEditorMsg>(msg: K) {
+    const {} = msg
   }
 }
 
-class StandaloneMessageHandlers extends BaseHandler {
-  handle<K extends keyof UiToEditor>(msg: UiToEditor[K]) {}
+function showServiceStatus(
+  msg: string,
+  statusBarItem: vscode.StatusBarItem
+): NodeJS.Timeout {
+  statusBarItem.text = msg
+  statusBarItem.show()
+  let animationFrame = 0
+  const animationInterval = 400 // ms per frame
+  const animationFrames = ['', '.', '..', '...']
+  const animationIntervalId = setInterval(() => {
+    statusBarItem.text = `${msg} ${
+      animationFrames[++animationFrame % animationFrames.length]
+    }`
+  }, animationInterval)
+  return animationIntervalId
 }

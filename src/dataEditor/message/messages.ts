@@ -45,10 +45,6 @@ export interface UiToEditor {
     overwriteOnly?: boolean
   }
 }
-// export type UiToEditor =
-//   | { type: 'RequestBytes'; offset: number; length: number }
-//   | { type: 'WriteBytes'; offset: number; data: Uint8Array }
-//   | { type: 'Ping' }
 
 export type EditorToUi =
   | { type: 'Notify'; kind: Notification; payload?: unknown }
@@ -81,6 +77,50 @@ export enum MessageCommand {
   undoChange,
   updateLogicalDisplay,
   viewportRefresh,
+}
+export type UiToEditorMsgId =
+  | 'ClearChanges'
+  | 'ApplyChanges'
+  | 'EditorOnChange'
+  | 'Profile'
+  | 'RequestEditedData'
+  | 'Save'
+  | 'SaveAs'
+  | 'SaveSegment'
+  | 'Search'
+  | 'Replace'
+export interface UiToEditorMsgs {
+  ClearChanges: {}
+  ApplyChanges: {
+    editMode: 'single' | 'multi'
+    encoding: BufferEncoding
+    selectionData: string
+  }
+  EditorOnChange: { start: number; length: number }
+  Profile: {}
+  RequestEditedData: {}
+  Save: {}
+  SaveAs: {}
+  SaveSegment: { offset: number; length: number }
+  Search: {
+    encoding: BufferEncoding
+    searchStr: string | Uint8Array
+    is_case_insensitive?: boolean
+    is_reverse?: boolean
+    offset?: number
+    length?: number
+    limit?: number
+  }
+  Replace: {
+    encoding: BufferEncoding
+    searchStr: string | Uint8Array
+    is_case_insensitive?: boolean
+    is_reverse?: boolean
+    offset?: number
+    length?: number
+    limit?: number
+    overwriteOnly?: boolean
+  }
 }
 export type UiToEditorMsg =
   | { clearChanges: {} }
@@ -126,6 +166,16 @@ export type UiToEditorMsg =
         overwriteOnly?: boolean
       }
     }
+
+export interface DataEditorAPI {
+  createMessage<K extends UiToEditorMsg>(type: K)
+}
+const t: DataEditorAPI = {
+  createMessage: function <K extends UiToEditorMsg>(type: K) {
+    throw new Error('Function not implemented.')
+  },
+}
+
 export interface ExtensionMsgCommands {
   clearChanges: {}
   applyChanges: {
@@ -134,13 +184,14 @@ export interface ExtensionMsgCommands {
     edited_segment: Uint8Array
   }
   editorOnChange: {
+    // extension
     editMode: 'single' | 'multi'
     encoding: BufferEncoding
     selectionData: string
   }
-  fileInfo: {}
-  heartbeat: {}
-  profile: { start: number; length: number }
+  fileInfo: {} // service
+  heartbeat: {} // service
+  profile: { start: number; length: number } // service
   redoChange: {}
   replaceResults: {}
   requestEditedData: {}

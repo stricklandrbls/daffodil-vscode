@@ -1,18 +1,12 @@
 import { SvelteUIAdapter } from 'dataEditor/adapters/svelteUIAdapter'
-import {
-  MessageBus,
-  OmegaEditServiceBus,
-  WebviewBusHost,
-} from 'dataEditor/message/messageBus'
-import { UiToEditor, EditorToUi } from 'dataEditor/message/messages'
+import { MessageBus } from 'dataEditor/message/messageBus'
+import { EditorToUi, UiToEditorMsgs } from 'dataEditor/message/messages'
 import { DataEditorService } from 'dataEditor/service/editorService'
-import { DataEditor } from './DataEditor'
 import { EditorUI } from 'dataEditor/ui/editorUI'
 import { OmegaEditorAdapter } from 'dataEditor/adapters/omegaEditAdapter/omegaEditAdapter'
 import { EditorType } from '.'
 import { DataEditorConfig } from 'dataEditor/config'
 import { OmegaEditSession } from 'dataEditor/adapters/omegaEditAdapter/sessions'
-import { OmegaEditRequests } from 'dataEditor/adapters/omegaEditAdapter/requestHandler'
 import { DataEditorRegistry } from './editorRegistry'
 import { IDataEditor } from './AbstractEditor'
 
@@ -29,7 +23,7 @@ export class DataEditorFactory {
   async create(
     type: EditorType,
     cfg: DataEditorConfig,
-    bus: MessageBus<UiToEditor, EditorToUi>
+    bus: MessageBus<UiToEditorMsgs, EditorToUi>
   ): Promise<IDataEditor> {
     // parse vscode config json for loglevel
     let service: DataEditorService
@@ -37,7 +31,6 @@ export class DataEditorFactory {
       service = this.opts.makeService?.(cfg)
     } else {
       service = new OmegaEditorAdapter(cfg, this.opts.vendor)
-      const reqh = (await service.getServiceHandler()) as OmegaEditSession
       //   serviceBus.send((type, response) => {})
     }
     const ui = this.opts.makeUI?.() ?? new SvelteUIAdapter()

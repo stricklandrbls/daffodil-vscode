@@ -6,17 +6,11 @@ import {
   IServerHeartbeat,
 } from '@omega-edit/client'
 import {
-  RequestMap,
-  ResponseMap,
-  ServiceRequestHandler,
-  ServiceRequestKeys,
+  IServiceRequestHandler,
+  ServiceRequestTypes,
 } from 'dataEditor/service/requestHandler'
 import { updateHeartbeatInterval } from './heartbeat'
-import {
-  handleRequest,
-  OmegaEditRequests,
-  OmegaEditResponses,
-} from './requestHandler'
+import { OmegaEditRequests, OmegaEditResponses } from './requestHandler'
 
 export interface SessionCreateOpts {
   targetFile: string
@@ -75,23 +69,26 @@ class OmegaEditorSessionManager {
 }
 const SessionManager = new OmegaEditorSessionManager()
 
-export class OmegaEditSession extends ServiceRequestHandler<
-  OmegaEditRequests,
-  OmegaEditResponses
-> {
-  request<K extends ServiceRequestKeys | keyof OmegaEditRequests>(
-    type: K,
-    request: RequestMap<OmegaEditRequests>[K]
-  ): K extends ServiceRequestKeys | keyof OmegaEditResponses
-    ? Promise<ResponseMap<OmegaEditResponses>[K]>
-    : never {
-    return handleRequest(type, request)
-  }
+export class OmegaEditSession implements IServiceRequestHandler {
   constructor(
     readonly id: string,
     readonly fileMetrics: SessionStaticFileMetrics
-  ) {
-    super()
+  ) {}
+  getRequestType<K extends keyof OmegaEditRequests>(
+    type: K
+  ): OmegaEditRequests[K] {
+    return {} as OmegaEditRequests[K]
+  }
+  canHandle(type: string): boolean {
+    return Object.keys({} as OmegaEditRequests).includes(type)
+  }
+  request<K extends keyof OmegaEditRequests>(
+    type: K,
+    data: OmegaEditRequests[K]
+  ): K extends keyof OmegaEditResponses
+    ? Promise<OmegaEditResponses[K]>
+    : never {
+    throw new Error('Method not implemented.')
   }
 }
 

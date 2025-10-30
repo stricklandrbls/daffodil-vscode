@@ -1,23 +1,16 @@
 // src/adapters/omega/OmegaServiceAdapter.ts
 
-import {
-  getServerInfo,
-  IServerHeartbeat,
-  IServerInfo,
-  startServer,
-} from '@omega-edit/client'
+import { getServerInfo, IServerInfo, startServer } from '@omega-edit/client'
 import { APP_DATA_PATH, DataEditorConfig } from 'dataEditor/config'
 import { generateLogbackConfigFile } from 'dataEditor/logs'
 import {
   DataEditorService,
   EditorServiceEvents,
-  HeartbeatFn,
 } from 'dataEditor/service/editorService'
 import EventEmitter from 'events'
 import { Socket } from 'net'
 import path from 'path'
 import { OmegaEditSession, sessionCreate } from './sessions'
-import { ServiceRequestHandler } from 'dataEditor/service/requestHandler'
 
 export type OmegaEditConfigProvider = () => DataEditorConfig &
   OmegaEditServiceConfig
@@ -38,7 +31,32 @@ export class OmegaEditorAdapter implements DataEditorService {
     throw new Error('Method not implemented.')
   }
   connect(): Promise<OmegaEditSession> {
-    throw new Error('Method not implemented.')
+    return new Promise(async (res) => {
+      this.eventEmitter.emit(
+        'status',
+        `Conencting to Ωedit server on port ${this.cfg.port}`
+      )
+
+      this.serverPid = await startService({
+        ...this.cfg,
+      }).catch((err) => {
+        this.eventEmitter.emit('error', err)
+        return -1
+      })
+
+      const serverInfo = await testServiceConnection().catch((err) => {
+        this.eventEmitter.emit('error', err)
+        return undefined
+      })
+      const session = await sessionCreate({ ...this.cfg })
+      this.connected = true
+      this.eventEmitter.emit('connected', {
+        hostname: this.cfg.hostname,
+        port: this.cfg.port,
+      })
+
+      res(session)
+    })
   }
 
   test<T extends { data: number }>(): Promise<string> {

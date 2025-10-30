@@ -1,5 +1,9 @@
 import { MessageBus } from 'dataEditor/message/messageBus'
-import { UiToEditor, EditorToUi } from 'dataEditor/message/messages'
+import {
+  UiToEditor,
+  EditorToUi,
+  UiToEditorMsgs,
+} from 'dataEditor/message/messages'
 import { DataEditorService } from 'dataEditor/service/editorService'
 import { EditorUI } from 'dataEditor/ui/editorUI'
 import { IDataEditor } from './AbstractEditor'
@@ -14,7 +18,7 @@ export interface DataEditorConstructor<K extends EditorType> {
     config: DataEditorArgMap[K],
     service: DataEditorService,
     ui: EditorUI,
-    bus: MessageBus<UiToEditor, EditorToUi>
+    bus: MessageBus<UiToEditorMsgs, EditorToUi>
   ): IDataEditor
 }
 
