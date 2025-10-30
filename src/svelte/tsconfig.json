@@ -41,7 +41,7 @@
     "verbatimModuleSyntax": true,
     "preserveSymlinks": true
   },
-  "include": ["src/**/*.ts", "src/**/*.svelte", "src/tests/**/*.test.ts"],
+  "include": ["src/**/*.ts", "src/**/*.svelte", "src/tests/**/*.test.ts", "src/global.d.ts"],
   "exclude": ["node_modules/*"],
   "strict": true /* enable all strict type-checking options */,
   "noImplicitAny": false,

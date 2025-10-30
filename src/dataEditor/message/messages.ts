@@ -82,6 +82,50 @@ export enum MessageCommand {
   updateLogicalDisplay,
   viewportRefresh,
 }
+export type UiToEditorMsgId =
+  | 'clearChanges'
+  | 'applyChanges'
+  | 'editorOnChange'
+  | 'profile'
+  | 'requestEditedData'
+  | 'save'
+  | 'saveAs'
+  | 'saveSegment'
+  | 'search'
+  | 'replace'
+export interface UiToEditorMsgs {
+  clearChanges: {}
+  applyChanges: {
+    editMode: 'single' | 'multi'
+    encoding: BufferEncoding
+    selectionData: string
+  }
+  editorOnChange: { start: number; length: number }
+  profile: {}
+  requestEditedData: {}
+  save: {}
+  saveAs: {}
+  saveSegment: { offset: number; length: number }
+  search: {
+    encoding: BufferEncoding
+    searchStr: string | Uint8Array
+    is_case_insensitive?: boolean
+    is_reverse?: boolean
+    offset?: number
+    length?: number
+    limit?: number
+  }
+  replace: {
+    encoding: BufferEncoding
+    searchStr: string | Uint8Array
+    is_case_insensitive?: boolean
+    is_reverse?: boolean
+    offset?: number
+    length?: number
+    limit?: number
+    overwriteOnly?: boolean
+  }
+}
 export type UiToEditorMsg =
   | { clearChanges: {} }
   | {
@@ -126,6 +170,15 @@ export type UiToEditorMsg =
         overwriteOnly?: boolean
       }
     }
+
+export interface DataEditorAPI {
+  createMessage<K extends UiToEditorMsg>(type: K)
+}
+const t: DataEditorAPI = {
+  createMessage: function <K extends UiToEditorMsg>(type: K) {
+    throw new Error('Function not implemented.')
+  },
+}
 export interface ExtensionMsgCommands {
   clearChanges: {}
   applyChanges: {

@@ -2,13 +2,15 @@ import {
   ServiceRequestKeys,
   RequestMap,
   ResponseMap,
+  ServiceRequestTypes,
+  ServiceResponseTypes,
 } from 'dataEditor/service/requestHandler'
 
-export type OmegaEditRequests = {
+export interface OmegaEditRequests extends ServiceRequestTypes {
   Profile: { offset: number; length: number }
   DestroySession: { id: string }
 }
-export type OmegaEditResponses = {
+export interface OmegaEditResponses extends ServiceResponseTypes {
   Profile: { request: { offset: number }; response: { data: number[] } }
   DestroySession: never
 }

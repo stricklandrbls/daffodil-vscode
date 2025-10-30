@@ -6,6 +6,7 @@ import {
   IServerHeartbeat,
 } from '@omega-edit/client'
 import {
+  IServiceRequestHandler,
   RequestMap,
   ResponseMap,
   ServiceRequestHandler,
@@ -75,24 +76,27 @@ class OmegaEditorSessionManager {
 }
 const SessionManager = new OmegaEditorSessionManager()
 
-export class OmegaEditSession extends ServiceRequestHandler<
-  OmegaEditRequests,
-  OmegaEditResponses
-> {
-  request<K extends ServiceRequestKeys | keyof OmegaEditRequests>(
-    type: K,
-    request: RequestMap<OmegaEditRequests>[K]
-  ): K extends ServiceRequestKeys | keyof OmegaEditResponses
-    ? Promise<ResponseMap<OmegaEditResponses>[K]>
-    : never {
-    return handleRequest(type, request)
-  }
+export class OmegaEditSession
+  implements IServiceRequestHandler<OmegaEditRequests, OmegaEditResponses>
+{
   constructor(
     readonly id: string,
     readonly fileMetrics: SessionStaticFileMetrics
-  ) {
-    super()
+  ) {}
+  request<K extends keyof OmegaEditRequests>(
+    type: K,
+    data: OmegaEditRequests[K]
+  ): K extends keyof OmegaEditResponses
+    ? Promise<OmegaEditResponses[K]>
+    : never {
+    throw new Error('Method not implemented.')
   }
+  // request<K extends keyof OmegaEditRequests>(
+  //   type: K,
+  //   data: OmegaEditRequests[K]
+  // ): Promise<OmegaEditResponses[K]> {
+  //   throw new Error('Method not implemented.')
+  // }
 }
 
 export function sessionCreate(

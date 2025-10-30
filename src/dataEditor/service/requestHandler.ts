@@ -90,10 +90,20 @@ export interface ServiceResponseTypes {
   Replace: number
   FillData: { bytes: Uint8Array; byteStr: string }
 }
-
+export interface IServiceRequestHandler<
+  ServiceRequestTypes,
+  ServiceResponseTypes,
+> {
+  request<K extends keyof ServiceRequestTypes>(
+    type: K,
+    data: ServiceRequestTypes[K]
+  ): K extends keyof ServiceResponseTypes
+    ? Promise<ServiceResponseTypes[K]>
+    : never
+}
 export abstract class ServiceRequestHandler<
-  ReqMap extends { [K: string]: any },
-  ResMap extends { [K: string]: any },
+  ReqMap extends MappedType,
+  ResMap extends MappedType,
 > {
   abstract request<K extends keyof RequestMap<ReqMap>>(
     type: K,

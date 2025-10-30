@@ -1,9 +1,12 @@
 import { IServerHeartbeat } from '@omega-edit/client'
 import {
+  IServiceRequestHandler,
   MappedType,
   RequestMap,
   ResponseMap,
   ServiceRequestHandler,
+  ServiceRequestTypes,
+  ServiceResponseTypes,
 } from './requestHandler'
 
 // src/ports/binaryDataService.ts
@@ -21,13 +24,11 @@ export type ServiceRequests = {
 }
 
 export interface DataEditorService {
-  connect(): Promise<any>
+  connect(): Promise<
+    IServiceRequestHandler<ServiceRequestTypes, ServiceResponseTypes>
+  >
   disconnect(): Promise<void>
   isConnected(): boolean
-  getServiceHandler<
-    ReqMap extends MappedType,
-    ResMap extends MappedType,
-  >(): Promise<ServiceRequestHandler<ReqMap, ResMap>>
   // request(): any
   // getRequestHandler(): ServiceRequestHandler
 

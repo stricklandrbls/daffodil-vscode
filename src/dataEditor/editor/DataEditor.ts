@@ -31,25 +31,29 @@ export abstract class DataEditor {
       ui: EditorUI
       bus: MessageBus<UiToEditor, EditorToUi>
     }
-  ) {
+  ) {}
+  async serviceConnect() {
     let statusBarIntervalId: NodeJS.Timeout | undefined = undefined
     const statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left
     )
-    const { service } = this.opts
-    service.on('status', (msg) => {
-      clearInterval(statusBarIntervalId)
+    return new Promise((res, rej) => {
+      this.opts.service.on('status', (msg) => {
+        clearInterval(statusBarIntervalId)
 
-      statusBarIntervalId = showServiceStatus(msg, statusBarItem)
-    })
-    service.on('connected', (info) => {
-      clearInterval(statusBarIntervalId)
-    })
-    service.on('error', (err) => {
-      clearInterval(statusBarIntervalId)
-    })
-    service.connect().then((response) => {
-      this.serviceRequesthandler = response
+        statusBarIntervalId = showServiceStatus(msg, statusBarItem)
+      })
+      this.opts.service.on('connected', (info) => {
+        clearInterval(statusBarIntervalId)
+        res(undefined)
+      })
+      this.opts.service.on('error', (err) => {
+        clearInterval(statusBarIntervalId)
+        rej()
+      })
+      this.opts.service.connect().then((response) => {
+        this.serviceRequesthandler = response
+      })
     })
   }
   async open(): Promise<void> {
