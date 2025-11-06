@@ -44,7 +44,7 @@ limitations under the License.
     UIThemeCSSClass,
     darkUITheme,
   } from './utilities/colorScheme'
-  import { MessageCommand } from './utilities/message'
+  import { MessageCommand, type ExtensionMsgCommands, type ExtensionMsgResponses } from './utilities/message'
   import { vscode } from './utilities/vscode'
   import Header from './components/Header/Header.svelte'
   import Main from './Main.svelte'
@@ -299,12 +299,12 @@ limitations under the License.
         break
       case MessageCommand.viewportRefresh:
         // the viewport has been refreshed, so the editor views need to be updated
-        const { data, fileOffset, length, bytesLeft } = msg.data.data
+        const { data, bytesRemaining, capacity, length, srcOffset} = msg.data.data as ExtensionMsgResponses['viewportRefresh']
         $viewport = {
           data: data,
-          fileOffset: fileOffset,
+          fileOffset: srcOffset,
           length: length,
-          bytesLeft: bytesLeft,
+          bytesLeft: bytesRemaining,
         } as ViewportData_t
         break
     }

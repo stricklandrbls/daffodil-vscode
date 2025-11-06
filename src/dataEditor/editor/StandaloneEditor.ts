@@ -6,6 +6,7 @@ import {
   UiToEditorMsgs,
   UiToEditorMsgId,
   ExtensionMsgCommands,
+  ExtensionMsgResponses,
 } from 'dataEditor/message/messages'
 import { DataEditorService } from 'dataEditor/service/editorService'
 import { EditorUI } from 'dataEditor/ui/editorUI'
@@ -46,39 +47,13 @@ export class StandaloneDataEditor extends IDataEditor {
     msg: ExtensionMsgCommands[K],
     isServiceRequestable: boolean
   ): Promise<any> {
-    return new Promise((res, rej) => {
-      if (isServiceRequestable) {
-        switch (type as keyof ServiceRequestTypes) {
-          case 'read':
-            this.serviceRequestHandler?.request(
-              'read',
-              msg as ServiceRequestTypes['read']
-            )
-            res(undefined)
-          case 'applyChanges':
-            res(undefined)
-          case 'clearChanges':
-            res(undefined)
-          case 'fillData':
-            res(undefined)
-          case 'redo':
-            res(undefined)
-          case 'replace':
-            res(undefined)
-          case 'search':
-            res(undefined)
-          case 'undo':
-            res(undefined)
-        }
-      } else {
-      }
-    })
+    return new Promise((res, rej) => {})
   }
   constructor(
     config: DataEditorArgMap[EditorType.Standalone],
     service: DataEditorService,
     ui: EditorUI,
-    bus: MessageBus<ExtensionMsgCommands, EditorToUi>
+    bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
   ) {
     super({
       config,

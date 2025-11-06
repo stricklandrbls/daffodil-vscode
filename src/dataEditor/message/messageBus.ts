@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import {
   EditorToUi,
   ExtensionMsgCommands,
+  ExtensionMsgResponses,
   UiToEditor,
   UiToEditorMsgs,
 } from './messages'
@@ -16,7 +17,7 @@ export type EditorToUIHandler = (m: EditorToUi) => Thenable<boolean>
 // src/core/messageBus.ts
 
 export interface MessageBus<In, Out> {
-  post(message: Out): void
+  post<K extends keyof Out>(type: K, message: Out[K]): void
   onMessage(
     handler: <K extends keyof In>(type: K, content: In[K]) => Promise<void>
   ): () => void // unsubscribe
@@ -41,13 +42,15 @@ export interface ServiceBus<
 }
 
 // Extension host side (Editor <-> Webview)
-export class WebviewBusHost implements MessageBus<UiToEditorMsgs, EditorToUi> {
+export class WebviewBusHost
+  implements MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
+{
   private disposable?: vscode.Disposable
   constructor(private readonly panel: vscode.WebviewPanel) {}
   onMessage(
-    handler: <K extends keyof UiToEditorMsgs>(
+    handler: <K extends keyof ExtensionMsgCommands>(
       type: K,
-      msg: UiToEditorMsgs[K]
+      msg: ExtensionMsgCommands[K]
     ) => Promise<void>
   ): () => void {
     // unsubscribe
@@ -62,8 +65,11 @@ export class WebviewBusHost implements MessageBus<UiToEditorMsgs, EditorToUi> {
     }
   }
 
-  post(message: EditorToUi) {
-    void this.panel.webview.postMessage(message)
+  post<K extends keyof ExtensionMsgResponses>(
+    type: K,
+    msg: ExtensionMsgResponses[K]
+  ) {
+    void this.panel.webview.postMessage({ command: type, data: msg })
   }
   // onMessage(handler: (msg: UiToEditor) => void): () => void {
   //   this.disposable = this.panel.webview.onDidReceiveMessage((msg) => {

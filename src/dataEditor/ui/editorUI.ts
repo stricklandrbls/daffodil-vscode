@@ -5,10 +5,14 @@ import {
   UiToEditorMsg,
   UiToEditorMsgs,
   ExtensionMsgCommands,
+  ExtensionMsgResponses,
 } from 'dataEditor/message/messages'
 
 export interface EditorUI {
-  attach(bus: MessageBus<ExtensionMsgCommands, EditorToUi>): void
+  attach(bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>): void
   detach(): void
-  notify(msg: EditorToUi): void // Editor -> UI push
+  notify<K extends keyof ExtensionMsgResponses>(
+    type: K,
+    msg: ExtensionMsgResponses[K]
+  ): void // Editor -> UI push
 }

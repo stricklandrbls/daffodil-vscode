@@ -1,5 +1,11 @@
+import {
+  createSimpleFileLogger,
+  getLogger,
+  Logger,
+  setLogger,
+} from '@omega-edit/client'
 import assert from 'assert'
-import { APP_DATA_PATH } from 'dataEditor/config'
+import { APP_DATA_PATH, BaseEditorConfigOpts } from 'dataEditor/config'
 import * as fs from 'fs'
 import path from 'path'
 
@@ -68,5 +74,30 @@ function rotateLogFiles(logFile: string): void {
     // Rename current log file with timestamp and create a new empty file
     const timestamp = new Date().toISOString().replace(/:/g, '-')
     fs.renameSync(logFile, path.join(logDir, `${logFileName}.${timestamp}`))
+  }
+}
+export async function initializeLogger(
+  file: BaseEditorConfigOpts['logFile'],
+  level: BaseEditorConfigOpts['logLevel']
+) {
+  setLogger(createSimpleFileLogger(file, level))
+}
+export type LogType = 'warn' | 'debug' | 'trace' | 'error'
+export interface IDataEditorLogger {
+  log(type: LogType, ...msgs: string[]): void
+  log(type: LogType, obj: object, ...msgs: string[]): void
+  initialize(file: string, level: 'info' | 'warn' | 'debug')
+}
+export class DefaultEditorLogger implements IDataEditorLogger {
+  initialize(file: string, level: 'info' | 'warn' | 'debug') {
+    setLogger(createSimpleFileLogger(file, level))
+  }
+  log(type: LogType, ...msgs: string[]): void
+  log(type: LogType, obj: object, ...msgs: string[]): void
+  log(
+    type: LogType,
+    ...rest: [obj: object, ...msgs: string[]] | string[]
+  ): void {
+    throw new Error('Method not implemented.')
   }
 }

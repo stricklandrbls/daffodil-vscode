@@ -3,6 +3,7 @@ import { EditorType } from 'dataEditor/editor'
 import XDGAppPaths from 'xdg-app-paths'
 import fs from 'fs'
 import assert from 'assert'
+import path from 'path'
 
 export const APP_DATA_PATH: string = XDGAppPaths({ name: 'omega_edit' }).data()
 
@@ -18,6 +19,7 @@ interface ConfigFileVars {
   hostname: string
   port: number
   logLevel: 'info' | 'warn' | 'debug'
+  logFile: string
 }
 
 export type ExtractableConfigOpts = {
@@ -47,8 +49,8 @@ export abstract class DataEditorConfig {
   readonly hostname: string
   readonly port: number
   readonly heartbeatMs: number
-  readonly logLevel: string
-
+  readonly logLevel: 'info' | 'warn' | 'debug'
+  readonly logFile: string
   protected constructor(p: DataEditorConfigOpts) {
     this.type = p.type
     this.targetFile = p.targetFile ?? ''
@@ -56,13 +58,14 @@ export abstract class DataEditorConfig {
     this.port = p.port ?? DefaultPort
     this.heartbeatMs = p.heartbeatMs ?? 1000
     this.logLevel = p.logLevel
+    this.logFile = p.logFile
   }
 }
 
 export interface DataEditorConfigProvider {
   get<T extends keyof ExtractableConfigOpts>(
     section: T,
-    defaultValue: ExtractableConfigOpts[T]
+    defaultValue?: ExtractableConfigOpts[T]
   ): ExtractableConfigOpts[T]
   targetFile(): string | Promise<string>
 }
@@ -72,10 +75,16 @@ export class StandaloneEditorConfig extends DataEditorConfig {
     super(opts)
   }
   static async build(provider: DataEditorConfigProvider) {
+    const port = provider.get('port', 9000)
+
     let config: StandaloneEditorConfigOpts = {
       hostname: provider.get('hostname', '127.0.0.1'),
-      port: provider.get('port', 9000),
+      port,
       logLevel: provider.get('logLevel', 'info'),
+      logFile: provider.get(
+        'logFile',
+        path.resolve(APP_DATA_PATH, `dataEditor-${port}.log`)
+      ),
       targetFile: await provider.targetFile(),
       heartbeatMs: 1000,
       type: EditorType.Standalone,

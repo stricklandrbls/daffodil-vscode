@@ -1,4 +1,9 @@
 import { DataEditorConfig, DataEditorConfigProvider } from 'dataEditor/config'
+import {
+  DefaultEditorLogger,
+  IDataEditorLogger,
+  initializeLogger,
+} from 'dataEditor/logs'
 import { MessageBus } from 'dataEditor/message/messageBus'
 import {
   UiToEditor,
@@ -6,6 +11,7 @@ import {
   UiToEditorMsg,
   UiToEditorMsgs,
   ExtensionMsgCommands,
+  ExtensionMsgResponses,
 } from 'dataEditor/message/messages'
 import { DataEditorService } from 'dataEditor/service/editorService'
 import { IServiceRequestHandler } from 'dataEditor/service/requestHandler'
@@ -21,14 +27,18 @@ export interface DataEditorDeps {
 export abstract class IDataEditor {
   protected serviceRequestHandler: IServiceRequestHandler | undefined =
     undefined
+  protected logger: IDataEditorLogger = new DefaultEditorLogger()
   constructor(
     protected readonly opts: {
       config: DataEditorConfig
       service: DataEditorService
       ui: EditorUI
-      bus: MessageBus<ExtensionMsgCommands, EditorToUi>
+      bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
     }
-  ) {}
+  ) {
+    const { logFile, logLevel } = this.opts.config
+    this.logger.initialize(logFile, logLevel)
+  }
   async open(): Promise<void> {
     const { service, ui, bus } = this.opts
     this.serviceRequestHandler = await this.serviceConnect()
@@ -40,6 +50,12 @@ export abstract class IDataEditor {
         this.serviceRequestHandler!.canHandle(type)
       )
     })
+
+    this.serviceRequestHandler
+      .request('viewportRefresh', { offset: 0, bytesPerRow: 16 })
+      .then((dataResponse) => {
+        ui.notify('viewportRefresh', dataResponse)
+      })
   }
   async close(): Promise<void> {
     throw ''

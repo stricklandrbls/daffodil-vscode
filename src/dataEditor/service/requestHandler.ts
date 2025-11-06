@@ -3,7 +3,10 @@ import {
   replaceOneSession,
   searchSession,
 } from '@omega-edit/client'
-import { ExtensionMsgCommands } from 'dataEditor/message/messages'
+import {
+  ExtensionMsgCommands,
+  ExtensionMsgResponses,
+} from 'dataEditor/message/messages'
 export type LookupOptions = {
   caseInsensitive: boolean
   reverse: boolean
@@ -66,12 +69,16 @@ export interface ServiceResponseTypes {
   clearChanges: never
 }
 export interface IServiceRequestHandler {
-  request<K extends keyof ServiceRequestTypes>(
+  request<K extends keyof ExtensionMsgCommands>(
     type: K,
-    data: ServiceRequestTypes[K]
-  ): Promise<ServiceResponseTypes[K]>
+    data: ExtensionMsgCommands[K]
+  ): Promise<ExtensionMsgResponses[K]>
+  requestAnd<K extends keyof ExtensionMsgCommands>(
+    cmd: { type: K; data: ExtensionMsgCommands[K] },
+    cb: (response: ExtensionMsgResponses[K]) => Promise<void>
+  )
   canHandle(type: string): boolean
-  getRequestType<K extends keyof ServiceRequestTypes>(
+  getRequestType<K extends keyof ExtensionMsgCommands>(
     type: K
-  ): ServiceRequestTypes[K]
+  ): ExtensionMsgCommands[K]
 }
