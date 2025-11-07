@@ -61,15 +61,11 @@ limitations under the License.
       }, 10000)
     }
   }
-
-  window.addEventListener('message', (msg) => {
-    switch (msg.data.command) {
-      case MessageCommand.fileInfo:
-        {
-          // reset the profiler if changes have been made
+  window.addEditorMessageListener('fileInfo', (info)=>{
+             // reset the profiler if changes have been made
           isProfilerOpen = false
           startOffset = length = 0
-          const {filename, bom, changes, contentType, language, sizes}  = msg.data.data as ExtensionMsgResponses['fileInfo']
+          const {filename, bom, changes, contentType, language, sizes}  = info
           $fileMetrics.name = filename
           $fileMetrics.language = language
           $fileMetrics.changeCount = changes.applied
@@ -77,33 +73,49 @@ limitations under the License.
           $fileMetrics.diskSize = sizes.disk
           $fileMetrics.computedSize = sizes.computed
           $fileMetrics.type = contentType
-          // if ('filename' in msg.data.data) {
-          //   $fileMetrics.name = msg.data.data.fileName
-          // }
-          // if ('type' in msg.data.data) {
-          //   $fileMetrics.type = msg.data.data.type
-          // }
-          // if ('language' in msg.data.data) {
-          //   $fileMetrics.language = msg.data.data.language
-          // }
-          // if ('diskFileSize' in msg.data.data) {
-          //   $fileMetrics.diskSize = msg.data.data.diskFileSize
-          // }
-          // if ('computedFileSize' in msg.data.data) {
-          //   $fileMetrics.computedSize = msg.data.data.computedFileSize
-          // }
-          // if ('changeCount' in msg.data.data) {
-          //   $fileMetrics.changeCount = msg.data.data.changeCount
-          // }
-          // if ('undoCount' in msg.data.data) {
-          //   $fileMetrics.undoCount = msg.data.data.undoCount
-          // }
-        }
-        break
-      default:
-        break // do nothing
-    }
   })
+//   window.addEventListener('message', (msg) => {
+//     switch (msg.data.command) {
+//       case MessageCommand.fileInfo:
+//         {
+//           // reset the profiler if changes have been made
+//           isProfilerOpen = false
+//           startOffset = length = 0
+//           const {filename, bom, changes, contentType, language, sizes}  = msg.data.data as ExtensionMsgResponses['fileInfo']
+//           $fileMetrics.name = filename
+//           $fileMetrics.language = language
+//           $fileMetrics.changeCount = changes.applied
+//           $fileMetrics.undoCount = changes.undos
+//           $fileMetrics.diskSize = sizes.disk
+//           $fileMetrics.computedSize = sizes.computed
+//           $fileMetrics.type = contentType
+//           // if ('filename' in msg.data.data) {
+//           //   $fileMetrics.name = msg.data.data.fileName
+//           // }
+//           // if ('type' in msg.data.data) {
+//           //   $fileMetrics.type = msg.data.data.type
+//           // }
+//           // if ('language' in msg.data.data) {
+//           //   $fileMetrics.language = msg.data.data.language
+//           // }
+//           // if ('diskFileSize' in msg.data.data) {
+//           //   $fileMetrics.diskSize = msg.data.data.diskFileSize
+//           // }
+//           // if ('computedFileSize' in msg.data.data) {
+//           //   $fileMetrics.computedSize = msg.data.data.computedFileSize
+//           // }
+//           // if ('changeCount' in msg.data.data) {
+//           //   $fileMetrics.changeCount = msg.data.data.changeCount
+//           // }
+//           // if ('undoCount' in msg.data.data) {
+//           //   $fileMetrics.undoCount = msg.data.data.undoCount
+//           // }
+//         }
+//         break
+//       default:
+//         break // do nothing
+//     }
+//   })
 
   $: {
     canUndo = $fileMetrics.changeCount > 0

@@ -24,9 +24,7 @@ const config = {
     vitePreprocess(),
     sveltePreprocess({ sourceMap: true, typescript: true }),
   ],
-  compilerOptions: {
-    css: 'external',
-  },
+  compilerOptions: { rootDir: '.', css: 'external' },
   onwarn(w, defaultHandler) {
     if (w.code.includes('a11y')) return
     defaultHandler(w)

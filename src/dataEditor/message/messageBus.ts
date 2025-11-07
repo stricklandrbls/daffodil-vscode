@@ -70,7 +70,7 @@ export class WebviewBusHost
     type: K,
     msg: ExtensionMsgResponses[K]
   ) {
-    void this.panel.webview.postMessage({ command: type, data: msg })
+    void this.panel.webview.postMessage({ type: type, data: msg })
   }
   // onMessage(handler: (msg: UiToEditor) => void): () => void {
   //   this.disposable = this.panel.webview.onDidReceiveMessage((msg) => {

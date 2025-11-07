@@ -18,6 +18,13 @@ limitations under the License.
   import DataEditor from './components/Editors/DataEditor.svelte'
   import DataViewports from './components/DataDisplays/DataViewports.svelte'
   import DisplayHeader from './components/DataDisplays/Header/DisplayHeader.svelte'
+  import { vscode } from './utilities/vscode'
+  
+  let msg = vscode.createMessage('scrollViewport')
+  vscode.postMessage('scrollViewport', msg)
+    window.addEditorMessageListener('viewportRefresh', (resp) => {
+
+    })
 </script>
 
 <main class="dataEditor">

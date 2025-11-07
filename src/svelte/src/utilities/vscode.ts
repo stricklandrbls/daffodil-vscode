@@ -16,6 +16,7 @@
  */
 
 import type { WebviewApi } from 'vscode-webview'
+import type { ExtensionMsgCommands } from 'dataEditor/message/messages'
 
 /**
  * A utility wrapper around the acquireVsCodeApi() function, which enables
@@ -45,14 +46,23 @@ class VSCodeAPIWrapper {
    *
    * @param message Arbitrary data (must be JSON serializable) to send to the extension context.
    */
-  public postMessage(message: unknown) {
+  public postMessage<K extends keyof ExtensionMsgCommands>(
+    type: K,
+    message: ExtensionMsgCommands[K]
+  ) {
     if (this.vsCodeApi) {
       this.vsCodeApi.postMessage(message)
     } else {
       console.log(message)
     }
   }
-
+  public createMessage<K extends keyof ExtensionMsgCommands>(
+    type: K,
+    data?: ExtensionMsgCommands[K]
+  ) {
+    if (data) return { ...data }
+    return {} as ExtensionMsgCommands[K]
+  }
   /**
    * Get the persistent state stored for this webview.
    *

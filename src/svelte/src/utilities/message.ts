@@ -15,6 +15,11 @@
  * limitations under the License.
  */
 
+import type {
+  ExtensionMsgCommands,
+  ExtensionMsgResponses,
+} from 'dataEditor/message/messages'
+
 export enum MessageCommand {
   clearChanges = 'clearChanges',
   applyChanges = 'applyChanges',
@@ -50,121 +55,18 @@ export type EditorMessage = {
   data: Record<string, any>
 }
 
-export interface ExtensionMsgCommands {
-  clearChanges: {}
-  applyChanges: {
-    offset: number
-    original_segment: Uint8Array<ArrayBufferLike>
-    edited_segment: Uint8Array
-  }
-  editorOnChange: {
-    // extension
-    editMode: 'single' | 'multi'
-    encoding: BufferEncoding
-    selectionData: string
-  }
-  fileInfo: {} // service
-  heartbeat: {} // service
-  profile: { start: number; length: number } // service
-  redoChange: {}
-  replaceResults: {}
-  requestEditedData: {}
-  save: {}
-  saveAs: {}
-  saveSegment: { offset: number; length: number }
-  scrollViewport: {}
-  search: {
-    encoding: BufferEncoding
-    searchStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-  }
-  replace: {
-    encoding: BufferEncoding
-    searchStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-    overwriteOnly?: boolean
-  }
-  searchResults: {}
-  setUITheme: {}
-  showMessage: {}
-  undoChange: {}
-  updateLogicalDisplay: {}
-  viewportRefresh: { offset: number; bytesPerRow: number }
-}
-export interface ExtensionMsgResponses {
-  clearChanges: {}
-  applyChanges: {
-    offset: number
-    original_segment: Uint8Array<ArrayBufferLike>
-    edited_segment: Uint8Array
-  }
-  editorOnChange: {
-    // extension
-    editMode: 'single' | 'multi'
-    encoding: BufferEncoding
-    selectionData: string
-  }
-  fileInfo: {
-    filename: string
-    bom: string
-    language: string
-    contentType: string
-    sizes: { computed: number; disk: number }
-    changes: { applied: number; undos: number }
-  } // service
-  heartbeat: {} // service
-  profile: { start: number; length: number } // service
-  redoChange: {}
-  replaceResults: {}
-  requestEditedData: {}
-  save: {}
-  saveAs: {}
-  saveSegment: { offset: number; length: number }
-  scrollViewport: {}
-  search: {
-    encoding: BufferEncoding
-    searchStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-  }
-  replace: {
-    encoding: BufferEncoding
-    searchStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-    overwriteOnly?: boolean
-  }
-  searchResults: {}
-  setUITheme: {}
-  showMessage: {}
-  undoChange: {}
-  updateLogicalDisplay: {}
-  viewportRefresh: ReadResponse
-  read: ReadResponse
-}
-type ReadRequest = {
-  offset: number
-  capacity: number
-  isFloating?: boolean
-}
-type ReadResponse = {
-  srcOffset: number
-  length: number
-  bytesRemaining: number
-  data: Uint8Array
-  capacity: number
+window.addEditorMessageListener = <K extends keyof ExtensionMsgCommands>(
+  type: K,
+  listener: (response: ExtensionMsgResponses[K]) => void
+): void => {
+  window.addEventListener('message', (event: MessageEvent) => {
+    const msg = event.data as {
+      type: keyof ExtensionMsgCommands
+      data: unknown
+    }
+    if (msg.type === type) {
+      // Use a type assertion since runtime can't validate generics
+      listener(msg.data as ExtensionMsgResponses[typeof type])
+    }
+  })
 }
