@@ -3,12 +3,13 @@ import {
   UiToEditor,
   EditorToUi,
   UiToEditorMsgs,
+  ExtensionMsgCommands,
+  ExtensionMsgResponses,
 } from 'dataEditor/message/messages'
 import { DataEditorService } from 'dataEditor/service/editorService'
 import { EditorUI } from 'dataEditor/ui/editorUI'
 import { IDataEditor } from './AbstractEditor'
 import { EditorType } from '.'
-import { DataEditor } from './DataEditor'
 import { DebugEditorConfig, StandaloneEditorConfig } from 'dataEditor/config'
 import { StandaloneDataEditor } from './StandaloneEditor'
 import { DFDLDebugEditor } from './DFDLDebugEditor'
@@ -18,7 +19,7 @@ export interface DataEditorConstructor<K extends EditorType> {
     config: DataEditorArgMap[K],
     service: DataEditorService,
     ui: EditorUI,
-    bus: MessageBus<UiToEditorMsgs, EditorToUi>
+    bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
   ): IDataEditor
 }
 
@@ -26,9 +27,11 @@ export interface DataEditorArgMap {
   [EditorType.Standalone]: StandaloneEditorConfig
   [EditorType.DFDLDebugLinked]: DebugEditorConfig
 }
+
 export type ExtensionCommandArgs = {
   [K in EditorType]: any | never
 }
+
 export class DataEditorRegistry {
   private ctrMap: { [K in EditorType]: DataEditorConstructor<K> } = {
     [EditorType.Standalone]: StandaloneDataEditor,

@@ -80,12 +80,5 @@ export interface IServiceRequestHandler {
   request<K extends keyof ExtensionMsgCommands>(
     ...args: RequestType<K>
   ): Promise<ExtensionMsgResponses[K]>
-  requestAnd<K extends keyof ExtensionMsgCommands>(
-    cmd: { type: K; data: ExtensionMsgCommands[K] },
-    cb: (response: ExtensionMsgResponses[K]) => Promise<void>
-  )
   canHandle(type: string): boolean
-  getRequestType<K extends keyof ExtensionMsgCommands>(
-    type: K
-  ): ExtensionMsgCommands[K]
 }

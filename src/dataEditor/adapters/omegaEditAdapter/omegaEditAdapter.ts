@@ -14,10 +14,7 @@ import { OmegaEditSession, sessionCreate } from './sessions'
 
 export type OmegaEditConfigProvider = () => DataEditorConfig &
   OmegaEditServiceConfig
-interface OETest {
-  data: number
-  id: string
-}
+
 export class OmegaEditorAdapter implements DataEditorService {
   private connected = false
   private eventEmitter: EventEmitter = new EventEmitter()
@@ -27,9 +24,11 @@ export class OmegaEditorAdapter implements DataEditorService {
     private readonly cfg: DataEditorConfig,
     private readonly vendor: any /* real sdk type */
   ) {}
+  
   getServiceHandler<OmegaEditSession>(): Promise<OmegaEditSession> {
     throw new Error('Method not implemented.')
   }
+  
   connect(): Promise<OmegaEditSession> {
     return new Promise(async (res) => {
       this.eventEmitter.emit(
@@ -59,12 +58,6 @@ export class OmegaEditorAdapter implements DataEditorService {
     })
   }
 
-  test<T extends { data: number }>(): Promise<string> {
-    return new Promise((res, rej) => {
-      const ret: OETest = { data: 0, id: '' }
-      res(ret.id)
-    })
-  }
   public on<T extends keyof EditorServiceEvents>(
     event: T,
     listener: (content: EditorServiceEvents[T]) => any
@@ -120,6 +113,7 @@ function checkServerListening(info: {
 function getPidFile(serverPort: number): string {
   return path.join(APP_DATA_PATH, `serv-${serverPort}.pid`)
 }
+
 export type OmegaEditServiceConfig = {
   hostname: string
   port: number

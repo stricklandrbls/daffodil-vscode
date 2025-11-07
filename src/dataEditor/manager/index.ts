@@ -10,9 +10,9 @@ import {
   DataEditorConfig,
   DataEditorConfigProvider,
   DebugEditorConfig,
+  ExtractableConfigOpts,
   StandaloneEditorConfig,
 } from 'dataEditor/config'
-import { DataEditor } from 'dataEditor/editor/DataEditor'
 import { DataEditorFactory } from 'dataEditor/editor/DataEditorFactory'
 import { WebviewBusHost } from 'dataEditor/message/messageBus'
 import { SvelteWebviewInitializer } from 'dataEditor/svelteWebviewInitializer'
@@ -106,5 +106,8 @@ class ConfigProvider implements DataEditorConfigProvider {
   readonly config = vscode.workspace.getConfiguration('dataEditor')
   constructor(public targetFile: TargetFileSelector) {}
 
-  get: <T>(section: string, defaultValue: T) => T = this.config.get
+  get<T extends keyof ExtractableConfigOpts>(section: T, defaultValue: ExtractableConfigOpts[T]):ExtractableConfigOpts[T]{
+    const ret = this.config.get(section)
+    return ret ? ret as ExtractableConfigOpts[T] : defaultValue
+  }
 }

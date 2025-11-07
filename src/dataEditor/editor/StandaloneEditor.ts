@@ -19,9 +19,7 @@ import {
   ServiceRequestTypes,
 } from 'dataEditor/service/requestHandler'
 import { dataToEncodedStr } from './DisplayState'
-interface SInMsgs extends UiToEditorMsgs {
-  standaloneOnly: { type: 'standalone' }
-}
+
 export class StandaloneDataEditor extends IDataEditor {
   protected async serviceConnect(): Promise<IServiceRequestHandler> {
     let statusBarIntervalId: NodeJS.Timeout | undefined = undefined
