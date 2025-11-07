@@ -34,6 +34,7 @@ limitations under the License.
     replaceQuery,
     searchResultsUpdated,
     dfdlBytePos,
+    viewport,
   } from '../../../stores'
   import {
     EditByteModes,
@@ -453,16 +454,21 @@ limitations under the License.
   }
 
   function postEditorOnChangeMsg(forcedEncoding?: string) {
-    vscode.postMessage({
-      command: MessageCommand.editorOnChange,
-      data: {
-        fileOffset: $selectionDataStore.startOffset + viewportData.fileOffset,
-        selectionData: $editedDataSegment,
-        encoding: forcedEncoding ? forcedEncoding : $editorEncoding,
-        selectionSize: $selectionSize,
-        editMode: $editMode,
-      },
+    vscode.postMessage('editorOnChange', {
+      editMode: $editMode === EditByteModes.Single ? 'single' : 'multi',
+      encoding: forcedEncoding ? forcedEncoding : $editorEncoding,
+      selectionData: $editedDataSegment
     })
+    // vscode.postMessage({
+    //   command: MessageCommand.editorOnChange,
+    //   data: {
+    //     fileOffset: $selectionDataStore.startOffset + viewportData.fileOffset,
+    //     selectionData: $editedDataSegment,
+    //     encoding: forcedEncoding ? forcedEncoding : $editorEncoding,
+    //     selectionSize: $selectionSize,
+    //     editMode: $editMode,
+    //   },
+    // })
   }
 
   function handleClickedIndicator(e: CustomEvent) {
@@ -562,10 +568,16 @@ limitations under the License.
   }
 
   window.addEventListener('keydown', navigation_keydown_event)
-  window.addEventListener('message', (msg) => {
-    switch (msg.data.command) {
-      case MessageCommand.viewportRefresh:
-        if (awaitViewportSeek) {
+    window.addListenerOnEditorMessages(
+    (response) => {
+      const { data, bytesRemaining, capacity, length, srcOffset } = response
+      $viewport = {
+        data: data,
+        fileOffset: srcOffset,
+        length: length,
+        bytesLeft: bytesRemaining,
+      } as ViewportData_t
+      if (awaitViewportSeek) {
           awaitViewportSeek = false
           $dataFeedLineTop = Math.max(
             0,
@@ -576,17 +588,35 @@ limitations under the License.
               $selectedByte.offset.toString()
             ) as HTMLDivElement
         }
-        break
-      case 'daffodil.data':
-        const { bytePos1b } = msg.data.data
-        if (!bytePosIsDisplayable(bytePos1b - 1)) {
-          $seekOffsetInput = bytePos1b.toString(addressRadix)
-          eventDispatcher('seek')
-        }
-        $dfdlBytePos = bytePos1b - 1
-        break
-    }
-  })
+    },
+    'viewportRefresh',
+    'scrollViewport'
+  )
+  // window.addEventListener('message', (msg) => {
+  //   switch (msg.data.command) {
+  //     case MessageCommand.viewportRefresh:
+  //       if (awaitViewportSeek) {
+  //         awaitViewportSeek = false
+  //         $dataFeedLineTop = Math.max(
+  //           0,
+  //           Math.min(lineTopMaxViewport, $dataFeedLineTop)
+  //         )
+  //         if ($selectionDataStore.active)
+  //           selectedByteElement = document.getElementById(
+  //             $selectedByte.offset.toString()
+  //           ) as HTMLDivElement
+  //       }
+  //       break
+  //     case 'daffodil.data':
+  //       const { bytePos1b } = msg.data.data
+  //       if (!bytePosIsDisplayable(bytePos1b - 1)) {
+  //         $seekOffsetInput = bytePos1b.toString(addressRadix)
+  //         eventDispatcher('seek')
+  //       }
+  //       $dfdlBytePos = bytePos1b - 1
+  //       break
+  //   }
+  // })
 </script>
 
 <svelte:window on:mousemove={mouseover_handler} />

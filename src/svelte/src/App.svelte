@@ -44,7 +44,7 @@ limitations under the License.
     UIThemeCSSClass,
     darkUITheme,
   } from './utilities/colorScheme'
-  import { MessageCommand, type ExtensionMsgCommands, type ExtensionMsgResponses } from './utilities/message'
+  import { MessageCommand } from './utilities/message'
   import { vscode } from './utilities/vscode'
   import Header from './components/Header/Header.svelte'
   import Main from './Main.svelte'
@@ -69,18 +69,19 @@ limitations under the License.
 
   function requestEditedData() {
     if ($requestable) {
-      vscode.postMessage({
-        command: MessageCommand.requestEditedData,
-        data: {
-          selectionToFileOffset: $selectionDataStore.startOffset,
-          editedContent: $editorSelection,
-          viewport: $focusedViewportId,
-          selectionSize: $selectionSize,
-          encoding: $editorEncoding,
-          radix: $displayRadix,
-          editMode: $editMode,
-        },
-      })
+      vscode.postMessage('requestEditedData')
+      // vscode.postMessage({
+      //   command: MessageCommand.requestEditedData,
+      //   data: {
+      //     selectionToFileOffset: $selectionDataStore.startOffset,
+      //     editedContent: $editorSelection,
+      //     viewport: $focusedViewportId,
+      //     selectionSize: $selectionSize,
+      //     encoding: $editorEncoding,
+      //     radix: $displayRadix,
+      //     editMode: $editMode,
+      //   },
+      // })
     }
   }
 
@@ -149,15 +150,18 @@ limitations under the License.
       $bytesPerRow,
       fetchOffset
     )
-
-    vscode.postMessage({
-      command: MessageCommand.scrollViewport,
-      data: {
-        scrollOffset: fetchOffset,
-        bytesPerRow: $bytesPerRow,
-        numLinesDisplayed: $dataDislayLineAmount,
-      },
+    vscode.postMessage('scrollViewport', {
+      scrollOffset: fetchOffset,
+      bytesPerRow: $bytesPerRow,
     })
+    // vscode.postMessage({
+    //   command: MessageCommand.scrollViewport,
+    //   data: {
+    //     scrollOffset: fetchOffset,
+    //     bytesPerRow: $bytesPerRow,
+    //     numLinesDisplayed: $dataDislayLineAmount,
+    //   },
+    // })
     clearDataDisplays()
   }
 
@@ -168,14 +172,17 @@ limitations under the License.
   function traversalEventHandler(navigationEvent: CustomEvent) {
     const navigationData = navigationEvent.detail
     $dataFeedAwaitRefresh = true
-
-    vscode.postMessage({
-      command: MessageCommand.scrollViewport,
-      data: {
-        scrollOffset: navigationData.nextViewportOffset,
-        bytesPerRow: $bytesPerRow,
-      },
+    vscode.postMessage('scrollViewport', {
+      scrollOffset: navigationData.nextViewportOffset,
+      bytesPerRow: $bytesPerRow,
     })
+    // vscode.postMessage({
+    //   command: MessageCommand.scrollViewport,
+    //   data: {
+    //     scrollOffset: navigationData.nextViewportOffset,
+    //     bytesPerRow: $bytesPerRow,
+    //   },
+    // })
 
     $dataFeedLineTop = navigationData.lineTopOnRefresh
     clearDataDisplays()
@@ -221,34 +228,37 @@ limitations under the License.
         break
     }
 
-    vscode.postMessage({
-      command: MessageCommand.applyChanges,
-      data: {
-        offset: editedOffset,
-        originalSegment: originalData,
-        editedSegment: editedData,
-      },
+    vscode.postMessage('applyChanges', {
+      offset: editedOffset,
+      edited_segment: editedData,
+      original_segment: originalData,
     })
+
+    // vscode.postMessage({
+    //   command: MessageCommand.applyChanges,
+    //   data: {
+    //     offset: editedOffset,
+    //     originalSegment: originalData,
+    //     editedSegment: editedData,
+    //   },
+    // })
     clearDataDisplays()
     clearQueryableData()
   }
 
   function undo() {
-    vscode.postMessage({
-      command: MessageCommand.undoChange,
-    })
+    vscode.postMessage('undoChange')
+    // vscode.postMessage({
+    //   command: MessageCommand.undoChange,
+    // })
   }
 
   function redo() {
-    vscode.postMessage({
-      command: MessageCommand.redoChange,
-    })
+    vscode.postMessage('redoChange')
   }
 
   function clearChangeStack() {
-    vscode.postMessage({
-      command: MessageCommand.clearChanges,
-    })
+    vscode.postMessage('clearChanges')
   }
 
   function clearDataDisplays() {
@@ -276,39 +286,57 @@ limitations under the License.
     }
   }
 
-  window.addEventListener('message', (msg) => {
-    switch (msg.data.command) {
-      case MessageCommand.editorOnChange:
-        if ($editMode === EditByteModes.Multiple)
-          $editorSelection = msg.data.display
-        break
-
-      case MessageCommand.requestEditedData:
-        $editorSelection = msg.data.data.dataDisplay
-        if ($editMode === EditByteModes.Multiple) {
-          $editedDataSegment = new Uint8Array(msg.data.data.data)
-        } else {
-          $editedDataSegment[0] = msg.data.data.data
-        }
-        $selectionDataStore.endOffset =
-          $selectionDataStore.startOffset + $editedDataSegment.byteLength - 1
-        break
-
-      case MessageCommand.setUITheme:
-        $darkUITheme = msg.data.theme === 2
-        break
-      case MessageCommand.viewportRefresh:
-        // the viewport has been refreshed, so the editor views need to be updated
-        const { data, bytesRemaining, capacity, length, srcOffset} = msg.data.data as ExtensionMsgResponses['viewportRefresh']
-        $viewport = {
-          data: data,
-          fileOffset: srcOffset,
-          length: length,
-          bytesLeft: bytesRemaining,
-        } as ViewportData_t
-        break
-    }
+  window.addEditorMessageListener('editorOnChange', (response) => {
+    if ($editMode === EditByteModes.Multiple)
+      $editorSelection = response.encodedStr
   })
+  window.addEditorMessageListener('requestEditedData', () => {})
+
+
+  // window.addEditorMessageListener('viewportRefresh', (response) => {
+  //   const { data, bytesRemaining, capacity, length, srcOffset } =
+  //     response
+  //   $viewport = {
+  //     data: data,
+  //     fileOffset: srcOffset,
+  //     length: length,
+  //     bytesLeft: bytesRemaining,
+  //   } as ViewportData_t
+  // })
+  // window.addEventListener('message', (msg) => {
+  //   switch (msg.data.command) {
+  //     case MessageCommand.editorOnChange:
+  //       if ($editMode === EditByteModes.Multiple)
+  //         $editorSelection = msg.data.display
+  //       break
+
+  //     case MessageCommand.requestEditedData:
+  //       $editorSelection = msg.data.data.dataDisplay
+  //       if ($editMode === EditByteModes.Multiple) {
+  //         $editedDataSegment = new Uint8Array(msg.data.data.data)
+  //       } else {
+  //         $editedDataSegment[0] = msg.data.data.data
+  //       }
+  //       $selectionDataStore.endOffset =
+  //         $selectionDataStore.startOffset + $editedDataSegment.byteLength - 1
+  //       break
+
+  //     case MessageCommand.setUITheme:
+  //       $darkUITheme = msg.data.theme === 2
+  //       break
+  //     case MessageCommand.viewportRefresh:
+  //       // the viewport has been refreshed, so the editor views need to be updated
+  //       const { data, bytesRemaining, capacity, length, srcOffset } = msg.data
+  //         .data as ExtensionMsgResponses['viewportRefresh']
+  //       $viewport = {
+  //         data: data,
+  //         fileOffset: srcOffset,
+  //         length: length,
+  //         bytesLeft: bytesRemaining,
+  //       } as ViewportData_t
+  //       break
+  //   }
+  // })
 </script>
 
 <svelte:window on:keydown|nonpassive={handleKeyBind} />

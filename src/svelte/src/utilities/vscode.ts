@@ -47,13 +47,13 @@ class VSCodeAPIWrapper {
    * @param message Arbitrary data (must be JSON serializable) to send to the extension context.
    */
   public postMessage<K extends keyof ExtensionMsgCommands>(
-    type: K,
-    message: ExtensionMsgCommands[K]
+    ...args: ArgsFor<K>
   ) {
     if (this.vsCodeApi) {
-      this.vsCodeApi.postMessage(message)
+      const [type, message] = args
+      this.vsCodeApi.postMessage({ command: type, data: message })
     } else {
-      console.log(message)
+      throw 'The VSCode API object is not defined'
     }
   }
   public createMessage<K extends keyof ExtensionMsgCommands>(
@@ -103,3 +103,10 @@ class VSCodeAPIWrapper {
 
 // Exports class singleton to prevent multiple invocations of acquireVsCodeApi.
 export const vscode = new VSCodeAPIWrapper()
+export type ArgsFor<K extends keyof ExtensionMsgCommands> = [
+  ExtensionMsgCommands[K],
+] extends [never]
+  ? [type: K]
+  : ExtensionMsgCommands[K] extends object
+    ? [type: K, data: ExtensionMsgCommands[K]]
+    : [type: K]

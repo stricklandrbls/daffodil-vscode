@@ -381,7 +381,7 @@ export const requestable = derived(
 export const originalDataSegment = derived(
   [viewport, selectionDataStore, regularSizedFile],
   ([$viewport, $selectionData, $regularSizedFile]) => {
-    if (!$viewport.data) return []
+    if (!$viewport.data) throw 'No viewport data available'
     if (!$regularSizedFile) return $viewport.data
 
     return $viewport.data.slice(

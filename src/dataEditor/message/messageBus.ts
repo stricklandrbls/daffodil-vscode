@@ -56,7 +56,8 @@ export class WebviewBusHost
     // unsubscribe
 
     this.panel.webview.onDidReceiveMessage((msg) => {
-      const { command, data } = msg
+      const command = msg.command
+      const data = msg.data
       handler(command, data)
     }, this)
 
@@ -70,7 +71,7 @@ export class WebviewBusHost
     type: K,
     msg: ExtensionMsgResponses[K]
   ) {
-    void this.panel.webview.postMessage({ type: type, data: msg })
+    void this.panel.webview.postMessage({ command: type, data: msg })
   }
   // onMessage(handler: (msg: UiToEditor) => void): () => void {
   //   this.disposable = this.panel.webview.onDidReceiveMessage((msg) => {

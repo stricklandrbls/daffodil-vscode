@@ -48,37 +48,43 @@ export class StandaloneDataEditor extends IDataEditor {
     msg: ExtensionMsgCommands[K],
     isServiceRequestable: boolean
   ): Promise<any> {
-    switch (type) {
-      case 'editorOnChange':
-        return new Promise((res, rej) => {
+    return new Promise((res, rej) => {
+      switch (type) {
+        case 'editorOnChange':
           const { editMode, encoding, selectionData } =
             msg as ExtensionMsgCommands['editorOnChange']
           const displayState = this.opts.ui.getDisplayState()
-          displayState.editorEncoding = encoding
+
+          displayState.editorEncoding = Buffer.isEncoding(encoding)
+            ? encoding
+            : 'hex'
+
           const encodeResponseAs =
             editMode === 'single' ? 'hex' : displayState.editorEncoding
           if (selectionData && selectionData.length > 0) {
-            this.opts.ui.notify('editorOnChange', {
+            res({
               encodedStr: dataToEncodedStr(
                 Buffer.from(selectionData),
                 encodeResponseAs
               ),
             })
-            res(undefined)
           }
-        })
-      case 'scrollViewport':
-        const { scrollOffset, bytesPerRow } =
-          msg as ExtensionMsgCommands['scrollViewport']
-        const startOffset = Math.max(
-          0,
-          scrollOffset - (scrollOffset % bytesPerRow)
-        )
-        return this.serviceRequestHandler!.request('scrollViewport', {
-          scrollOffset,
-          bytesPerRow,
-        })
-    }
+          break
+        case 'scrollViewport':
+          const { scrollOffset, bytesPerRow } =
+            msg as ExtensionMsgCommands['scrollViewport']
+          const startOffset = Math.max(
+            0,
+            scrollOffset - (scrollOffset % bytesPerRow)
+          )
+          res(
+            this.serviceRequestHandler!.request('scrollViewport', {
+              scrollOffset,
+              bytesPerRow,
+            })
+          )
+      }
+    })
   }
 
   constructor(

@@ -8,7 +8,7 @@ export enum Notification {
 }
 
 export interface UiToEditor {
-  clearChanges: {}
+  clearChanges: never
   applyChanges: {
     offset: number
     original_segment: Uint8Array<ArrayBufferLike>
@@ -21,9 +21,9 @@ export interface UiToEditor {
   }
 
   profile: { start: number; length: number }
-  requestEditedData: {}
-  save: {}
-  saveAs: {}
+  requestEditedData: never
+  save: never
+  saveAs: never
   saveSegment: { offset: number; length: number }
   search: {
     encoding: BufferEncoding
@@ -90,17 +90,17 @@ export type UiToEditorMsgId =
   | 'Search'
   | 'Replace'
 export interface UiToEditorMsgs {
-  ClearChanges: {}
+  ClearChanges: never
   ApplyChanges: {
     editMode: 'single' | 'multi'
     encoding: BufferEncoding
     selectionData: string
   }
   EditorOnChange: { start: number; length: number }
-  Profile: {}
-  RequestEditedData: {}
-  Save: {}
-  SaveAs: {}
+  Profile: never
+  RequestEditedData: never
+  Save: never
+  SaveAs: never
   SaveSegment: { offset: number; length: number }
   Search: {
     encoding: BufferEncoding
@@ -123,7 +123,7 @@ export interface UiToEditorMsgs {
   }
 }
 export type UiToEditorMsg =
-  | { clearChanges: {} }
+  | { clearChanges: never }
   | {
       applyChanges: {
         offset: number
@@ -139,9 +139,9 @@ export type UiToEditorMsg =
       }
     }
   | { profile: { start: number; length: number } }
-  | { requestEditedData: {} }
-  | { save: {} }
-  | { saveAs: {} }
+  | { requestEditedData: never }
+  | { save: never }
+  | { saveAs: never }
   | { saveSegment: { offset: number; length: number } }
   | {
       search: {
@@ -177,7 +177,7 @@ const t: DataEditorAPI = {
 }
 
 export interface ExtensionMsgCommands {
-  clearChanges: {}
+  clearChanges: never
   applyChanges: {
     offset: number
     original_segment: Uint8Array<ArrayBufferLike>
@@ -186,17 +186,17 @@ export interface ExtensionMsgCommands {
   editorOnChange: {
     // extension
     editMode: 'single' | 'multi'
-    encoding: BufferEncoding
-    selectionData: string
+    encoding: BufferEncoding | string
+    selectionData: Uint8Array
   }
   fileInfo: never // service
-  heartbeat: {} // service
+  heartbeat: never // service
   profile: { start: number; length: number } // service
-  redoChange: {}
-  replaceResults: {}
-  requestEditedData: {}
-  save: {}
-  saveAs: {}
+  redoChange: never
+  replaceResults: never
+  requestEditedData: never
+  save: never
+  saveAs: never
   saveSegment: { offset: number; length: number }
   scrollViewport: {
     scrollOffset: number
@@ -221,18 +221,18 @@ export interface ExtensionMsgCommands {
     limit?: number
     overwriteOnly?: boolean
   }
-  searchResults: {}
-  setUITheme: {}
-  showMessage: {}
-  undoChange: {}
-  updateLogicalDisplay: {}
+  searchResults: never
+  setUITheme: never
+  showMessage: never
+  undoChange: never
+  updateLogicalDisplay: never
   viewportRefresh: { offset: number; bytesPerRow: number }
 }
 export interface ExtensionMsgResponses {
-  clearChanges: {}
+  clearChanges: never
   applyChanges: {
     offset: number
-    original_segment: Uint8Array<ArrayBufferLike>
+    original_segment: Uint8Array
     edited_segment: Uint8Array
   }
   editorOnChange: {
@@ -246,13 +246,13 @@ export interface ExtensionMsgResponses {
     sizes: { computed: number; disk: number }
     changes: { applied: number; undos: number }
   } // service
-  heartbeat: {} // service
+  heartbeat: never // service
   profile: { start: number; length: number } // service
-  redoChange: {}
-  replaceResults: {}
-  requestEditedData: {}
-  save: {}
-  saveAs: {}
+  redoChange: never
+  replaceResults: never
+  requestEditedData: never
+  save: never
+  saveAs: never
   saveSegment: { offset: number; length: number }
   scrollViewport: ReadResponse
   search: {
@@ -274,11 +274,11 @@ export interface ExtensionMsgResponses {
     limit?: number
     overwriteOnly?: boolean
   }
-  searchResults: {}
-  setUITheme: {}
-  showMessage: {}
-  undoChange: {}
-  updateLogicalDisplay: {}
+  searchResults: never
+  setUITheme: never
+  showMessage: never
+  undoChange: never
+  updateLogicalDisplay: never
   viewportRefresh: ReadResponse
   read: ReadResponse
 }

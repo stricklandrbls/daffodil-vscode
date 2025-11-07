@@ -61,12 +61,28 @@ window.addEditorMessageListener = <K extends keyof ExtensionMsgCommands>(
 ): void => {
   window.addEventListener('message', (event: MessageEvent) => {
     const msg = event.data as {
-      type: keyof ExtensionMsgCommands
+      command: keyof ExtensionMsgCommands
       data: unknown
     }
-    if (msg.type === type) {
+    if (msg.command === type) {
       // Use a type assertion since runtime can't validate generics
       listener(msg.data as ExtensionMsgResponses[typeof type])
+    }
+  })
+}
+
+window.addListenerOnEditorMessages = <K extends keyof ExtensionMsgCommands>(
+  listener: (response: ExtensionMsgResponses[K]) => void,
+  ...types: K[]
+) => {
+  window.addEventListener('message', (event: MessageEvent) => {
+    const msg = event.data as {
+      command: keyof ExtensionMsgCommands
+      data: unknown
+    }
+    // if(types.includes(msg.command))
+    if (types.includes(event.data.command)) {
+      listener(msg.data as ExtensionMsgResponses[K])
     }
   })
 }

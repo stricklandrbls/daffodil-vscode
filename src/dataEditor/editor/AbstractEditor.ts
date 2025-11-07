@@ -45,11 +45,14 @@ export abstract class IDataEditor {
     this.serviceRequestHandler = await this.serviceConnect()
     ui.attach(bus)
     bus.onMessage(async (type, msg) => {
+      console.debug(`Received message bus msg: ${type}: ${msg}`)
       this.messageHandler(
         type,
         msg,
         this.serviceRequestHandler!.canHandle(type)
-      )
+      ).then((response) => {
+        this.opts.ui.notify(type, response)
+      })
     })
     this.serviceRequestHandler.request('fileInfo').then((metrics) => {
       ui.notify('fileInfo', metrics)
@@ -67,6 +70,6 @@ export abstract class IDataEditor {
     type: K,
     msg: ExtensionMsgCommands[K],
     isServiceRequestable: boolean
-  ): Promise<void>
+  ): Promise<any>
   protected abstract serviceConnect(): Promise<IServiceRequestHandler>
 }
