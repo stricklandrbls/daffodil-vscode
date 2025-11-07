@@ -1,3 +1,4 @@
+import { DisplayState } from 'dataEditor/editor/DisplayState'
 import { MessageBus } from 'dataEditor/message/messageBus'
 import {
   UiToEditor,
@@ -9,6 +10,10 @@ import {
 import { EditorUI } from 'dataEditor/ui/editorUI'
 
 export class SvelteUIAdapter implements EditorUI {
+  private displayState = new DisplayState()
+  getDisplayState(): DisplayState {
+    return this.displayState
+  }
   private bus?: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
 
   attach(bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>): void {

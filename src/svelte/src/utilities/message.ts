@@ -112,7 +112,14 @@ export interface ExtensionMsgResponses {
     encoding: BufferEncoding
     selectionData: string
   }
-  fileInfo: {} // service
+  fileInfo: {
+    filename: string
+    bom: string
+    language: string
+    contentType: string
+    sizes: { computed: number; disk: number }
+    changes: { applied: number; undos: number }
+  } // service
   heartbeat: {} // service
   profile: { start: number; length: number } // service
   redoChange: {}

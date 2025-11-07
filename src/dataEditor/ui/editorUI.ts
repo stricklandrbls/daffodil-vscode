@@ -1,3 +1,4 @@
+import { DisplayState } from 'dataEditor/editor/DisplayState'
 import { MessageBus } from 'dataEditor/message/messageBus'
 import {
   UiToEditor,
@@ -15,4 +16,5 @@ export interface EditorUI {
     type: K,
     msg: ExtensionMsgResponses[K]
   ): void // Editor -> UI push
+  getDisplayState(): DisplayState
 }

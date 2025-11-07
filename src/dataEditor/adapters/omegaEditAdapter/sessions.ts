@@ -4,6 +4,7 @@ import {
   EditorClient,
   getByteOrderMark,
   getClient,
+  getComputedFileSize,
   getContentType,
   getLanguage,
   getViewportData,
@@ -12,6 +13,7 @@ import {
 } from '@omega-edit/client'
 import {
   IServiceRequestHandler,
+  RequestType,
   ServiceRequestTypes,
 } from 'dataEditor/service/requestHandler'
 import { updateHeartbeatInterval } from './heartbeat'
@@ -31,6 +33,7 @@ export interface SessionStaticFileMetrics {
   readonly BOM: string
   readonly language: string
   readonly type: string
+  readonly filesize: number
 }
 export interface SessionInfo {
   changeCount: number
@@ -72,6 +75,7 @@ class OmegaEditorSessionManager {
           filePath: opts.targetFile,
           language,
           type,
+          filesize: filesize ? filesize : -1,
         },
         vpCreateResponse.getViewportId()
       )
@@ -147,19 +151,37 @@ export class OmegaEditSession implements IServiceRequestHandler {
     return Object.keys({} as ExtensionMsgCommands).includes(type)
   }
   async request<K extends keyof ExtensionMsgCommands>(
-    type: K,
-    data: ExtensionMsgCommands[K]
+    ...args: RequestType<K>
   ): Promise<ExtensionMsgResponses[K]> {
+    const [type, optData] = args as [K, ExtensionMsgCommands[K]]
+    this.reqMap.reqMap['fileInfo'] = (
+      ids: { session: string; viewport: DataEditorViewport },
+      content: never
+    ) => {
+      return new Promise(async (res, rej) => {
+        res({
+          bom: this.fileMetrics.BOM,
+          contentType: this.fileMetrics.type,
+          language: this.fileMetrics.language,
+          sizes: {
+            computed: await getComputedFileSize(this.sessionId),
+            disk: this.fileMetrics.filesize,
+          },
+          filename: this.fileMetrics.filePath,
+          changes: { applied: 0, undos: 0 },
+        })
+      })
+    }
     return this.reqMap.getRequestExecutor(type)(
       { session: this.sessionId, viewport: this.currentViewport },
-      data
+      optData
     )
   }
   currentViewportId() {
     return this.viewportId
   }
 }
-type RequestMap = {
+export type RequestMap = {
   [K in keyof ExtensionMsgCommands]: (
     ids: { session: string; viewport: DataEditorViewport },
     content: ExtensionMsgCommands[K]
@@ -167,7 +189,7 @@ type RequestMap = {
 }
 class OmegaEditRequestMap {
   constructor(private sessionRef: OmegaEditSession) {}
-  private reqMap: RequestMap = {
+  reqMap: RequestMap = {
     clearChanges: function (
       ids: { session: string; viewport: DataEditorViewport },
       content: {}
@@ -186,26 +208,6 @@ class OmegaEditRequestMap {
       original_segment: Uint8Array<ArrayBufferLike>
       edited_segment: Uint8Array
     }> {
-      throw new Error('Function not implemented.')
-    },
-    editorOnChange: function (
-      ids: { session: string; viewport: DataEditorViewport },
-      content: {
-        editMode: 'single' | 'multi'
-        encoding: BufferEncoding
-        selectionData: string
-      }
-    ): Promise<{
-      editMode: 'single' | 'multi'
-      encoding: BufferEncoding
-      selectionData: string
-    }> {
-      throw new Error('Function not implemented.')
-    },
-    fileInfo: function (
-      ids: { session: string; viewport: DataEditorViewport },
-      content: {}
-    ): Promise<{}> {
       throw new Error('Function not implemented.')
     },
     heartbeat: function (
@@ -258,9 +260,22 @@ class OmegaEditRequestMap {
     },
     scrollViewport: function (
       ids: { session: string; viewport: DataEditorViewport },
-      content: {}
-    ): Promise<{}> {
-      throw new Error('Function not implemented.')
+      content: { scrollOffset: number; bytesPerRow: number }
+    ): Promise<ExtensionMsgResponses['scrollViewport']> {
+      return new Promise(async (res, rej) => {
+        const vpResponse = await modifyViewport(
+          ids.viewport.id,
+          content.scrollOffset,
+          DataEditorViewport.capacity
+        )
+        res({
+          bytesRemaining: vpResponse.getFollowingByteCount(),
+          capacity: DataEditorViewport.capacity,
+          data: vpResponse.getData_asU8(),
+          length: vpResponse.getLength(),
+          srcOffset: vpResponse.getOffset(),
+        })
+      })
     },
     search: function (
       ids: { session: string; viewport: DataEditorViewport },
@@ -366,6 +381,29 @@ class OmegaEditRequestMap {
         )
         res({ ...ids.viewport.toObject() })
       })
+    },
+    fileInfo: function (
+      ids: { session: string; viewport: DataEditorViewport },
+      content: never
+    ): Promise<{
+      filename: string
+      bom: string
+      language: string
+      contentType: string
+      sizes: { computed: number; disk: number }
+      changes: { applied: number; undos: number }
+    }> {
+      throw new Error('Function not implemented.')
+    },
+    editorOnChange: function (
+      ids: { session: string; viewport: DataEditorViewport },
+      content: {
+        editMode: 'single' | 'multi'
+        encoding: BufferEncoding
+        selectionData: string
+      }
+    ): Promise<{ encodedStr: string }> {
+      throw '' // TODO: Remove non-service related msg command functions
     },
   }
   getRequestExecutor<K extends keyof RequestMap>(type: K): RequestMap[K] {

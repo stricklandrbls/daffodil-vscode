@@ -17,7 +17,7 @@ limitations under the License.
 <script lang="ts">
   import Button from '../../Inputs/Buttons/Button.svelte'
   import FlexContainer from '../../layouts/FlexContainer.svelte'
-  import { MessageCommand } from '../../../utilities/message'
+  import { MessageCommand, type ExtensionMsgResponses } from '../../../utilities/message'
   import { vscode } from '../../../utilities/vscode'
   import { saveable, fileMetrics, replaceQuery } from '../../../stores'
   import { createEventDispatcher } from 'svelte'
@@ -69,27 +69,35 @@ limitations under the License.
           // reset the profiler if changes have been made
           isProfilerOpen = false
           startOffset = length = 0
-          if ('fileName' in msg.data.data) {
-            $fileMetrics.name = msg.data.data.fileName
-          }
-          if ('type' in msg.data.data) {
-            $fileMetrics.type = msg.data.data.type
-          }
-          if ('language' in msg.data.data) {
-            $fileMetrics.language = msg.data.data.language
-          }
-          if ('diskFileSize' in msg.data.data) {
-            $fileMetrics.diskSize = msg.data.data.diskFileSize
-          }
-          if ('computedFileSize' in msg.data.data) {
-            $fileMetrics.computedSize = msg.data.data.computedFileSize
-          }
-          if ('changeCount' in msg.data.data) {
-            $fileMetrics.changeCount = msg.data.data.changeCount
-          }
-          if ('undoCount' in msg.data.data) {
-            $fileMetrics.undoCount = msg.data.data.undoCount
-          }
+          const {filename, bom, changes, contentType, language, sizes}  = msg.data.data as ExtensionMsgResponses['fileInfo']
+          $fileMetrics.name = filename
+          $fileMetrics.language = language
+          $fileMetrics.changeCount = changes.applied
+          $fileMetrics.undoCount = changes.undos
+          $fileMetrics.diskSize = sizes.disk
+          $fileMetrics.computedSize = sizes.computed
+          $fileMetrics.type = contentType
+          // if ('filename' in msg.data.data) {
+          //   $fileMetrics.name = msg.data.data.fileName
+          // }
+          // if ('type' in msg.data.data) {
+          //   $fileMetrics.type = msg.data.data.type
+          // }
+          // if ('language' in msg.data.data) {
+          //   $fileMetrics.language = msg.data.data.language
+          // }
+          // if ('diskFileSize' in msg.data.data) {
+          //   $fileMetrics.diskSize = msg.data.data.diskFileSize
+          // }
+          // if ('computedFileSize' in msg.data.data) {
+          //   $fileMetrics.computedSize = msg.data.data.computedFileSize
+          // }
+          // if ('changeCount' in msg.data.data) {
+          //   $fileMetrics.changeCount = msg.data.data.changeCount
+          // }
+          // if ('undoCount' in msg.data.data) {
+          //   $fileMetrics.undoCount = msg.data.data.undoCount
+          // }
         }
         break
       default:

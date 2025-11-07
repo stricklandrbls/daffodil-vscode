@@ -16,6 +16,7 @@ import {
 import { DataEditorService } from 'dataEditor/service/editorService'
 import { IServiceRequestHandler } from 'dataEditor/service/requestHandler'
 import { EditorUI } from 'dataEditor/ui/editorUI'
+import { DisplayState } from './DisplayState'
 
 export interface DataEditorDeps {
   configProvider: DataEditorConfigProvider
@@ -50,7 +51,9 @@ export abstract class IDataEditor {
         this.serviceRequestHandler!.canHandle(type)
       )
     })
-
+    this.serviceRequestHandler.request('fileInfo').then((metrics) => {
+      ui.notify('fileInfo', metrics)
+    })
     this.serviceRequestHandler
       .request('viewportRefresh', { offset: 0, bytesPerRow: 16 })
       .then((dataResponse) => {

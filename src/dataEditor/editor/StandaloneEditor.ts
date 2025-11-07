@@ -18,6 +18,7 @@ import {
   IServiceRequestHandler,
   ServiceRequestTypes,
 } from 'dataEditor/service/requestHandler'
+import { dataToEncodedStr } from './DisplayState'
 interface SInMsgs extends UiToEditorMsgs {
   standaloneOnly: { type: 'standalone' }
 }
@@ -47,8 +48,39 @@ export class StandaloneDataEditor extends IDataEditor {
     msg: ExtensionMsgCommands[K],
     isServiceRequestable: boolean
   ): Promise<any> {
-    return new Promise((res, rej) => {})
+    switch (type) {
+      case 'editorOnChange':
+        return new Promise((res, rej) => {
+          const { editMode, encoding, selectionData } =
+            msg as ExtensionMsgCommands['editorOnChange']
+          const displayState = this.opts.ui.getDisplayState()
+          displayState.editorEncoding = encoding
+          const encodeResponseAs =
+            editMode === 'single' ? 'hex' : displayState.editorEncoding
+          if (selectionData && selectionData.length > 0) {
+            this.opts.ui.notify('editorOnChange', {
+              encodedStr: dataToEncodedStr(
+                Buffer.from(selectionData),
+                encodeResponseAs
+              ),
+            })
+            res(undefined)
+          }
+        })
+      case 'scrollViewport':
+        const { scrollOffset, bytesPerRow } =
+          msg as ExtensionMsgCommands['scrollViewport']
+        const startOffset = Math.max(
+          0,
+          scrollOffset - (scrollOffset % bytesPerRow)
+        )
+        return this.serviceRequestHandler!.request('scrollViewport', {
+          scrollOffset,
+          bytesPerRow,
+        })
+    }
   }
+
   constructor(
     config: DataEditorArgMap[EditorType.Standalone],
     service: DataEditorService,
@@ -61,13 +93,7 @@ export class StandaloneDataEditor extends IDataEditor {
       ui,
       bus,
     })
-  }
-}
-
-class StandaloneMessageHandlers {
-  cmdFnMap: { [K: string]: (msg: UiToEditorMsg) => Promise<any> } = {}
-  handle<K extends UiToEditorMsg>(msg: K) {
-    const {} = msg
+    // this.handlers = new StandaloneMessageHandlers(this)
   }
 }
 

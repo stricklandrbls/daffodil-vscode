@@ -46,7 +46,7 @@ export class WebviewBusHost
   implements MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
 {
   private disposable?: vscode.Disposable
-  constructor(private readonly panel: vscode.WebviewPanel) {}
+  constructor(readonly panel: vscode.WebviewPanel) {}
   onMessage(
     handler: <K extends keyof ExtensionMsgCommands>(
       type: K,
@@ -56,8 +56,9 @@ export class WebviewBusHost
     // unsubscribe
 
     this.panel.webview.onDidReceiveMessage((msg) => {
-      handler(msg.type, msg.content)
-    })
+      const { command, data } = msg
+      handler(command, data)
+    }, this)
 
     return () => {
       this.disposable?.dispose()

@@ -68,10 +68,17 @@ export interface ServiceResponseTypes {
   fillData: { bytes: Uint8Array; byteStr: string }
   clearChanges: never
 }
+export type RequestType<K extends keyof ExtensionMsgCommands> = [
+  ExtensionMsgCommands[K],
+] extends [never]
+  ? [type: K]
+  : ExtensionMsgCommands[K] extends object
+    ? [type: K, data: ExtensionMsgCommands[K]]
+    : [type: K]
+
 export interface IServiceRequestHandler {
   request<K extends keyof ExtensionMsgCommands>(
-    type: K,
-    data: ExtensionMsgCommands[K]
+    ...args: RequestType<K>
   ): Promise<ExtensionMsgResponses[K]>
   requestAnd<K extends keyof ExtensionMsgCommands>(
     cmd: { type: K; data: ExtensionMsgCommands[K] },

@@ -189,7 +189,7 @@ export interface ExtensionMsgCommands {
     encoding: BufferEncoding
     selectionData: string
   }
-  fileInfo: {} // service
+  fileInfo: never // service
   heartbeat: {} // service
   profile: { start: number; length: number } // service
   redoChange: {}
@@ -198,7 +198,10 @@ export interface ExtensionMsgCommands {
   save: {}
   saveAs: {}
   saveSegment: { offset: number; length: number }
-  scrollViewport: {}
+  scrollViewport: {
+    scrollOffset: number
+    bytesPerRow: number
+  }
   search: {
     encoding: BufferEncoding
     searchStr: string | Uint8Array
@@ -233,12 +236,16 @@ export interface ExtensionMsgResponses {
     edited_segment: Uint8Array
   }
   editorOnChange: {
-    // extension
-    editMode: 'single' | 'multi'
-    encoding: BufferEncoding
-    selectionData: string
+    encodedStr: string
   }
-  fileInfo: {} // service
+  fileInfo: {
+    filename: string
+    bom: string
+    language: string
+    contentType: string
+    sizes: { computed: number; disk: number }
+    changes: { applied: number; undos: number }
+  } // service
   heartbeat: {} // service
   profile: { start: number; length: number } // service
   redoChange: {}
@@ -247,7 +254,7 @@ export interface ExtensionMsgResponses {
   save: {}
   saveAs: {}
   saveSegment: { offset: number; length: number }
-  scrollViewport: {}
+  scrollViewport: ReadResponse
   search: {
     encoding: BufferEncoding
     searchStr: string | Uint8Array
