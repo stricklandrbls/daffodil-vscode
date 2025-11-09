@@ -1,23 +1,18 @@
 import {
   createSession,
   createViewport,
-  EditorClient,
   getByteOrderMark,
-  getClient,
   getComputedFileSize,
   getContentType,
   getLanguage,
-  getViewportData,
   IServerHeartbeat,
-  modifyViewport,
 } from '@omega-edit/client'
 import {
   IServiceRequestHandler,
   RequestType,
-  ServiceRequestTypes,
 } from 'dataEditor/service/requestHandler'
 import { updateHeartbeatInterval } from './heartbeat'
-import { OmegaEditRequestMap} from './requestHandler'
+import { OmegaEditRequestMap } from './requestHandler'
 import {
   ExtensionMsgCommands,
   ExtensionMsgResponses,
@@ -145,24 +140,24 @@ export class OmegaEditSession implements IServiceRequestHandler {
     ...args: RequestType<K>
   ): Promise<ExtensionMsgResponses[K]> {
     const [type, optData] = args as [K, ExtensionMsgCommands[K]]
-    this.reqMap.reqMap['fileInfo'] = (
-      ids: { session: string; viewport: DataEditorViewport },
-      content: never
-    ) => {
-      return new Promise(async (res, rej) => {
-        res({
-          bom: this.fileMetrics.BOM,
-          contentType: this.fileMetrics.type,
-          language: this.fileMetrics.language,
-          sizes: {
-            computed: await getComputedFileSize(this.sessionId),
-            disk: this.fileMetrics.filesize,
-          },
-          filename: this.fileMetrics.filePath,
-          changes: { applied: 0, undos: 0 },
-        })
-      })
-    }
+    // this.reqMap.reqMap['fileInfo'] = (
+    //   ids: { session: string; viewport: DataEditorViewport },
+    //   content: never
+    // ) => {
+    //   return new Promise(async (res, rej) => {
+    //     res({
+    //       bom: this.fileMetrics.BOM,
+    //       contentType: this.fileMetrics.type,
+    //       language: this.fileMetrics.language,
+    //       sizes: {
+    //         computed: await getComputedFileSize(this.sessionId),
+    //         disk: this.fileMetrics.filesize,
+    //       },
+    //       filename: this.fileMetrics.filePath,
+    //       changes: { applied: 0, undos: 0 },
+    //     })
+    //   })
+    // }
     return this.reqMap.getRequestExecutor(type)(
       { session: this.sessionId, viewport: this.currentViewport },
       optData

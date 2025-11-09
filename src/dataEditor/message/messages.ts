@@ -158,15 +158,7 @@ export interface ExtensionMsgResponses {
   saveAs: never
   saveSegment: { offset: number; length: number }
   scrollViewport: ReadResponse
-  search: {
-    encoding: BufferEncoding
-    searchStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-  }
+  search: number[]
   replace: {
     encoding: BufferEncoding
     searchStr: string | Uint8Array
@@ -177,7 +169,7 @@ export interface ExtensionMsgResponses {
     limit?: number
     overwriteOnly?: boolean
   }
-  searchResults: never
+  searchResults: number[]
   setUITheme: never
   showMessage: never
   undoChange: never
@@ -202,3 +194,9 @@ export enum MessageLevel {
   Info,
   Warn,
 }
+
+export type RequestArgs<R, K extends keyof R> = [R[K]] extends [never]
+  ? [type: K]
+  : [type: K, payload: R[K]]
+export interface ExtensionRequest {}
+export interface ExtensionResponse {}

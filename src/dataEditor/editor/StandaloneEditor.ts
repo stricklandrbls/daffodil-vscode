@@ -1,12 +1,10 @@
 import { MessageBus } from 'dataEditor/message/messageBus'
 import {
-  UiToEditor,
-  EditorToUi,
-  UiToEditorMsg,
-  UiToEditorMsgs,
-  UiToEditorMsgId,
   ExtensionMsgCommands,
   ExtensionMsgResponses,
+  ExtensionRequest,
+  ExtensionResponse,
+  RequestArgs,
 } from 'dataEditor/message/messages'
 import { DataEditorService } from 'dataEditor/service/editorService'
 import { EditorUI } from 'dataEditor/ui/editorUI'
@@ -18,10 +16,24 @@ import {
   IServiceRequestHandler,
   ServiceRequestTypes,
 } from 'dataEditor/service/requestHandler'
-import { dataToEncodedStr } from './DisplayState'
-
+import { dataToEncodedStr, encodedStrToData } from './DisplayState'
+import { AbstractMediator } from 'dataEditor/message/messageMediator'
+class StandaloneMsgMediator extends AbstractMediator<ExtensionRequest> {
+  handle<K extends never>(
+    ...args: RequestArgs<ExtensionRequest, K>
+  ): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
+}
 export class StandaloneDataEditor extends IDataEditor {
-  protected async serviceConnect(): Promise<IServiceRequestHandler> {
+  protected msgMediator: AbstractMediator<ExtensionRequest>
+  protected canHandleLocally<K extends keyof ExtensionRequest>(
+    type: K,
+    msg: ExtensionRequest[K]
+  ): boolean {
+    throw new Error('Method not implemented.')
+  }
+  protected async serviceConnect(): Promise<boolean> {
     let statusBarIntervalId: NodeJS.Timeout | undefined = undefined
     const statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left
@@ -41,55 +53,11 @@ export class StandaloneDataEditor extends IDataEditor {
       res(await this.opts.service.connect())
     })
   }
-  protected messageHandler<K extends keyof ExtensionMsgCommands>(
-    type: K,
-    msg: ExtensionMsgCommands[K],
-    isServiceRequestable: boolean
-  ): Promise<any> {
-    return new Promise((res, rej) => {
-      switch (type) {
-        case 'editorOnChange':
-          const { editMode, encoding, selectionData } =
-            msg as ExtensionMsgCommands['editorOnChange']
-          const displayState = this.opts.ui.getDisplayState()
-
-          displayState.editorEncoding = Buffer.isEncoding(encoding)
-            ? encoding
-            : 'hex'
-
-          const encodeResponseAs =
-            editMode === 'single' ? 'hex' : displayState.editorEncoding
-          if (selectionData && selectionData.length > 0) {
-            res({
-              encodedStr: dataToEncodedStr(
-                Buffer.from(selectionData),
-                encodeResponseAs
-              ),
-            })
-          }
-          break
-        case 'scrollViewport':
-          const { scrollOffset, bytesPerRow } =
-            msg as ExtensionMsgCommands['scrollViewport']
-          const startOffset = Math.max(
-            0,
-            scrollOffset - (scrollOffset % bytesPerRow)
-          )
-          res(
-            this.serviceRequestHandler!.request('scrollViewport', {
-              scrollOffset,
-              bytesPerRow,
-            })
-          )
-      }
-    })
-  }
-
   constructor(
     config: DataEditorArgMap[EditorType.Standalone],
     service: DataEditorService,
     ui: EditorUI,
-    bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
+    bus: MessageBus<ExtensionRequest, ExtensionResponse>
   ) {
     super({
       config,
@@ -97,7 +65,6 @@ export class StandaloneDataEditor extends IDataEditor {
       ui,
       bus,
     })
-    // this.handlers = new StandaloneMessageHandlers(this)
   }
 }
 

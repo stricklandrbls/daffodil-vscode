@@ -89,13 +89,13 @@ limitations under the License.
   ) {
     $searchQuery.processing = true
     vscode.postMessage('search', {
-        encoding: $editorEncoding,
-        searchStr: $searchQuery.input,
-        is_case_insensitive: caseInsensitive,
-        is_reverse: isReverse,
-        offset: searchOffset,
-        length: searchLength,
-        limit: 1
+      encoding: $editorEncoding,
+      searchStr: $searchQuery.input,
+      is_case_insensitive: caseInsensitive,
+      is_reverse: isReverse,
+      offset: searchOffset,
+      length: searchLength,
+      limit: 1,
     })
   }
 
@@ -145,15 +145,16 @@ limitations under the License.
   function replace() {
     $replaceQuery.processing = true
     vscode.postMessage('replace', {
-        encoding: $editorEncoding,
-        is_case_insensitive: caseInsensitive,
-        is_reverse: false,
-        searchStr: $searchQuery.input,
-        replaceStr: $replaceQuery.input,
-        overwriteOnly: $editorActionsAllowed === EditActionRestrictions.OverwriteOnly,
-        length: 0,
-        limit: 1,
-        offset: matchOffset
+      encoding: $editorEncoding,
+      is_case_insensitive: caseInsensitive,
+      is_reverse: false,
+      searchStr: $searchQuery.input,
+      replaceStr: $replaceQuery.input,
+      overwriteOnly:
+        $editorActionsAllowed === EditActionRestrictions.OverwriteOnly,
+      length: 0,
+      limit: 1,
+      offset: matchOffset,
     })
     eventDispatcher('clearDataDisplays')
   }
@@ -193,49 +194,87 @@ limitations under the License.
 
     eventDispatcher('clearDataDisplays')
   }
-
+  window.addEditorMessageListener('searchResults', (results) => {
+    if (results.length > 0) {
+      searchQuery.updateSearchResults(results)
+      switch (direction) {
+        case 'Home':
+          hasNext = $searchQuery.overflow
+          hasPrev = false
+          break
+        case 'End':
+          hasNext = false
+          hasPrev = $searchQuery.overflow
+          break
+        case 'Forward':
+          hasNext = $searchQuery.overflow
+          hasPrev = justReplaced ? preReplaceHasPrev : true
+          justReplaced = false
+          break
+        case 'Backward':
+          hasNext = true
+          hasPrev = $searchQuery.overflow
+          break
+      }
+      matchOffset = $searchQuery.searchResults[0]
+      scrollToMatch()
+      if (searchStarted) {
+        showReplaceOptions = false
+        showSearchOptions = true
+      } else if (replaceStarted) {
+        showReplaceOptions = true
+        showSearchOptions = false
+      }
+    } else {
+      matchOffset = -1
+      $searchQuery.overflow = showSearchOptions = showReplaceOptions = false
+      searchQuery.clear()
+    }
+    searchStarted = replaceStarted = false
+    $searchQuery.processing = false
+  })
   window.addEventListener('message', (msg) => {
     switch (msg.data.command) {
       // handle search results
-      case MessageCommand.searchResults:
-        if (msg.data.data.searchResults.length > 0) {
-          searchQuery.updateSearchResults(msg.data.data)
-          switch (direction) {
-            case 'Home':
-              hasNext = $searchQuery.overflow
-              hasPrev = false
-              break
-            case 'End':
-              hasNext = false
-              hasPrev = $searchQuery.overflow
-              break
-            case 'Forward':
-              hasNext = $searchQuery.overflow
-              hasPrev = justReplaced ? preReplaceHasPrev : true
-              justReplaced = false
-              break
-            case 'Backward':
-              hasNext = true
-              hasPrev = $searchQuery.overflow
-              break
-          }
-          matchOffset = $searchQuery.searchResults[0]
-          scrollToMatch()
-          if (searchStarted) {
-            showReplaceOptions = false
-            showSearchOptions = true
-          } else if (replaceStarted) {
-            showReplaceOptions = true
-            showSearchOptions = false
-          }
-        } else {
-          matchOffset = -1
-          $searchQuery.overflow = showSearchOptions = showReplaceOptions = false
-          searchQuery.clear()
-        }
-        searchStarted = replaceStarted = false
-        $searchQuery.processing = false
-        break
+      //   case MessageCommand.searchResults:
+      //     if (msg.data.data.searchResults.length > 0) {
+      //       searchQuery.updateSearchResults(msg.data.data)
+      //       switch (direction) {
+      //         case 'Home':
+      //           hasNext = $searchQuery.overflow
+      //           hasPrev = false
+      //           break
+      //         case 'End':
+      //           hasNext = false
+      //           hasPrev = $searchQuery.overflow
+      //           break
+      //         case 'Forward':
+      //           hasNext = $searchQuery.overflow
+      //           hasPrev = justReplaced ? preReplaceHasPrev : true
+      //           justReplaced = false
+      //           break
+      //         case 'Backward':
+      //           hasNext = true
+      //           hasPrev = $searchQuery.overflow
+      //           break
+      //       }
+      //       matchOffset = $searchQuery.searchResults[0]
+      //       scrollToMatch()
+      //       if (searchStarted) {
+      //         showReplaceOptions = false
+      //         showSearchOptions = true
+      //       } else if (replaceStarted) {
+      //         showReplaceOptions = true
+      //         showSearchOptions = false
+      //       }
+      //     } else {
+      //       matchOffset = -1
+      //       $searchQuery.overflow = showSearchOptions = showReplaceOptions = false
+      //       searchQuery.clear()
+      //     }
+      //     searchStarted = replaceStarted = false
+      //     $searchQuery.processing = false
+      //     break
 
       // handle replace results
       case MessageCommand.replaceResults:

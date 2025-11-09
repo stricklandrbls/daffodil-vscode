@@ -1,9 +1,4 @@
 import {
-  modifyViewport,
-  replaceOneSession,
-  searchSession,
-} from '@omega-edit/client'
-import {
   ExtensionMsgCommands,
   ExtensionMsgResponses,
 } from 'dataEditor/message/messages'
@@ -81,4 +76,78 @@ export interface IServiceRequestHandler {
     ...args: RequestType<K>
   ): Promise<ExtensionMsgResponses[K]>
   canHandle(type: string): boolean
+}
+interface RequestTypeMap {
+  [key: string]: object | never
+}
+export interface BaseRequests extends RequestTypeMap {
+  editorOnChange: { data: Uint8Array }
+  setTheme: { type: 'light' | 'dark' }
+  showMessage: { type: 'info' | 'warn'; msg: string }
+  test: never
+}
+
+export type RequestTypes<
+  R extends { [key: string]: object | never },
+  K extends keyof R,
+> = [R[K]] extends [never]
+  ? [type: K]
+  : R[K] extends object
+    ? [type: K, data: R[K]]
+    : [type: K]
+
+export interface IRequestHandler<Requests extends RequestTypeMap> {
+  request<K extends keyof Requests>(
+    ...args: RequestTypes<Requests, K>
+  ): Promise<any>
+  canHandle(type: string): boolean
+}
+export interface ExtendedRequests extends RequestTypeMap {
+  search: { offset: number }
+  save: never
+  read: { offset: number; length: number }
+}
+
+export class ExtendedHandler implements IRequestHandler<ExtendedRequests> {
+  request<K extends keyof ExtendedRequests>(
+    ...args: RequestTypes<ExtendedRequests, K>
+  ): Promise<any> {
+    throw new Error('Method not implemented.')
+  }
+  canHandle(type: string): boolean {
+    throw new Error('Method not implemented.')
+  }
+}
+const eh = new ExtendedHandler()
+eh.request('save')
+
+abstract class Usage {
+  abstract handle<K extends keyof BaseRequests>(
+    ...args: RequestTypes<BaseRequests, K>
+  ): void
+}
+class User extends Usage {
+  handle<K extends keyof BaseRequests>(
+    ...args: RequestTypes<BaseRequests, K>
+  ): void {
+    const [type, someData] = args as [K, BaseRequests[K]]
+    if (this.locallyHandlable(type)) {
+      console.log('handling')
+    } else {
+      this.handler.request(type, ...some)
+    }
+  }
+  handler: IRequestHandler<BaseRequests> = {
+    request: function <K extends keyof BaseRequests>(
+      ...args: RequestTypes<BaseRequests, K>
+    ): Promise<any> {
+      throw new Error('Function not implemented.')
+    },
+    canHandle: function (type: string): boolean {
+      throw new Error('Function not implemented.')
+    },
+  }
+  locallyHandlable<K extends keyof ExtendedRequests>(type: K) {
+    if (type === 'editorOnChange') return true
+  }
 }
