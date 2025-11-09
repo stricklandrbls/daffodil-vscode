@@ -88,17 +88,14 @@ limitations under the License.
     isReverse: boolean
   ) {
     $searchQuery.processing = true
-    vscode.postMessage({
-      command: MessageCommand.search,
-      data: {
-        searchData: $searchQuery.input,
-        caseInsensitive: caseInsensitive,
-        isReverse: isReverse,
+    vscode.postMessage('search', {
         encoding: $editorEncoding,
-        searchOffset: searchOffset,
-        searchLength: searchLength,
-        limit: 1,
-      },
+        searchStr: $searchQuery.input,
+        is_case_insensitive: caseInsensitive,
+        is_reverse: isReverse,
+        offset: searchOffset,
+        length: searchLength,
+        limit: 1
     })
   }
 
@@ -147,20 +144,16 @@ limitations under the License.
 
   function replace() {
     $replaceQuery.processing = true
-    vscode.postMessage({
-      command: MessageCommand.replace,
-      data: {
-        searchData: $searchQuery.input,
-        caseInsensitive: caseInsensitive,
-        isReverse: false,
-        replaceData: $replaceQuery.input,
+    vscode.postMessage('replace', {
         encoding: $editorEncoding,
-        overwriteOnly:
-          $editorActionsAllowed === EditActionRestrictions.OverwriteOnly,
-        searchOffset: matchOffset,
-        searchLength: 0,
+        is_case_insensitive: caseInsensitive,
+        is_reverse: false,
+        searchStr: $searchQuery.input,
+        replaceStr: $replaceQuery.input,
+        overwriteOnly: $editorActionsAllowed === EditActionRestrictions.OverwriteOnly,
+        length: 0,
         limit: 1,
-      },
+        offset: matchOffset
     })
     eventDispatcher('clearDataDisplays')
   }

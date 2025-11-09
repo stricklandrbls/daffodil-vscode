@@ -7,54 +7,6 @@ export enum Notification {
   Error = 'Error',
 }
 
-export interface UiToEditor {
-  clearChanges: never
-  applyChanges: {
-    offset: number
-    original_segment: Uint8Array<ArrayBufferLike>
-    edited_segment: Uint8Array
-  }
-  editorOnChange: {
-    editMode: 'single' | 'multi'
-    encoding: BufferEncoding
-    selectionData: string
-  }
-
-  profile: { start: number; length: number }
-  requestEditedData: never
-  save: never
-  saveAs: never
-  saveSegment: { offset: number; length: number }
-  search: {
-    encoding: BufferEncoding
-    searchStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-  }
-  replace: {
-    encoding: BufferEncoding
-    searchStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-    overwriteOnly?: boolean
-  }
-}
-
-export type EditorToUi =
-  | { type: 'Notify'; kind: Notification; payload?: unknown }
-  | { type: 'Bytes'; offset: number; data: Uint8Array }
-  | { type: 'Ack'; id?: string }
-  | { type: 'Error'; message: string; details?: unknown }
-
-// Narrow helper
-export type MessageDirection = UiToEditor | EditorToUi
-
 export enum MessageCommand {
   clearChanges,
   applyChanges,
@@ -78,104 +30,6 @@ export enum MessageCommand {
   updateLogicalDisplay,
   viewportRefresh,
 }
-export type UiToEditorMsgId =
-  | 'ClearChanges'
-  | 'ApplyChanges'
-  | 'EditorOnChange'
-  | 'Profile'
-  | 'RequestEditedData'
-  | 'Save'
-  | 'SaveAs'
-  | 'SaveSegment'
-  | 'Search'
-  | 'Replace'
-export interface UiToEditorMsgs {
-  ClearChanges: never
-  ApplyChanges: {
-    editMode: 'single' | 'multi'
-    encoding: BufferEncoding
-    selectionData: string
-  }
-  EditorOnChange: { start: number; length: number }
-  Profile: never
-  RequestEditedData: never
-  Save: never
-  SaveAs: never
-  SaveSegment: { offset: number; length: number }
-  Search: {
-    encoding: BufferEncoding
-    searchStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-  }
-  Replace: {
-    encoding: BufferEncoding
-    searchStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-    overwriteOnly?: boolean
-  }
-}
-export type UiToEditorMsg =
-  | { clearChanges: never }
-  | {
-      applyChanges: {
-        offset: number
-        original_segment: Uint8Array<ArrayBufferLike>
-        edited_segment: Uint8Array
-      }
-    }
-  | {
-      editorOnChange: {
-        editMode: 'single' | 'multi'
-        encoding: BufferEncoding
-        selectionData: string
-      }
-    }
-  | { profile: { start: number; length: number } }
-  | { requestEditedData: never }
-  | { save: never }
-  | { saveAs: never }
-  | { saveSegment: { offset: number; length: number } }
-  | {
-      search: {
-        encoding: BufferEncoding
-        searchStr: string | Uint8Array
-        is_case_insensitive?: boolean
-        is_reverse?: boolean
-        offset?: number
-        length?: number
-        limit?: number
-      }
-    }
-  | {
-      replace: {
-        encoding: BufferEncoding
-        searchStr: string | Uint8Array
-        is_case_insensitive?: boolean
-        is_reverse?: boolean
-        offset?: number
-        length?: number
-        limit?: number
-        overwriteOnly?: boolean
-      }
-    }
-
-export interface DataEditorAPI {
-  createMessage<K extends UiToEditorMsg>(type: K)
-}
-const t: DataEditorAPI = {
-  createMessage: function <K extends UiToEditorMsg>(type: K) {
-    throw new Error('Function not implemented.')
-  },
-}
-
 export interface ExtensionMsgCommands {
   clearChanges: never
   applyChanges: {
@@ -203,7 +57,7 @@ export interface ExtensionMsgCommands {
     bytesPerRow: number
   }
   search: {
-    encoding: BufferEncoding
+    encoding: BufferEncoding | string
     searchStr: string | Uint8Array
     is_case_insensitive?: boolean
     is_reverse?: boolean
@@ -212,8 +66,9 @@ export interface ExtensionMsgCommands {
     limit?: number
   }
   replace: {
-    encoding: BufferEncoding
+    encoding: BufferEncoding | string
     searchStr: string | Uint8Array
+    replaceStr: string | Uint8Array
     is_case_insensitive?: boolean
     is_reverse?: boolean
     offset?: number
