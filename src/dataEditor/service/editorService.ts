@@ -1,5 +1,6 @@
 import { IServerHeartbeat } from '@omega-edit/client'
-import { IServiceRequestHandler } from './requestHandler'
+import { IServiceRequestHandler, RequestHandler } from './requestHandler'
+import { RequestArgs } from 'dataEditor/message/messages'
 
 // src/ports/binaryDataService.ts
 export type HeartbeatFn = (ts: number) => void
@@ -16,13 +17,26 @@ export type ServiceRequests = {
 }
 
 export interface DataEditorService {
-  connect(): Promise<IServiceRequestHandler>
+  connect(): Promise<RequestHandler<any, any>>
   disconnect(): Promise<void>
   isConnected(): boolean
 
-  read(offset: number, length: number): Promise<Uint8Array>
-  write(offset: number, data: Uint8Array): Promise<void>
+  on<T extends keyof EditorServiceEvents>(
+    event: T,
+    listener: (content: EditorServiceEvents[T]) => any
+  ): void
+}
 
+export interface IDataEditorService<
+  Requests,
+  Responses extends { [K in keyof Requests]: any },
+> {
+  connect(): Promise<any>
+  disconnect(): Promise<void>
+  isConnected(): boolean
+  request<K extends keyof Requests>(
+    ...args: RequestArgs<Requests, K>
+  ): Promise<Responses[K]>
   on<T extends keyof EditorServiceEvents>(
     event: T,
     listener: (content: EditorServiceEvents[T]) => any

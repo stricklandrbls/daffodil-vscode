@@ -177,6 +177,14 @@ export interface ExtensionMsgResponses {
   viewportRefresh: ReadResponse
   read: ReadResponse
 }
+export type ExtensionReqSubMap = Pick<
+  ExtensionMsgCommands,
+  keyof ExtensionMsgCommands
+>
+export type ExtensionResSubMap = Pick<
+  ExtensionMsgResponses,
+  keyof ExtensionMsgResponses
+>
 type ReadRequest = {
   offset: number
   capacity: number

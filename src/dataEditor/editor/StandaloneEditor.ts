@@ -6,33 +6,47 @@ import {
   ExtensionResponse,
   RequestArgs,
 } from 'dataEditor/message/messages'
-import { DataEditorService } from 'dataEditor/service/editorService'
+import {
+  DataEditorService,
+  IDataEditorService,
+} from 'dataEditor/service/editorService'
 import { EditorUI } from 'dataEditor/ui/editorUI'
 import { IDataEditor } from './AbstractEditor'
 import { EditorType } from '.'
 import { DataEditorArgMap } from './editorRegistry'
 import * as vscode from 'vscode'
 import {
+  AbstractMediator,
+  MessageHandler,
+} from 'dataEditor/message/messageMediator'
+import {
   IServiceRequestHandler,
-  ServiceRequestTypes,
+  RequestHandler,
+  RequestType,
 } from 'dataEditor/service/requestHandler'
-import { dataToEncodedStr, encodedStrToData } from './DisplayState'
-import { AbstractMediator } from 'dataEditor/message/messageMediator'
-class StandaloneMsgMediator extends AbstractMediator<ExtensionRequest> {
-  handle<K extends never>(
-    ...args: RequestArgs<ExtensionRequest, K>
-  ): Promise<void> {
-    throw new Error('Method not implemented.')
+class StandaloneMsgMediator extends AbstractMediator<
+  ExtensionMsgCommands,
+  ExtensionMsgResponses
+> {
+  private serviceHandler: RequestHandler<any, any> | undefined = undefined
+  private baseHandler: MessageHandler<ExtensionMsgCommands> | undefined =
+    undefined
+  setServiceHandler(handler: RequestHandler<any, any>) {
+    this.serviceHandler = handler
+  }
+  handle<K extends keyof ExtensionMsgCommands>(
+    ...args: RequestArgs<ExtensionMsgCommands, K>
+  ): Promise<ExtensionMsgResponses[K]> {
+    const [type, data] = args as [K, ExtensionMsgCommands[K]]
+    return this.serviceHandler!.request(type, data)
+    // return this.baseHandler?.canHandle(type)
+    //   ? this.baseHandler.handle(type, data)
+    //   : this.serviceHandler!.request(type, data)
   }
 }
 export class StandaloneDataEditor extends IDataEditor {
-  protected msgMediator: AbstractMediator<ExtensionRequest>
-  protected canHandleLocally<K extends keyof ExtensionRequest>(
-    type: K,
-    msg: ExtensionRequest[K]
-  ): boolean {
-    throw new Error('Method not implemented.')
-  }
+  protected msgMediator: StandaloneMsgMediator = new StandaloneMsgMediator()
+
   protected async serviceConnect(): Promise<boolean> {
     let statusBarIntervalId: NodeJS.Timeout | undefined = undefined
     const statusBarItem = vscode.window.createStatusBarItem(
@@ -49,15 +63,16 @@ export class StandaloneDataEditor extends IDataEditor {
     this.opts.service.on('error', (err) => {
       clearInterval(statusBarIntervalId)
     })
-    return new Promise(async (res, rej) => {
-      res(await this.opts.service.connect())
-    })
+    const serviceReqHandler = await this.opts.service.connect()
+    this.msgMediator.setServiceHandler(serviceReqHandler)
+    this.msgMediator.handle('fileInfo').then()
+    return true
   }
   constructor(
     config: DataEditorArgMap[EditorType.Standalone],
     service: DataEditorService,
     ui: EditorUI,
-    bus: MessageBus<ExtensionRequest, ExtensionResponse>
+    bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
   ) {
     super({
       config,

@@ -1,6 +1,9 @@
 import {
   ExtensionMsgCommands,
   ExtensionMsgResponses,
+  ExtensionReqSubMap,
+  ExtensionResSubMap,
+  RequestArgs,
 } from 'dataEditor/message/messages'
 export type LookupOptions = {
   caseInsensitive: boolean
@@ -75,6 +78,13 @@ export interface IServiceRequestHandler {
   request<K extends keyof ExtensionMsgCommands>(
     ...args: RequestType<K>
   ): Promise<ExtensionMsgResponses[K]>
+  canHandle(type: string): boolean
+}
+export interface RequestHandler<
+  Req extends Partial<ExtensionMsgCommands>,
+  Res extends { [K in keyof Req]: any },
+> {
+  request<K extends keyof Req>(...args: RequestArgs<Req, K>): Promise<Res[K]>
   canHandle(type: string): boolean
 }
 interface RequestTypeMap {

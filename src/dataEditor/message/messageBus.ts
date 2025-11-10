@@ -17,20 +17,20 @@ export type EditorToUIHandler = (m: EditorToUi) => Thenable<boolean>
 export interface MessageBus<In, Out> {
   post<K extends keyof Out>(type: K, message: Out[K]): void
   onMessageRx(
-    handler: <K extends keyof In>(...args: RequestArgs<In, K>) => Promise<void>
+    handler: <K extends keyof In>(...args: RequestArgs<In, K>) => Promise<any>
   ): () => void // unsubscribe
 }
 
 // Extension host side (Editor <-> Webview)
 export class WebviewBusHost
-  implements MessageBus<ExtensionRequest, ExtensionResponse>
+  implements MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
 {
   private disposable?: vscode.Disposable
   constructor(readonly panel: vscode.WebviewPanel) {}
   onMessageRx(
-    handler: <K extends keyof ExtensionRequest>(
-      ...args: RequestArgs<ExtensionRequest, K>
-    ) => Promise<void>
+    handler: <K extends keyof ExtensionMsgCommands>(
+      ...args: RequestArgs<ExtensionMsgCommands, K>
+    ) => Promise<ExtensionMsgResponses[K]>
   ): () => void {
     // unsubscribe
 

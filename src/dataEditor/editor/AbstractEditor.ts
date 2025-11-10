@@ -7,14 +7,8 @@ import {
   EditorToUi,
   ExtensionMsgCommands,
   ExtensionMsgResponses,
-  ExtensionRequest,
-  ExtensionResponse,
 } from 'dataEditor/message/messages'
 import { DataEditorService } from 'dataEditor/service/editorService'
-import {
-  BaseRequests,
-  IServiceRequestHandler,
-} from 'dataEditor/service/requestHandler'
 import { EditorUI } from 'dataEditor/ui/editorUI'
 
 export interface DataEditorDeps {
@@ -25,14 +19,17 @@ export interface DataEditorDeps {
 }
 
 export abstract class IDataEditor {
-  protected abstract msgMediator: AbstractMediator<ExtensionRequest>
+  protected abstract msgMediator: AbstractMediator<
+    ExtensionMsgCommands,
+    ExtensionMsgResponses
+  >
   protected logger: IDataEditorLogger = new DefaultEditorLogger()
   constructor(
     protected readonly opts: {
       config: DataEditorConfig
       service: DataEditorService
       ui: EditorUI
-      bus: MessageBus<ExtensionRequest, ExtensionResponse>
+      bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
     }
   ) {
     const { logFile, logLevel } = this.opts.config
@@ -40,7 +37,7 @@ export abstract class IDataEditor {
   }
   async open(): Promise<void> {
     const { service, ui, bus } = this.opts
-    // this.serviceRequestHandler = await this.serviceConnect()
+    await this.serviceConnect()
     ui.attach(bus)
     bus.onMessageRx(this.msgMediator.handle)
     // bus.onMessage(async (type, msg) => {
@@ -70,9 +67,5 @@ export abstract class IDataEditor {
   async close(): Promise<void> {
     throw ''
   }
-  protected abstract canHandleLocally<K extends keyof ExtensionRequest>(
-    type: K,
-    msg: ExtensionRequest[K]
-  ): boolean
   protected abstract serviceConnect(): Promise<boolean>
 }
