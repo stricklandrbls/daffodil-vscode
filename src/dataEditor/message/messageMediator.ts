@@ -5,13 +5,13 @@ export abstract class AbstractMediator<
   Responses extends Record<keyof Base, any>,
 > {
   /** Must be implemented by subclasses — every Base key must be handled. */
-  abstract handle<K extends keyof Base>(
+  abstract process<K extends keyof Base>(
     ...args: RequestArgs<Base, K>
   ): Promise<Responses[K]>
 
   /** Optional convenience entrypoint for base routes. */
   route<K extends keyof Base>(...args: RequestArgs<Base, K>): void {
-    this.handle(...args)
+    this.process(...args)
   }
 }
 

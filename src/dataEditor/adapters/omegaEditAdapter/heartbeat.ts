@@ -20,10 +20,12 @@ import {
   IServerInfo,
 } from '@omega-edit/client'
 
+export type HeartbeatReceiver = (hb: IServerHeartbeat) => any
 const HEARTBEAT_INTERVAL_MS: number = 1000 // 1 second (1000 ms)
 
 let getHeartbeatIntervalId: NodeJS.Timeout | number | undefined = undefined
 let currentHeartbeat: IServerHeartbeat | undefined = undefined
+let receviers: Map<string, HeartbeatReceiver> = new Map()
 
 export function updateHeartbeatInterval(activeSessions: string[]) {
   if (getHeartbeatIntervalId) {
@@ -37,6 +39,28 @@ export function updateHeartbeatInterval(activeSessions: string[]) {
             HEARTBEAT_INTERVAL_MS * activeSessions.length
           )
         })
+      : undefined
+}
+export function registerHeartbeatReceiver(
+  id: string,
+  receiver?: HeartbeatReceiver
+) {
+  receviers.set(id, receiver ? receiver : () => {})
+
+  if (getHeartbeatIntervalId) {
+    clearInterval(getHeartbeatIntervalId)
+  }
+  getHeartbeatIntervalId =
+    receviers.size > 0
+      ? setInterval(async () => {
+          currentHeartbeat = await getServerHeartbeat(
+            Array.from(receviers.keys())
+          )
+
+          receviers.forEach((rx) => {
+            rx(currentHeartbeat!)
+          })
+        }, HEARTBEAT_INTERVAL_MS * receviers.size)
       : undefined
 }
 export function getCurrentHeartbeatInfo() {

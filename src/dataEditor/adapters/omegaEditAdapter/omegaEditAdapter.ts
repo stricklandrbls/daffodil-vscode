@@ -6,18 +6,12 @@ import { generateLogbackConfigFile } from 'dataEditor/logs'
 import {
   DataEditorService,
   EditorServiceEvents,
-  IDataEditorService,
 } from 'dataEditor/service/editorService'
 import EventEmitter from 'events'
 import { Socket } from 'net'
 import path from 'path'
-import { OmegaEditSession, sessionCreate } from './sessions'
-import { RequestArgs } from 'dataEditor/message/messages'
-import {
-  IServiceRequestHandler,
-  RequestHandler,
-} from 'dataEditor/service/requestHandler'
-import { OmegaEditRequest, OmegaEditResponse } from './requestHandler'
+import { sessionCreate } from './sessions'
+import { RequestHandler } from 'dataEditor/service/requestHandler'
 
 export type OmegaEditConfigProvider = () => DataEditorConfig &
   OmegaEditServiceConfig
@@ -53,7 +47,15 @@ export class OmegaEditorAdapter implements DataEditorService {
         this.eventEmitter.emit('error', err)
         return undefined
       })
-      const session = await sessionCreate({ ...this.cfg })
+      const session = await sessionCreate({
+        ...this.cfg,
+        heartbeatReceiver: (hb) => {
+          this.eventEmitter.emit('heartbeatUpdate', {
+            ...hb,
+            port: this.cfg.port,
+          })
+        },
+      })
       this.connected = true
       this.eventEmitter.emit('connected', {
         hostname: this.cfg.hostname,
@@ -63,34 +65,6 @@ export class OmegaEditorAdapter implements DataEditorService {
       res(session as RequestHandler<any, any>)
     })
   }
-  // connect(): Promise<OmegaEditSession> {
-  //   return new Promise(async (res) => {
-  //     this.eventEmitter.emit(
-  //       'status',
-  //       `Conencting to Ωedit server on port ${this.cfg.port}`
-  //     )
-
-  //     this.serverPid = await startService({
-  //       ...this.cfg,
-  //     }).catch((err) => {
-  //       this.eventEmitter.emit('error', err)
-  //       return -1
-  //     })
-
-  //     const serverInfo = await testServiceConnection().catch((err) => {
-  //       this.eventEmitter.emit('error', err)
-  //       return undefined
-  //     })
-  //     const session = await sessionCreate({ ...this.cfg })
-  //     this.connected = true
-  //     this.eventEmitter.emit('connected', {
-  //       hostname: this.cfg.hostname,
-  //       port: this.cfg.port,
-  //     })
-
-  //     res(session)
-  //   })
-  // }
 
   public on<T extends keyof EditorServiceEvents>(
     event: T,
@@ -214,59 +188,4 @@ async function testServiceConnection(): Promise<IServerInfo> {
     }
     res(serverInfo!)
   })
-}
-
-export class OmegaEditService
-  implements IDataEditorService<OmegaEditRequest, OmegaEditResponse>
-{
-  private connected = false
-  private eventEmitter: EventEmitter = new EventEmitter()
-  private serverPid: number = -1
-  constructor(private readonly cfg: DataEditorConfig) {}
-
-  public on<T extends keyof EditorServiceEvents>(
-    event: T,
-    listener: (content: EditorServiceEvents[T]) => any
-  ) {
-    this.eventEmitter.on(event, listener)
-  }
-  request<K extends keyof OmegaEditRequest>(
-    ...args: RequestArgs<OmegaEditRequest, K>
-  ): Promise<OmegaEditResponse[K]> {
-    throw new Error('Method not implemented.')
-  }
-
-  connect(): Promise<RequestHandler<any, any>> {
-    return new Promise(async (res) => {
-      this.eventEmitter.emit(
-        'status',
-        `Conencting to Ωedit server on port ${this.cfg.port}`
-      )
-
-      this.serverPid = await startService({
-        ...this.cfg,
-      }).catch((err) => {
-        this.eventEmitter.emit('error', err)
-        return -1
-      })
-
-      const serverInfo = await testServiceConnection().catch((err) => {
-        this.eventEmitter.emit('error', err)
-        return undefined
-      })
-      const session = await sessionCreate({ ...this.cfg })
-      this.connected = true
-      this.eventEmitter.emit('connected', {
-        hostname: this.cfg.hostname,
-        port: this.cfg.port,
-      })
-      res(session as RequestHandler<any, any>)
-    })
-  }
-  disconnect(): Promise<void> {
-    throw new Error('Method not implemented.')
-  }
-  isConnected(): boolean {
-    return this.connected
-  }
 }

@@ -1,6 +1,9 @@
 import { SvelteUIAdapter } from 'dataEditor/adapters/svelteUIAdapter'
 import { MessageBus } from 'dataEditor/message/messageBus'
-import { ExtensionMsgCommands, ExtensionMsgResponses } from 'dataEditor/message/messages'
+import {
+  ExtensionMsgCommands,
+  ExtensionMsgResponses,
+} from 'dataEditor/message/messages'
 import { DataEditorService } from 'dataEditor/service/editorService'
 import { EditorUI } from 'dataEditor/ui/editorUI'
 import { OmegaEditorAdapter } from 'dataEditor/adapters/omegaEditAdapter/omegaEditAdapter'
@@ -30,6 +33,9 @@ export class DataEditorFactory {
       service = this.opts.makeService?.(cfg)
     } else {
       service = new OmegaEditorAdapter(cfg, this.opts.vendor)
+      service.on('heartbeatUpdate', (content) => {
+        bus.post('heartbeat', content)
+      })
     }
     const ui = this.opts.makeUI?.() ?? new SvelteUIAdapter()
 
