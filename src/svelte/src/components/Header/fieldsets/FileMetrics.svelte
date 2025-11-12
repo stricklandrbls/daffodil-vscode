@@ -17,9 +17,9 @@ limitations under the License.
 <script lang="ts">
   import Button from '../../Inputs/Buttons/Button.svelte'
   import FlexContainer from '../../layouts/FlexContainer.svelte'
-  import { MessageCommand, type ExtensionMsgResponses } from '../../../utilities/message'
+  import { MessageCommand } from '../../../utilities/message'
   import { vscode } from '../../../utilities/vscode'
-  import { saveable, fileMetrics, replaceQuery } from '../../../stores'
+  import { saveable, fileMetrics } from '../../../stores'
   import { createEventDispatcher } from 'svelte'
   import SidePanel from '../../layouts/SidePanel.svelte'
   import ByteFrequencyGraph from '../../DataMetrics/DataMetrics.svelte'
@@ -61,17 +61,19 @@ limitations under the License.
       }, 10000)
     }
   }
+  window.addEditorMessageListener('counts', info => {
+    const {applied, computedFileSize, undos} = info
+    $fileMetrics.changeCount = applied
+    $fileMetrics.computedSize = $fileMetrics.diskSize = computedFileSize
+    $fileMetrics.undoCount = undos
+  })
   window.addEditorMessageListener('fileInfo', (info)=>{
              // reset the profiler if changes have been made
           isProfilerOpen = false
           startOffset = length = 0
-          const {filename, bom, changes, contentType, language, sizes}  = info
+          const {filename, bom, contentType, language}  = info
           $fileMetrics.name = filename
           $fileMetrics.language = language
-          $fileMetrics.changeCount = changes.applied
-          $fileMetrics.undoCount = changes.undos
-          $fileMetrics.diskSize = sizes.disk
-          $fileMetrics.computedSize = sizes.computed
           $fileMetrics.type = contentType
   })
 //   window.addEventListener('message', (msg) => {

@@ -24,28 +24,57 @@ import {
   RequestHandler,
   RequestType,
 } from 'dataEditor/service/requestHandler'
+import { OmegaEditSession } from 'dataEditor/adapters/omegaEditAdapter/sessions'
+import { dataToEncodedStr, DisplayState } from './DisplayState'
+class ExtensionLocalMsgHandler
+  implements
+    RequestHandler<
+      Pick<ExtensionMsgCommands, 'editorOnChange'>,
+      Pick<ExtensionMsgResponses, 'editorOnChange'>
+    >
+{
+  request<K extends 'editorOnChange'>(
+    ...args: RequestArgs<Pick<ExtensionMsgCommands, 'editorOnChange'>, K>
+  ): Promise<Pick<ExtensionMsgResponses, 'editorOnChange'>[K]> {
+    throw new Error('Method not implemented.')
+  }
+  canHandle(type: string): boolean {
+    return type === 'editorOnChange'
+  }
+  editorOnChange: (
+    args: ExtensionMsgCommands['editorOnChange']
+  ) => Promise<ExtensionMsgResponses['editorOnChange']> = (args) => {
+    throw ''
+  }
+}
 class StandaloneMsgMediator extends AbstractMediator<
   ExtensionMsgCommands,
   ExtensionMsgResponses
 > {
-  private serviceHandler: RequestHandler<any, any> | undefined = undefined
-  private baseHandler: MessageHandler<ExtensionMsgCommands> | undefined =
-    undefined
+  constructor(
+    private serviceHandler: RequestHandler<any, any>,
+    private baseHandler: RequestHandler<any, any>
+  ) {
+    super()
+  }
   setServiceHandler(handler: RequestHandler<any, any>) {
     this.serviceHandler = handler
   }
-  handle<K extends keyof ExtensionMsgCommands>(
+  setBaseHandler(handler: typeof this.baseHandler) {
+    this.baseHandler = handler
+  }
+  process<K extends keyof ExtensionMsgCommands>(
     ...args: RequestArgs<ExtensionMsgCommands, K>
   ): Promise<ExtensionMsgResponses[K]> {
     const [type, data] = args as [K, ExtensionMsgCommands[K]]
+    if (this.baseHandler!.canHandle(type)) {
+      return this.baseHandler!.request(type, data)
+    }
     return this.serviceHandler!.request(type, data)
-    // return this.baseHandler?.canHandle(type)
-    //   ? this.baseHandler.handle(type, data)
-    //   : this.serviceHandler!.request(type, data)
   }
 }
 export class StandaloneDataEditor extends IDataEditor {
-  protected msgMediator: StandaloneMsgMediator = new StandaloneMsgMediator()
+  protected msgMediator: StandaloneMsgMediator | undefined = undefined
 
   protected async serviceConnect(): Promise<boolean> {
     let statusBarIntervalId: NodeJS.Timeout | undefined = undefined
@@ -63,9 +92,40 @@ export class StandaloneDataEditor extends IDataEditor {
     this.opts.service.on('error', (err) => {
       clearInterval(statusBarIntervalId)
     })
+    this.opts.service.on('heartbeatUpdate', (hb) => {
+      this.opts.bus.post('heartbeat', hb)
+    })
     const serviceReqHandler = await this.opts.service.connect()
-    this.msgMediator.setServiceHandler(serviceReqHandler)
-    this.msgMediator.handle('fileInfo').then()
+    // this.msgMediator.setServiceHandler(serviceReqHandler)
+    const baseHandler = new ExtensionLocalMsgHandler()
+    baseHandler['editorOnChange'] = async (args) => {
+      return new Promise((res, rej) => {
+        const displayState = this.opts.ui.getDisplayState()
+        displayState.editorEncoding = args.encoding as BufferEncoding
+        const encodeDataAs =
+          args.editMode === 'single' ? 'hex' : displayState.editorEncoding
+
+        if (args.selectionData && args.selectionData.length > 0) {
+          res({
+            encodedStr: dataToEncodedStr(
+              Buffer.from(args.selectionData),
+              encodeDataAs
+            ),
+          })
+        }
+      })
+    }
+    // this.msgMediator.setBaseHandler(baseHandler as RequestHandler<any, any>)
+    this.msgMediator = new StandaloneMsgMediator(
+      serviceReqHandler,
+      baseHandler as RequestHandler<any, any>
+    )
+    // this.msgMediator.process('fileInfo').then((info) => {
+    //   this.opts.bus.post('fileInfo', info)
+    // })
+    // this.msgMediator.process('counts').then((counts) => {
+    //   this.opts.bus.post('counts', counts)
+    // })
     return true
   }
   constructor(

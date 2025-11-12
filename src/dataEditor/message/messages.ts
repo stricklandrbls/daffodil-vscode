@@ -1,59 +1,6 @@
 // src/core/messages.ts
-export enum Notification {
-  ServiceConnected = 'ServiceConnected',
-  ServiceDisconnected = 'ServiceDisconnected',
-  Heartbeat = 'Heartbeat',
-  DataUpdated = 'DataUpdated',
-  Error = 'Error',
-}
 
-export interface UiToEditor {
-  clearChanges: never
-  applyChanges: {
-    offset: number
-    original_segment: Uint8Array<ArrayBufferLike>
-    edited_segment: Uint8Array
-  }
-  editorOnChange: {
-    editMode: 'single' | 'multi'
-    encoding: BufferEncoding
-    selectionData: string
-  }
-
-  profile: { start: number; length: number }
-  requestEditedData: never
-  save: never
-  saveAs: never
-  saveSegment: { offset: number; length: number }
-  search: {
-    encoding: BufferEncoding
-    searchStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-  }
-  replace: {
-    encoding: BufferEncoding
-    searchStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-    overwriteOnly?: boolean
-  }
-}
-
-export type EditorToUi =
-  | { type: 'Notify'; kind: Notification; payload?: unknown }
-  | { type: 'Bytes'; offset: number; data: Uint8Array }
-  | { type: 'Ack'; id?: string }
-  | { type: 'Error'; message: string; details?: unknown }
-
-// Narrow helper
-export type MessageDirection = UiToEditor | EditorToUi
+import { IServerHeartbeat } from '@omega-edit/client'
 
 export enum MessageCommand {
   clearChanges,
@@ -79,6 +26,7 @@ export enum MessageCommand {
   viewportRefresh,
 }
 export interface ExtensionMsgCommands {
+  counts: never
   clearChanges: never
   applyChanges: {
     offset: number
@@ -129,7 +77,13 @@ export interface ExtensionMsgCommands {
   showMessage: never
   undoChange: never
   updateLogicalDisplay: never
-  viewportRefresh: { offset: number; bytesPerRow: number }
+  viewportRefresh: { viewportId: string }
+}
+
+export type CountResponse = {
+  applied: number
+  undos: number
+  computedFileSize: number
 }
 export interface ExtensionMsgResponses {
   clearChanges: never
@@ -146,10 +100,9 @@ export interface ExtensionMsgResponses {
     bom: string
     language: string
     contentType: string
-    sizes: { computed: number; disk: number }
-    changes: { applied: number; undos: number }
   } // service
-  heartbeat: never // service
+  counts: CountResponse
+  heartbeat: IServerHeartbeat & { port: number } // service
   profile: { start: number; length: number } // service
   redoChange: never
   replaceResults: never

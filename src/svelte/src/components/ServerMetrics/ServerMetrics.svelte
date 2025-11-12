@@ -35,13 +35,12 @@ limitations under the License.
     availableProcessors: 0,
   }
   let timerId: NodeJS.Timeout
+  let heartbeatDivElement: HTMLDivElement
+  let heartbeatDetailsDivElement: HTMLDivElement
 
   function showHeartbeatInfo(show: boolean) {
-    const element = document.getElementsByClassName(
-      'heartbeat-info'
-    )[0] as HTMLElement
-
-    element.style.opacity = show ? '.7' : '0'
+    heartbeatDetailsDivElement.innerHTML = parseHeartbeatDetails()
+    heartbeatDetailsDivElement.style.opacity = show ? '.7' : '0'
   }
 
   function prettyPrintUptime(uptimeInMilliseconds: number): string {
@@ -66,7 +65,9 @@ limitations under the License.
       ? `${seconds} second`
       : `${seconds} seconds`
   }
-
+  function parseHeartbeatDetails() {
+    return `Latency: ${heartbeat.latency} Uptime: ${prettyPrintUptime(heartbeat.serverUptime)} Session Count: ${heartbeat.sessionCount} CPU Load Avg: ${heartbeat.serverCpuLoadAverage.toFixed(2)} Memory Usage: ${heartbeat.serverUsedMemory} Process ID: ${heartbeat.serverProcessId} JVM Version: ${heartbeat.jvmVersion} JVM Vendor: ${heartbeat.jvmVendor}`
+  }
   window.addEventListener('message', (msg) => {
     switch (msg.data.command) {
       case MessageCommand.heartbeat:
@@ -76,15 +77,14 @@ limitations under the License.
         heartbeat.serverUptime = msg.data.data.serverUptime
         heartbeat.serverUsedMemory = msg.data.data.serverUsedMemory
         heartbeat.sessionCount = msg.data.data.sessionCount
-        heartbeat.omegaEditPort = msg.data.data.serverInfo.omegaEditPort
-        heartbeat.serverVersion = msg.data.data.serverInfo.serverVersion
-        heartbeat.serverHostname = msg.data.data.serverInfo.serverHostname
-        heartbeat.serverProcessId = msg.data.data.serverInfo.serverProcessId
-        heartbeat.jvmVersion = msg.data.data.serverInfo.jvmVersion
-        heartbeat.jvmVendor = msg.data.data.serverInfo.jvmVendor
-        heartbeat.jvmPath = msg.data.data.serverInfo.jvmPath
-        heartbeat.availableProcessors =
-          msg.data.data.serverInfo.availableProcessors
+        heartbeat.omegaEditPort = msg.data.data.port
+        heartbeat.serverVersion = msg.data.data.serverVersion
+        heartbeat.serverHostname = msg.data.data.serverHostname
+        heartbeat.serverProcessId = msg.data.data.serverProcessId
+        heartbeat.jvmVersion = msg.data.data.jvmVersion
+        heartbeat.jvmVendor = msg.data.data.jvmVendor
+        heartbeat.jvmPath = msg.data.data.jvmPath
+        heartbeat.availableProcessors = msg.data.data.availableProcessors
 
         // set the serverTimestamp to 0 after 5 seconds of no heartbeat to indicate that no heartbeat has been received
         clearTimeout(timerId)
@@ -93,69 +93,35 @@ limitations under the License.
         }, 5000)
         break
     }
+    heartbeatDivElement.innerHTML = `&#9889; Powered by Ωedit™ v${heartbeat.serverVersion} on port ${heartbeat.omegaEditPort}&nbsp;`
+    console.log(heartbeat)
   })
 </script>
 
 <FlexContainer --height="25pt" --align-items="center">
-  {#if heartbeat.serverTimestamp !== 0}
-    <div class="info">
-      &#9889; Powered by Ωedit™ v{heartbeat.serverVersion} on port {heartbeat.omegaEditPort}
-      &nbsp;
-    </div>
-    <FlexContainer>
-      <svg
-        class="latency-indicator"
-        on:mouseenter={() => showHeartbeatInfo(true)}
-        on:mouseleave={() => showHeartbeatInfo(false)}
-      >
-        {#if 0 < heartbeat.latency && heartbeat.latency < 20}
-          <circle cx="50%" cy="50%" r="4pt" fill="green" />
-        {:else if 0 < heartbeat.latency && heartbeat.latency < 40}
-          <circle cx="50%" cy="50%" r="4pt" fill="yellow" />
-        {:else if 0 < heartbeat.latency && heartbeat.latency > 60}
-          <circle cx="50%" cy="50%" r="4pt" fill="red" />
-        {:else}
-          <circle cx="50%" cy="50%" r="4pt" fill="grey" />
-        {/if}
-      </svg>
-      <div class="heartbeat-info">
-        {#if heartbeat.latency > 0}
-          <b>Latency:</b>
-          {heartbeat.latency}ms,
-        {/if}
-        {#if heartbeat.serverUptime > 0}
-          <b>Uptime:</b>
-          {prettyPrintUptime(heartbeat.serverUptime)}
-        {/if}
-        {#if heartbeat.sessionCount > 0}
-          <b>Session Count:</b>
-          {heartbeat.sessionCount},
-        {/if}
-        {#if heartbeat.serverCpuLoadAverage > 0}
-          <b>CPU Load Avg:</b>
-          {heartbeat.serverCpuLoadAverage.toFixed(2)},
-        {/if}
-        {#if heartbeat.serverUsedMemory > 0}
-          <b>Memory Usage:</b>
-          {heartbeat.serverUsedMemory},
-        {/if}
-        {#if heartbeat.serverProcessId > 0}
-          <b>Process ID:</b>
-          {heartbeat.serverProcessId},
-        {/if}
-        {#if heartbeat.jvmVersion.length > 0}
-          <b>JVM Version:</b>
-          {heartbeat.jvmVersion}
-        {/if}
-        {#if heartbeat.jvmVendor.length > 0}
-          <b>JVM Vendor:</b>
-          {heartbeat.jvmVendor}
-        {/if}
-      </div>
-    </FlexContainer>
-  {:else}
-    <div class="info">&#9889; Powered by Ωedit™ (heartbeat not received)</div>
-  {/if}
+  <!-- {#if heartbeat.serverTimestamp !== 0} -->
+  <div bind:this={heartbeatDivElement} class="info">&#9889; Powered by Ωedit™ v${heartbeat.serverVersion}</div>
+  <FlexContainer>
+    <svg
+      class="latency-indicator"
+      on:mouseenter={() => showHeartbeatInfo(true)}
+      on:mouseleave={() => showHeartbeatInfo(false)}
+    >
+      {#if 0 < heartbeat.latency && heartbeat.latency < 20}
+        <circle cx="50%" cy="50%" r="4pt" fill="green" />
+      {:else if 0 < heartbeat.latency && heartbeat.latency < 40}
+        <circle cx="50%" cy="50%" r="4pt" fill="yellow" />
+      {:else if 0 < heartbeat.latency && heartbeat.latency > 60}
+        <circle cx="50%" cy="50%" r="4pt" fill="red" />
+      {:else}
+        <circle cx="50%" cy="50%" r="4pt" fill="grey" />
+      {/if}
+    </svg>
+    <div bind:this={heartbeatDetailsDivElement} class="heartbeat-info"></div>
+  </FlexContainer>
+  <!-- {:else} -->
+  <!-- <div bind:this={heartbeatDivElement} class="info">&#9889; Powered by Ωedit™ (heartbeat not received)</div> -->
+  <!-- {/if} -->
 </FlexContainer>
 
 <style lang="scss">

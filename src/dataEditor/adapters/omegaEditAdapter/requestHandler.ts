@@ -1,347 +1,166 @@
 import {
   modifyViewport,
   getViewportData,
-  searchSession,
+  getCounts,
+  CountKind,
 } from '@omega-edit/client'
 import { ExtensionMsgCommands, ExtensionMsgResponses } from 'dataEditor/global'
-import {
-  DataEditorViewport,
-  OmegaEditRequests,
-  OmegaEditResponses,
-  OmegaEditSession,
-} from './sessions'
-import { RequestArgs } from 'dataEditor/message/messages'
+import { CountResponse } from 'dataEditor/message/messages'
 
-export interface OmegaEditRequest {
-  fileInfo: never // service
-  heartbeat: never // service
-  profile: { start: number; length: number } // service
-  scrollViewport: {
-    scrollOffset: number
-    bytesPerRow: number
-  }
-  search: {
-    encoding: BufferEncoding | string
-    searchStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-  }
-  replace: {
-    encoding: BufferEncoding | string
-    searchStr: string | Uint8Array
-    replaceStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-    overwriteOnly?: boolean
-  }
-  undoChange: never
-  redoChange: never
-  clearChanges: never
-  applyChanges: {
-    offset: number
-    original_segment: Uint8Array<ArrayBufferLike>
-    edited_segment: Uint8Array
-  }
+export type OmegaEditRequests = Pick<
+  ExtensionMsgCommands,
+  'fileInfo' | 'viewportRefresh' | 'scrollViewport' | 'counts'
+>
+export type OmegaEditResponses = Pick<
+  ExtensionMsgResponses,
+  'fileInfo' | 'viewportRefresh' | 'scrollViewport' | 'counts'
+>
+
+export type SearchRequest = {
+  encoding: BufferEncoding | string
+  searchStr: string | Uint8Array
+  is_case_insensitive?: boolean
+  is_reverse?: boolean
+  offset?: number
+  length?: number
+  limit?: number
 }
-export interface OmegaEditResponse {
-  fileInfo: never // service
-  heartbeat: never // service
-  profile: { start: number; length: number } // service
-  scrollViewport: {
-    scrollOffset: number
-    bytesPerRow: number
-  }
-  search: {
-    encoding: BufferEncoding | string
-    searchStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-  }
-  replace: {
-    encoding: BufferEncoding | string
-    searchStr: string | Uint8Array
-    replaceStr: string | Uint8Array
-    is_case_insensitive?: boolean
-    is_reverse?: boolean
-    offset?: number
-    length?: number
-    limit?: number
-    overwriteOnly?: boolean
-  }
-  undoChange: never
-  redoChange: never
-  clearChanges: never
-  applyChanges: {
-    offset: number
-    original_segment: Uint8Array<ArrayBufferLike>
-    edited_segment: Uint8Array
-  }
+export type ReplaceRequest = {
+  encoding: BufferEncoding | string
+  searchStr: string | Uint8Array
+  replaceStr: string | Uint8Array
+  is_case_insensitive?: boolean
+  is_reverse?: boolean
+  offset?: number
+  length?: number
+  limit?: number
+  overwriteOnly?: boolean
 }
-export type RequestMap = {
+
+export type FileInfoResponse = {
+  bom: string
+  language: string
+  contentType: string
+  filename: string
+}
+export type RequestTypeMap = {
   [K in keyof OmegaEditRequests]: (
-    content: OmegaEditRequests[K]
+    content: OmegaEditRequests[K],
+    onProcessed?: (response: OmegaEditResponses[K]) => any
   ) => Promise<OmegaEditResponses[K]>
 }
-
-export class OmegaEditRequestMap {
-  constructor(private sessionRef: OmegaEditSession) {}
-  private requestMap: RequestMap = {
-    fileInfo: function (
-      content: never
-    ): Promise<{
-      filename: string
-      bom: string
-      language: string
-      contentType: string
-      sizes: { computed: number; disk: number }
-      changes: { applied: number; undos: number }
-    }> {
-      throw new Error('Function not implemented.')
-    },
-    viewportRefresh: function (content: {
-      offset: number
-      bytesPerRow: number
-    }): Promise<{
-      srcOffset: number
-      length: number
-      bytesRemaining: number
-      data: Uint8Array
-      capacity: number
-    }> {
-      throw new Error('Function not implemented.')
-    },
-    scrollViewport: function (content: {
-      scrollOffset: number
-      bytesPerRow: number
-    }): Promise<{
-      srcOffset: number
-      length: number
-      bytesRemaining: number
-      data: Uint8Array
-      capacity: number
-    }> {
-      throw new Error('Function not implemented.')
-    },
+interface RequestMap extends RequestTypeMap {}
+export class OmegaEditRequestMap implements RequestMap {
+  constructor(
+    readonly sessionId: string,
+    public viewportId: string,
+    public processedCallback?: <K extends keyof RequestMap>(
+      type: K,
+      response: OmegaEditResponses[K]
+    ) => any
+  ) {}
+  fileInfo(
+    onProcessed?:
+      | ((response: {
+          filename: string
+          bom: string
+          language: string
+          contentType: string
+        }) => any)
+      | undefined
+  ): Promise<{
+    filename: string
+    bom: string
+    language: string
+    contentType: string
+  }> {
+    throw ''
   }
-  // reqMap: RequestMap = {
-  //   applyChanges: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: {
-  //       offset: number
-  //       original_segment: Uint8Array<ArrayBufferLike>
-  //       edited_segment: Uint8Array
-  //     }
-  //   ): Promise<{
-  //     offset: number
-  //     original_segment: Uint8Array<ArrayBufferLike>
-  //     edited_segment: Uint8Array
-  //   }> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   profile: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: { start: number; length: number }
-  //   ): Promise<{ start: number; length: number }> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   saveSegment: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: { offset: number; length: number }
-  //   ): Promise<{ offset: number; length: number }> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   scrollViewport: (ids, content) => {
 
-  //   },
-  //   viewportRefresh: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: { offset: number; bytesPerRow: number }
-  //   ): Promise<{
-  //     srcOffset: number
-  //     length: number
-  //     bytesRemaining: number
-  //     data: Uint8Array
-  //     capacity: number
-  //   }> {
-  //     //TODO: Check if fetch to service is required (new offset outside of current viewport offset bounds)
-  //     //  i.e, `modifyViewport` or `getViewportData`
-  //     return new Promise(async (res, rej) => {
-  //       const response = ids.viewport.requiresFetchAt(content.offset)
-  //         ? await modifyViewport(
-  //             ids.viewport.id,
-  //             content.offset,
-  //             DataEditorViewport.capacity
-  //           )
-  //         : await getViewportData(ids.viewport.id)
-  //       ids.viewport.setViewport(
-  //         response.getOffset(),
-  //         response.getLength(),
-  //         response.getFollowingByteCount(),
-  //         response.getData_asU8()
-  //       )
-  //       res({ ...ids.viewport.toObject() })
-  //     })
-  //   },
-  //   fileInfo: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: never
-  //   ): Promise<{
-  //     filename: string
-  //     bom: string
-  //     language: string
-  //     contentType: string
-  //     sizes: { computed: number; disk: number }
-  //     changes: { applied: number; undos: number }
-  //   }> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   clearChanges: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: never
-  //   ): Promise<never> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   editorOnChange: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: {
-  //       editMode: 'single' | 'multi'
-  //       encoding: BufferEncoding | string
-  //       selectionData: Uint8Array
-  //     }
-  //   ): Promise<{ encodedStr: string }> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   heartbeat: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: never
-  //   ): Promise<never> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   redoChange: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: never
-  //   ): Promise<never> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   replaceResults: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: never
-  //   ): Promise<never> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   requestEditedData: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: never
-  //   ): Promise<never> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   save: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: never
-  //   ): Promise<never> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   saveAs: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: never
-  //   ): Promise<never> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   searchResults: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: never
-  //   ): Promise<never> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   setUITheme: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: never
-  //   ): Promise<never> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   showMessage: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: never
-  //   ): Promise<never> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   undoChange: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: never
-  //   ): Promise<never> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   updateLogicalDisplay: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: never
-  //   ): Promise<never> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   replace: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: {
-  //       encoding: BufferEncoding | string
-  //       searchStr: string | Uint8Array
-  //       replaceStr: string | Uint8Array
-  //       is_case_insensitive?: boolean
-  //       is_reverse?: boolean
-  //       offset?: number
-  //       length?: number
-  //       limit?: number
-  //       overwriteOnly?: boolean
-  //     }
-  //   ): Promise<{
-  //     encoding: BufferEncoding
-  //     searchStr: string | Uint8Array
-  //     is_case_insensitive?: boolean
-  //     is_reverse?: boolean
-  //     offset?: number
-  //     length?: number
-  //     limit?: number
-  //     overwriteOnly?: boolean
-  //   }> {
-  //     throw new Error('Function not implemented.')
-  //   },
-  //   search: function (
-  //     ids: { session: string; viewport: DataEditorViewport },
-  //     content: {
-  //       encoding: BufferEncoding | string
-  //       searchStr: string | Uint8Array
-  //       is_case_insensitive?: boolean
-  //       is_reverse?: boolean
-  //       offset?: number
-  //       length?: number
-  //       limit?: number
-  //     }
-  //   ): Promise<number[]> {
-  //     return searchSession(
-  //       ids.session,
-  //       content.searchStr,
-  //       content.is_case_insensitive,
-  //       content.is_reverse,
-  //       content.offset,
-  //       content.length,
-  //       content.limit
-  //     )
-  //   },
-  // }
-
-  getRequestExecutor<K extends keyof RequestMap>(type: K): RequestMap[K] {
-    return this.requestMap[type]
+  scrollViewport: (content: {
+    scrollOffset: number
+    bytesPerRow: number
+  }) => Promise<{
+    srcOffset: number
+    length: number
+    bytesRemaining: number
+    data: Uint8Array
+    capacity: number
+  }> = (content) => {
+    return new Promise((res, rej) => {
+      const { scrollOffset, bytesPerRow } = content
+      // start of the row containing the offset, making sure the offset is never negative
+      const startOffset = Math.max(
+        0,
+        scrollOffset - (scrollOffset % bytesPerRow)
+      )
+      modifyViewport(this.viewportId, startOffset, 1024).then((response) => {
+        res({
+          bytesRemaining: response.getFollowingByteCount(),
+          capacity: 1024,
+          data: response.getData_asU8(),
+          length: response.getLength(),
+          srcOffset: response.getOffset(),
+        })
+      })
+    })
   }
-  setRequestExecutor<K extends keyof RequestMap>(
-    type: K,
-    executor: RequestMap[K]
-  ) {
-    this.requestMap[type] = executor
+
+  counts: (content: {
+    type: 'applied' | 'undos' | 'all'
+  }) => Promise<CountResponse> = (content) => {
+    return new Promise(async (res, rej) => {
+      if (!this) {
+        rej("'this' is not defined in counts()")
+      }
+      const ret: CountResponse = {
+        applied: -1,
+        computedFileSize: -1,
+        undos: -1,
+      }
+      const countResponse = await getCounts(this.sessionId, [
+        CountKind.COUNT_CHANGES,
+        CountKind.COUNT_UNDOS,
+        CountKind.COUNT_COMPUTED_FILE_SIZE,
+      ]).catch((err) => console.log(err))
+
+      countResponse!.forEach((count) => {
+        switch (count.getKind()) {
+          case CountKind.COUNT_CHANGES:
+            ret.applied = count.getCount()
+            break
+          case CountKind.COUNT_COMPUTED_FILE_SIZE:
+            ret.computedFileSize = count.getCount()
+            break
+          case CountKind.COUNT_UNDOS:
+            ret.undos = count.getCount()
+            break
+        }
+      })
+      res(ret)
+      // .then((values) => {
+
+      // })
+    })
+  }
+
+  viewportRefresh(content: { viewportId: string }): Promise<{
+    srcOffset: number
+    length: number
+    bytesRemaining: number
+    data: Uint8Array
+    capacity: number
+  }> {
+    return new Promise((res, rej) => {
+      getViewportData(this.viewportId).then((response) => {
+        res({
+          srcOffset: response.getOffset(),
+          length: response.getLength(),
+          bytesRemaining: response.getFollowingByteCount(),
+          data: response.getData_asU8(),
+          capacity: 1024,
+        })
+      })
+    })
   }
 }

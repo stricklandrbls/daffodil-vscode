@@ -1,33 +1,34 @@
 import {
-  CountKind,
   createSession,
   createViewport,
+  EventSubscriptionRequest,
   getByteOrderMark,
-  getChangeCount,
-  getComputedFileSize,
+  getClient,
   getContentType,
-  getCounts,
   getLanguage,
   IServerHeartbeat,
+  ViewportEventKind,
 } from '@omega-edit/client'
+import { RequestHandler } from 'dataEditor/service/requestHandler'
 import {
-  IServiceRequestHandler,
-  RequestHandler,
-  RequestType,
-} from 'dataEditor/service/requestHandler'
-import { updateHeartbeatInterval } from './heartbeat'
-import { OmegaEditRequestMap } from './requestHandler'
+  getCurrentHeartbeatInfo,
+  HeartbeatReceiver,
+  registerHeartbeatReceiver,
+  updateHeartbeatInterval,
+} from './heartbeat'
 import {
-  ExtensionMsgCommands,
-  ExtensionMsgResponses,
-  ExtensionReqSubMap,
-  ExtensionResSubMap,
-  RequestArgs,
-} from 'dataEditor/message/messages'
-import { LOADIPHLPAPI } from 'dns'
-
+  OmegaEditRequestMap,
+  OmegaEditRequests,
+  OmegaEditResponses,
+  RequestTypeMap,
+} from './requestHandler'
+import { RequestArgs } from 'dataEditor/message/messages'
+import { DataEditorViewport } from 'dataEditor/editor/Viewport'
 export interface SessionCreateOpts {
   targetFile: string
+  heartbeatReceiver?: HeartbeatReceiver
+  readonly hostname: string
+  readonly port: number
   desiredId?: string
   checkpointDirectory?: string
 }
@@ -47,8 +48,7 @@ export interface SessionInfo {
 
 class OmegaEditorSessionManager {
   activeSessions: string[] = []
-  sessions: Map<string, (hb: IServerHeartbeat & { port: number }) => any> =
-    new Map()
+  sessions: Map<string, () => any> = new Map()
 
   async create(opts: SessionCreateOpts): Promise<OmegaEditSession> {
     return new Promise(async (res, rej) => {
@@ -73,6 +73,7 @@ class OmegaEditorSessionManager {
 
       const newSession = new OmegaEditSession(
         id,
+        opts.port,
         {
           BOM: bom,
           filePath: opts.targetFile,
@@ -83,61 +84,30 @@ class OmegaEditorSessionManager {
         vpCreateResponse.getViewportId()
       )
 
+      if (opts.heartbeatReceiver) {
+        this.sessions[newSession.sessionId] = () => {
+          const hb = getCurrentHeartbeatInfo()!
+          opts.heartbeatReceiver!({ ...hb })
+        }
+      }
       this.activeSessions.push(newSession.sessionId)
-      updateHeartbeatInterval(this.activeSessions)
+      registerHeartbeatReceiver(newSession.sessionId, opts.heartbeatReceiver)
       res(newSession)
     })
+  }
+  setHeartbeatReceiverForSession(id: string, receiver: HeartbeatReceiver) {
+    if (!this.sessions[id]) throw `Session (${id}) is not registered`
+    registerHeartbeatReceiver(id, receiver)
+  }
+  remove(id: string) {
+    const removalIndex = this.activeSessions.findIndex((storedId) => {
+      return storedId === id
+    })
+    this.activeSessions.splice(removalIndex, 1)
   }
 }
 const SessionManager = new OmegaEditorSessionManager()
 
-export class DataEditorViewport {
-  static capacity: number = 1024
-  private srcOffset: number = -1
-  private length = -1
-  private bytesRemaining = -1
-  private data: Uint8Array | undefined = undefined
-
-  constructor(readonly id: string) {}
-  updateData(data: Uint8Array): void {
-    this.data = data
-  }
-  setViewport(
-    offset: number,
-    length: number,
-    bytesRemaining: number,
-    data: Uint8Array
-  ): void {
-    this.srcOffset = offset
-    this.length = length
-    this.bytesRemaining = bytesRemaining
-    this.data = data
-  }
-  isValid() {
-    if (this.data === undefined) return false
-  }
-  requiresFetchAt(offset: number) {
-    return offset > this.srcOffset + this.length || offset < this.srcOffset
-  }
-  toObject() {
-    return {
-      srcOffset: this.srcOffset,
-      length: this.length,
-      bytesRemaining: this.bytesRemaining,
-      data: this.data!,
-      capacity: DataEditorViewport.capacity,
-    }
-  }
-}
-
-export type OmegaEditRequests = Pick<
-  ExtensionMsgCommands,
-  'fileInfo' | 'viewportRefresh' | 'scrollViewport'
->
-export type OmegaEditResponses = Pick<
-  ExtensionMsgResponses,
-  'fileInfo' | 'viewportRefresh' | 'scrollViewport'
->
 export class OmegaEditSession
   implements RequestHandler<OmegaEditRequests, OmegaEditResponses>
 {
@@ -145,86 +115,53 @@ export class OmegaEditSession
   private currentViewport: DataEditorViewport
   constructor(
     readonly sessionId: string,
+    readonly port: number,
     readonly fileMetrics: SessionStaticFileMetrics,
     private viewportId: string
   ) {
-    this.reqMap = new OmegaEditRequestMap(this)
-    this.reqMap.setRequestExecutor('fileInfo', () => {
-      return new Promise(async (res, rej) => {
-        const counts = await getCounts(this.sessionId, [
-          CountKind.COUNT_CHANGES,
-          CountKind.COUNT_UNDOS,
-        ])
-
-        res({
-          bom: this.fileMetrics.BOM,
-          contentType: this.fileMetrics.type,
-          filename: this.fileMetrics.filePath,
-          language: this.fileMetrics.language,
-          sizes: {
-            computed: await getComputedFileSize(this.sessionId),
-            disk: 0,
-          },
-          changes: {
-            applied: counts[0].getCount(),
-            undos: counts[1].getCount(),
-          },
-        })
-      })
-    })
     this.currentViewport = new DataEditorViewport(viewportId)
+    this.reqMap = new OmegaEditRequestMap(
+      this.sessionId,
+      this.currentViewportId()
+    )
+    this.reqMap['fileInfo'] = () => {
+      return computeFileInfo(this.sessionId, this.fileMetrics)
+    }
+
+    getClient().then((client) => {
+      client
+        .subscribeToViewportEvents(
+          new EventSubscriptionRequest()
+            .setId(this.currentViewportId())
+            .setInterest(ViewportEventKind.VIEWPORT_EVT_MODIFY)
+        )
+        .on('data', () => {
+          this.reqMap.viewportRefresh({ viewportId: this.currentViewportId() })
+        })
+    })
   }
   canHandle(type: string): boolean {
-    return Object.keys({} as ExtensionMsgCommands).includes(type)
+    return Object.keys({} as OmegaEditRequests).includes(type)
   }
   request<K extends keyof OmegaEditRequests>(
     ...args: RequestArgs<OmegaEditRequests, K>
   ): Promise<OmegaEditResponses[K]> {
     const [type, data] = args as [K, OmegaEditRequests[K]]
-    return this.reqMap.getRequestExecutor(type)(
-      { session: this.sessionId, viewport: this.currentViewport },
-      data
-    )
-
-    // return this.reqMap.getRequestExecutor(type)(
-    //   { session: this.sessionId, viewport: this.currentViewport },
-    //   data
-    // )
+    const executor = this.reqMap[type] as RequestTypeMap[K]
+    return executor(data)
   }
-  // request<K extends keyof OmegaEditRequests>(
-  //   ...args: RequestArgs<OmegaEditRequests, K>
-  // ): Promise<OmegaEditResponses[K]> {
-  //   return new Promise((res, rej) => {})
-  // }
-  // async request<K extends keyof ExtensionMsgCommands>(
-  //   ...args: RequestType<K>
-  // ): Promise<ExtensionMsgResponses[K]> {
-  //   const [type, optData] = args as [K, ExtensionMsgCommands[K]]
-  //   // this.reqMap.reqMap['fileInfo'] = (
-  //   //   ids: { session: string; viewport: DataEditorViewport },
-  //   //   content: never
-  //   // ) => {
-  //   //   return new Promise(async (res, rej) => {
-  //   //     res({
-  //   //       bom: this.fileMetrics.BOM,
-  //   //       contentType: this.fileMetrics.type,
-  //   //       language: this.fileMetrics.language,
-  //   //       sizes: {
-  //   //         computed: await getComputedFileSize(this.sessionId),
-  //   //         disk: this.fileMetrics.filesize,
-  //   //       },
-  //   //       filename: this.fileMetrics.filePath,
-  //   //       changes: { applied: 0, undos: 0 },
-  //   //     })
-  //   //   })
-  //   // }
-  //   return this.reqMap.getRequestExecutor(type)(
-  //     { session: this.sessionId, viewport: this.currentViewport },
-  //     optData
-  //   )
-  // }
+
   currentViewportId() {
     return this.viewportId
+  }
+  getSessionId() {
+    return this.sessionId
+  }
+  onHeartbeat(receiver: HeartbeatReceiver) {
+    SessionManager.setHeartbeatReceiverForSession(this.sessionId, receiver)
+  }
+  destroy() {
+    SessionManager.remove(this.sessionId)
   }
 }
 
@@ -235,4 +172,50 @@ export function sessionCreate(
 }
 export function sessionCount() {
   return SessionManager.activeSessions.length
+}
+function computeFileInfo(
+  sessionId: string,
+  staticMetrics: SessionStaticFileMetrics
+): Promise<OmegaEditResponses['fileInfo']> {
+  return new Promise(async (res, rej) => {
+    const ret: OmegaEditResponses['fileInfo'] = {
+      bom: staticMetrics.BOM,
+      language: staticMetrics.language,
+      contentType: staticMetrics.type,
+      filename: staticMetrics.filePath,
+    }
+    // const ret: OmegaEditResponse['fileInfo'] = {
+    //   bom: staticMetrics.BOM,
+    //   contentType: staticMetrics.type,
+    //   filename: staticMetrics.filePath,
+    //   language: staticMetrics.language,
+    //   changes: {
+    //     applied: 0,
+    //     undos: 0,
+    //   },
+    //   sizes: {
+    //     computed: 0,
+    //     disk: 0,
+    //   },
+    // }
+    // const counts = await getCounts(sessionId, [
+    //   CountKind.COUNT_CHANGES,
+    //   CountKind.COUNT_UNDOS,
+    //   CountKind.COUNT_COMPUTED_FILE_SIZE,
+    // ])
+    // counts.forEach((count) => {
+    //   switch (count.getKind()) {
+    //     case CountKind.COUNT_CHANGES:
+    //       ret.changes.applied = count.getCount()
+    //       break
+    //     case CountKind.COUNT_COMPUTED_FILE_SIZE:
+    //       ret.sizes.computed = ret.sizes.disk = count.getCount()
+    //       break
+    //     case CountKind.COUNT_UNDOS:
+    //       ret.changes.undos = count.getCount()
+    //       break
+    //   }
+    // })
+    res(ret)
+  })
 }
