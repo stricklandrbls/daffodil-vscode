@@ -36,7 +36,8 @@ class ExtensionLocalMsgHandler
   request<K extends 'editorOnChange'>(
     ...args: RequestArgs<Pick<ExtensionMsgCommands, 'editorOnChange'>, K>
   ): Promise<Pick<ExtensionMsgResponses, 'editorOnChange'>[K]> {
-    throw new Error('Method not implemented.')
+    const [type, data] = args as [K, ExtensionMsgCommands[K]]
+    return this[type](data)
   }
   canHandle(type: string): boolean {
     return type === 'editorOnChange'
@@ -54,7 +55,9 @@ class StandaloneMsgMediator extends AbstractMediator<
   constructor(
     private serviceHandler: RequestHandler<any, any>,
     private baseHandler: RequestHandler<any, any>
-  ) {}
+  ) {
+    super()
+  }
   setServiceHandler(handler: RequestHandler<any, any>) {
     this.serviceHandler = handler
   }

@@ -5,6 +5,7 @@ import { AbstractMediator } from 'dataEditor/message/messageMediator'
 import {
   ExtensionMsgCommands,
   ExtensionMsgResponses,
+  RequestArgs,
 } from 'dataEditor/message/messages'
 import { DataEditorService } from 'dataEditor/service/editorService'
 import { EditorUI } from 'dataEditor/ui/editorUI'
@@ -29,7 +30,15 @@ export abstract class IDataEditor {
     const { service, ui, bus } = this.opts
     await this.serviceConnect()
     ui.attach(bus)
-    bus.onMessageRx(this.msgMediator!.process)
+    bus.onMessageRx(async (...args) => {
+      const [type, data] = args as RequestArgs<
+        ExtensionMsgCommands,
+        typeof type
+      >
+      this.msgMediator!.process(type, data).then((info) =>
+        this.opts.bus.post(type, info)
+      )
+    })
     this.msgMediator!.process('fileInfo').then((info) =>
       this.opts.bus.post('fileInfo', info)
     )

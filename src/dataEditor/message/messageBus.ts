@@ -1,22 +1,18 @@
 import * as vscode from 'vscode'
 import {
-  EditorToUi,
   ExtensionMsgCommands,
   ExtensionMsgResponses,
-  ExtensionRequest,
   ExtensionResponse,
   RequestArgs,
-  UiToEditor,
 } from './messages'
-import { BaseRequests, MappedType } from 'dataEditor/service/requestHandler'
 
-export type UIToEditorHandler = (m: UiToEditor) => void
-export type EditorToUIHandler = (m: EditorToUi) => Thenable<boolean>
 // src/core/messageBus.ts
 
 export interface MessageBus<In, Out> {
   post<K extends keyof Out>(type: K, message: Out[K]): void
   onMessageRx(
+    // handler: <K extends keyof In>(...args: RequestArgs<In, K>) => Promise<any>
+
     handler: <K extends keyof In>(...args: RequestArgs<In, K>) => Promise<any>
   ): () => void // unsubscribe
 }
@@ -38,7 +34,7 @@ export class WebviewBusHost
       const command = msg.command
       const data = msg.data
       handler(command, data)
-    }, this)
+    })
 
     return () => {
       this.disposable?.dispose()
