@@ -92,11 +92,7 @@ export class StandaloneDataEditor extends IDataEditor {
     this.opts.service.on('error', (err) => {
       clearInterval(statusBarIntervalId)
     })
-    this.opts.service.on('heartbeatUpdate', (hb) => {
-      this.opts.bus.post('heartbeat', hb)
-    })
     const serviceReqHandler = await this.opts.service.connect()
-    // this.msgMediator.setServiceHandler(serviceReqHandler)
     const baseHandler = new ExtensionLocalMsgHandler()
     baseHandler['editorOnChange'] = async (args) => {
       return new Promise((res, rej) => {
@@ -115,17 +111,10 @@ export class StandaloneDataEditor extends IDataEditor {
         }
       })
     }
-    // this.msgMediator.setBaseHandler(baseHandler as RequestHandler<any, any>)
     this.msgMediator = new StandaloneMsgMediator(
       serviceReqHandler,
       baseHandler as RequestHandler<any, any>
     )
-    // this.msgMediator.process('fileInfo').then((info) => {
-    //   this.opts.bus.post('fileInfo', info)
-    // })
-    // this.msgMediator.process('counts').then((counts) => {
-    //   this.opts.bus.post('counts', counts)
-    // })
     return true
   }
   constructor(

@@ -20,6 +20,7 @@ interface ConfigFileVars {
   port: number
   logLevel: 'info' | 'warn' | 'debug'
   logFile: string
+  checkpointPath: string
 }
 
 export type ExtractableConfigOpts = {
@@ -51,6 +52,7 @@ export abstract class DataEditorConfig {
   readonly heartbeatMs: number
   readonly logLevel: 'info' | 'warn' | 'debug'
   readonly logFile: string
+  readonly checkpointPath: string
   protected constructor(p: DataEditorConfigOpts) {
     this.type = p.type
     this.targetFile = p.targetFile ?? ''
@@ -59,6 +61,7 @@ export abstract class DataEditorConfig {
     this.heartbeatMs = p.heartbeatMs ?? 1000
     this.logLevel = p.logLevel
     this.logFile = p.logFile
+    this.checkpointPath = p.checkpointPath
   }
 }
 
@@ -85,6 +88,7 @@ export class StandaloneEditorConfig extends DataEditorConfig {
         'logFile',
         path.resolve(APP_DATA_PATH, `dataEditor-${port}.log`)
       ),
+      checkpointPath: provider.get('checkpointPath'),
       targetFile: await provider.targetFile(),
       heartbeatMs: 1000,
       type: EditorType.Standalone,

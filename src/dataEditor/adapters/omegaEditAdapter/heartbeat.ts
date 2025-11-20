@@ -27,41 +27,40 @@ let getHeartbeatIntervalId: NodeJS.Timeout | number | undefined = undefined
 let currentHeartbeat: IServerHeartbeat | undefined = undefined
 let receviers: Map<string, HeartbeatReceiver> = new Map()
 
-export function updateHeartbeatInterval(activeSessions: string[]) {
+export function updateHeartbeatInterval() {
   if (getHeartbeatIntervalId) {
     clearInterval(getHeartbeatIntervalId)
+    if (receviers.size === 0) return
   }
-  getHeartbeatIntervalId =
-    activeSessions.length > 0
-      ? setInterval(async () => {
-          currentHeartbeat = await getServerHeartbeat(
-            activeSessions,
-            HEARTBEAT_INTERVAL_MS * activeSessions.length
-          )
-        })
-      : undefined
+  getHeartbeatIntervalId = setInterval(async () => {
+    currentHeartbeat = await getServerHeartbeat(
+      Array.from(receviers.keys()),
+      HEARTBEAT_INTERVAL_MS * receviers.size
+    )
+    receviers.forEach((rx) => {
+      rx(currentHeartbeat!)
+    })
+  }, HEARTBEAT_INTERVAL_MS * receviers.size)
+}
+export function unregisterHeartbeatReceiver(id: string) {
+  receviers.delete(id)
+  updateHeartbeatInterval()
+}
+export function unregisterAllHeartbeatReceivers() {
+  receviers.clear()
+  clearInterval(getHeartbeatIntervalId)
+  getHeartbeatIntervalId = undefined
 }
 export function registerHeartbeatReceiver(
   id: string,
   receiver?: HeartbeatReceiver
 ) {
-  receviers.set(id, receiver ? receiver : () => {})
-
   if (getHeartbeatIntervalId) {
     clearInterval(getHeartbeatIntervalId)
   }
-  getHeartbeatIntervalId =
-    receviers.size > 0
-      ? setInterval(async () => {
-          currentHeartbeat = await getServerHeartbeat(
-            Array.from(receviers.keys())
-          )
+  receviers.set(id, receiver ? receiver : () => {})
 
-          receviers.forEach((rx) => {
-            rx(currentHeartbeat!)
-          })
-        }, HEARTBEAT_INTERVAL_MS * receviers.size)
-      : undefined
+  updateHeartbeatInterval()
 }
 export function getCurrentHeartbeatInfo() {
   return currentHeartbeat

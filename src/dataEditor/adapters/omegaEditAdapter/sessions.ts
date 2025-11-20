@@ -14,6 +14,8 @@ import {
   getCurrentHeartbeatInfo,
   HeartbeatReceiver,
   registerHeartbeatReceiver,
+  unregisterAllHeartbeatReceivers,
+  unregisterHeartbeatReceiver,
   updateHeartbeatInterval,
 } from './heartbeat'
 import {
@@ -49,7 +51,9 @@ export interface SessionInfo {
 class OmegaEditorSessionManager {
   activeSessions: string[] = []
   sessions: Map<string, () => any> = new Map()
-
+  onAllSessionsDestroyed: () => any = () => {
+    throw ''
+  }
   async create(opts: SessionCreateOpts): Promise<OmegaEditSession> {
     return new Promise(async (res, rej) => {
       const response = await createSession(
@@ -85,10 +89,10 @@ class OmegaEditorSessionManager {
       )
 
       if (opts.heartbeatReceiver) {
-        this.sessions[newSession.sessionId] = () => {
+        this.sessions.set(newSession.sessionId, () => {
           const hb = getCurrentHeartbeatInfo()!
           opts.heartbeatReceiver!({ ...hb })
-        }
+        })
       }
       this.activeSessions.push(newSession.sessionId)
       registerHeartbeatReceiver(newSession.sessionId, opts.heartbeatReceiver)
@@ -104,6 +108,14 @@ class OmegaEditorSessionManager {
       return storedId === id
     })
     this.activeSessions.splice(removalIndex, 1)
+    if (sessionCount() === 0) {
+      this.onAllSessionsDestroyed()
+    }
+  }
+  removeAll() {
+    this.sessions.clear()
+    unregisterAllHeartbeatReceivers()
+    this.onAllSessionsDestroyed()
   }
 }
 const SessionManager = new OmegaEditorSessionManager()
@@ -160,8 +172,8 @@ export class OmegaEditSession
   onHeartbeat(receiver: HeartbeatReceiver) {
     SessionManager.setHeartbeatReceiverForSession(this.sessionId, receiver)
   }
-  destroy() {
-    SessionManager.remove(this.sessionId)
+  destroy: () => any = () => {
+    throw ''
   }
 }
 
@@ -171,7 +183,17 @@ export function sessionCreate(
   return SessionManager.create(opts)
 }
 export function sessionCount() {
-  return SessionManager.activeSessions.length
+  return SessionManager.sessions.size
+}
+export function sessionDestroy(id: string) {
+  SessionManager.remove(id)
+  unregisterHeartbeatReceiver(id)
+}
+export function sessionDestroyAll() {
+  SessionManager.removeAll()
+}
+export function onAllSessionsDestroyed(cb: () => any) {
+  SessionManager.onAllSessionsDestroyed = cb
 }
 function computeFileInfo(
   sessionId: string,

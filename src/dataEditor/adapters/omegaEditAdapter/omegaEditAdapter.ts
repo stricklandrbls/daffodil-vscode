@@ -16,9 +16,17 @@ import {
 import EventEmitter from 'events'
 import { Socket } from 'net'
 import path from 'path'
-import { sessionCount, sessionCreate } from './sessions'
+import {
+  onAllSessionsDestroyed,
+  sessionCount,
+  sessionCreate,
+  sessionDestroy,
+  sessionDestroyAll,
+} from './sessions'
 import { RequestHandler } from 'dataEditor/service/requestHandler'
-
+import * as fs from 'fs'
+import * as child_process from 'child_process'
+import { osCheck } from '../../../utils'
 export type OmegaEditConfigProvider = () => DataEditorConfig &
   OmegaEditServiceConfig
 
@@ -68,6 +76,10 @@ export class OmegaEditorAdapter implements DataEditorService {
         port: this.cfg.port,
       })
 
+      onAllSessionsDestroyed(() => {
+        stopProcessUsingPID(this.serverPid)
+      })
+
       res(session as RequestHandler<any, any>)
     })
   }
@@ -82,7 +94,7 @@ export class OmegaEditorAdapter implements DataEditorService {
   async disconnect(): Promise<void> {
     // await this.vendor.close();
     this.connected = false
-    stopProcessUsingPID(this.serverPid)
+    sessionDestroyAll()
   }
 
   isConnected(): boolean {
@@ -139,7 +151,36 @@ const SERVER_START_TIMEOUT: number = 15 // in seconds
 async function startService(serviceConfig: DataEditorConfig): Promise<number> {
   return new Promise(async (res, rej) => {
     // await stopServer(info)
-
+    const serverPidFile = getPidFile(serviceConfig.port)
+    if (fs.existsSync(serverPidFile)) {
+      const pid = parseInt(fs.readFileSync(serverPidFile).toString())
+      if (!isNaN(pid)) {
+        // Ensure PID isn't assigned to a different process before stopping process
+        try {
+          if (
+            child_process
+              .execSync(
+                osCheck(
+                  `wmic process where processid=${pid} get CommandLine`,
+                  `ps -p ${pid} -o command=`
+                )
+              )
+              .toString('ascii')
+              .toLowerCase()
+              .includes('omega-edit')
+          ) {
+            await serverStop(serviceConfig)
+          } else {
+            fs.unlinkSync(serverPidFile)
+          }
+        } catch (error) {
+          // if process doesn't exist, ps returns 1 resulting in command failed error
+          fs.unlinkSync(serverPidFile)
+        }
+      } else {
+        fs.unlinkSync(serverPidFile)
+      }
+    }
     const logConfigFile = generateLogbackConfigFile(
       path.join(APP_DATA_PATH, `serv-${serviceConfig.port}.log`),
       serviceConfig.logLevel,
@@ -195,4 +236,62 @@ async function testServiceConnection(): Promise<IServerInfo> {
     }
     res(serverInfo!)
   })
+}
+
+export async function serverStop(serviceConfig: DataEditorConfig) {
+  const serverPidFile = getPidFile(serviceConfig.port)
+  if (fs.existsSync(serverPidFile)) {
+    const pid = parseInt(fs.readFileSync(serverPidFile).toString())
+    if (await stopProcessUsingPID(pid)) {
+      // vscode.window.setStatusBarMessage(
+      //   `Ωedit server stopped on port ${serviceConfig.port} with PID ${pid}`,
+      //   new Promise((resolve) => {
+      //     setTimeout(() => {
+      //       resolve(true)
+      //     }, 4000)
+      //   })
+      // )
+      removeDirectory(serviceConfig.checkpointPath)
+    } else {
+      // Check again if the process has stopped after a short delay
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      if (!(await stopProcessUsingPID(pid))) {
+        // vscode.window.showErrorMessage(
+        //   `Ωedit server on port ${omegaEditPort} with PID ${pid} failed to stop`
+        // )
+      } else {
+        // vscode.window.setStatusBarMessage(
+        //   `Ωedit server stopped on port ${omegaEditPort} with PID ${pid}`,
+        //   new Promise((resolve) => {
+        //     setTimeout(() => {
+        //       resolve(true)
+        //     }, 4000)
+        //   })
+        // )
+        removeDirectory(serviceConfig.checkpointPath)
+      }
+    }
+  }
+}
+
+/**
+ * Removes a directory and all of its contents
+ * @param dirPath path to directory to remove
+ */
+function removeDirectory(dirPath: string): void {
+  if (fs.existsSync(dirPath)) {
+    fs.readdirSync(dirPath).forEach((file) => {
+      const curPath = `${dirPath}/${file}`
+      if (fs.lstatSync(curPath).isDirectory()) {
+        // Recursively remove subdirectories
+        removeDirectory(curPath)
+      } else {
+        // Delete file
+        fs.unlinkSync(curPath)
+      }
+    })
+
+    // Remove empty directory
+    fs.rmdirSync(dirPath)
+  }
 }
