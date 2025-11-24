@@ -88,7 +88,10 @@ export class StandaloneEditorConfig extends DataEditorConfig {
         'logFile',
         path.resolve(APP_DATA_PATH, `dataEditor-${port}.log`)
       ),
-      checkpointPath: provider.get('checkpointPath'),
+      checkpointPath: provider.get(
+        'checkpointPath',
+        APP_DATA_PATH + `/.checkpoint-${port}`
+      ),
       targetFile: await provider.targetFile(),
       heartbeatMs: 1000,
       type: EditorType.Standalone,

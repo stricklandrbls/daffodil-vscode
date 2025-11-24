@@ -50,12 +50,16 @@ export class OmegaEditorAdapter implements DataEditorService {
         `Conencting to Ωedit server on port ${this.cfg.port}`
       )
 
-      this.serverPid = await startService({
-        ...this.cfg,
-      }).catch((err) => {
-        this.eventEmitter.emit('error', err)
-        return -1
-      })
+      if (!(await checkServerListening({ ...this.cfg }))) {
+        this.serverPid = await startService({
+          ...this.cfg,
+        }).catch((err) => {
+          this.eventEmitter.emit('error', err)
+          return -1
+        })
+      } else {
+        this.serverPid = getExistingPidFile(this.cfg.port)
+      }
 
       const serverInfo = await testServiceConnection().catch((err) => {
         this.eventEmitter.emit('error', err)
@@ -70,6 +74,10 @@ export class OmegaEditorAdapter implements DataEditorService {
           })
         },
       })
+      this.disconnect = async () => {
+        this.connected = false
+        sessionDestroy(session.sessionId)
+      }
       this.connected = true
       this.eventEmitter.emit('connected', {
         hostname: this.cfg.hostname,
@@ -91,10 +99,8 @@ export class OmegaEditorAdapter implements DataEditorService {
     this.eventEmitter.on(event, listener)
   }
 
-  async disconnect(): Promise<void> {
-    // await this.vendor.close();
-    this.connected = false
-    sessionDestroyAll()
+  disconnect: () => Promise<void> = () => {
+    throw 'No disconnection function set'
   }
 
   isConnected(): boolean {
@@ -140,7 +146,34 @@ function checkServerListening(info: {
 function getPidFile(serverPort: number): string {
   return path.join(APP_DATA_PATH, `serv-${serverPort}.pid`)
 }
-
+function getExistingPidFile(serverPort: number): number {
+  const pidFile = getPidFile(serverPort)
+  const pid = parseInt(fs.readFileSync(pidFile).toString())
+  if (isNaN(pid)) throw 'Server is listening but pidfile is invalid'
+  try {
+    if (
+      child_process
+        .execSync(
+          osCheck(
+            `wmic process where processid=${pid} get CommandLine`,
+            `ps -p ${pid} -o command=`
+          )
+        )
+        .toString('ascii')
+        .toLowerCase()
+        .includes('omega-edit')
+    ) {
+      return pid
+    } else {
+      fs.unlinkSync(pidFile)
+      throw 'Server pidfile has changed process executions'
+    }
+  } catch (error) {
+    // if process doesn't exist, ps returns 1 resulting in command failed error
+    fs.unlinkSync(pidFile)
+  }
+  return -1
+}
 export type OmegaEditServiceConfig = {
   hostname: string
   port: number
@@ -152,35 +185,7 @@ async function startService(serviceConfig: DataEditorConfig): Promise<number> {
   return new Promise(async (res, rej) => {
     // await stopServer(info)
     const serverPidFile = getPidFile(serviceConfig.port)
-    if (fs.existsSync(serverPidFile)) {
-      const pid = parseInt(fs.readFileSync(serverPidFile).toString())
-      if (!isNaN(pid)) {
-        // Ensure PID isn't assigned to a different process before stopping process
-        try {
-          if (
-            child_process
-              .execSync(
-                osCheck(
-                  `wmic process where processid=${pid} get CommandLine`,
-                  `ps -p ${pid} -o command=`
-                )
-              )
-              .toString('ascii')
-              .toLowerCase()
-              .includes('omega-edit')
-          ) {
-            await serverStop(serviceConfig)
-          } else {
-            fs.unlinkSync(serverPidFile)
-          }
-        } catch (error) {
-          // if process doesn't exist, ps returns 1 resulting in command failed error
-          fs.unlinkSync(serverPidFile)
-        }
-      } else {
-        fs.unlinkSync(serverPidFile)
-      }
-    }
+
     const logConfigFile = generateLogbackConfigFile(
       path.join(APP_DATA_PATH, `serv-${serviceConfig.port}.log`),
       serviceConfig.logLevel,

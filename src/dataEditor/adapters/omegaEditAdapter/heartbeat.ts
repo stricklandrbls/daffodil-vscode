@@ -26,20 +26,28 @@ const HEARTBEAT_INTERVAL_MS: number = 1000 // 1 second (1000 ms)
 let getHeartbeatIntervalId: NodeJS.Timeout | number | undefined = undefined
 let currentHeartbeat: IServerHeartbeat | undefined = undefined
 let receviers: Map<string, HeartbeatReceiver> = new Map()
-
+let heartbeatFailureCount = 0
 export function updateHeartbeatInterval() {
   if (getHeartbeatIntervalId) {
     clearInterval(getHeartbeatIntervalId)
     if (receviers.size === 0) return
   }
   getHeartbeatIntervalId = setInterval(async () => {
-    currentHeartbeat = await getServerHeartbeat(
+    getServerHeartbeat(
       Array.from(receviers.keys()),
       HEARTBEAT_INTERVAL_MS * receviers.size
     )
-    receviers.forEach((rx) => {
-      rx(currentHeartbeat!)
-    })
+      .then((heartbeatResponse) => {
+        currentHeartbeat = heartbeatResponse
+        receviers.forEach((rx) => {
+          rx(currentHeartbeat!)
+        })
+      })
+      .catch((err) => {
+        console.log('Heartbeat failure', err)
+        heartbeatFailureCount++
+        if (heartbeatFailureCount > 10) unregisterAllHeartbeatReceivers()
+      })
   }, HEARTBEAT_INTERVAL_MS * receviers.size)
 }
 export function unregisterHeartbeatReceiver(id: string) {
