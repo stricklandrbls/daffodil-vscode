@@ -192,28 +192,22 @@ async function startService(serviceConfig: DataEditorConfig): Promise<number> {
       serviceConfig.port
     )
 
-    // Start the server and wait up to 10 seconds for it to start
-    const serverPid = (await Promise.race([
-      startServer(
+    const startupTimeout = setTimeout(()=>{
+      rej(`Server startup timed out after ${SERVER_START_TIMEOUT} seconds`)
+    }, SERVER_START_TIMEOUT * 1000)
+    const serverPid = await startServer(
         serviceConfig.port,
         serviceConfig.hostname,
         getPidFile(serviceConfig.port),
         logConfigFile
-      ),
-
-      new Promise((_resolve, reject) => {
-        setTimeout(() => {
-          reject((): Error => {
-            return new Error(
-              `Server startup timed out after ${SERVER_START_TIMEOUT} seconds`
-            )
-          })
-        }, SERVER_START_TIMEOUT * 1000)
-      }),
-    ])) as number | undefined
-    if (serverPid === undefined || serverPid <= 0) {
+      )
+          if (serverPid === undefined || serverPid <= 0) {
       rej('Server failed to start or PID is invalid')
-    } else res(serverPid)
+    } else {
+      clearTimeout(startupTimeout)
+      res(serverPid)
+    }
+
   })
 }
 const MaxInitializationAttempts: number = 60

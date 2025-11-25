@@ -19,6 +19,11 @@ import { SvelteWebviewInitializer } from 'dataEditor/svelteWebviewInitializer'
 import { DataEditorArgMap } from 'dataEditor/editor/editorRegistry'
 import { IDataEditor } from 'dataEditor/editor/AbstractEditor'
 
+/**
+ * @brief Data Editor Manager Class
+ * Responsible for creating, storing, and disposing of Data Editor instances from the command
+ * registered to VSCode's commands.
+ */
 export class DataEditorManager {
   private editors = new Map<string, IDataEditor>() // key = editorId
 
@@ -31,6 +36,10 @@ export class DataEditorManager {
     return this.editors.get(editorId)
   }
 
+  /**
+   * @brief Attaches functions to the extension context for creating Data Editors.
+   * @param ctx Current VSCode extension context
+   */
   registerCommands(ctx: vscode.ExtensionContext) {
     ctx.subscriptions.push(
       vscode.commands.registerCommand('extension.data.edit', async () => {
@@ -54,14 +63,24 @@ export class DataEditorManager {
       )
     )
   }
+
+/**
+ * @brief Creates the webview panel to pass to the Data Editor created by the `DataEditorFactory` class
+ * @param {T} Type of Data Editor 
+ * @param {DataEditorArgMap[T]} config 
+ * @param ctx 
+ */
   async open<T extends EditorType>(
     type: T,
     config: DataEditorArgMap[T],
     ctx: vscode.ExtensionContext
   ) {
+    const titleFileStr = config.targetFile.substring(config.targetFile.lastIndexOf("/"))
+    /* Must retain title value for `onPanelDidDispose()` because it is invoked AFTER the panel, and panel.title, have been disposed i.e, the panel.title is non-existent */
+    const title = `Data Editor - ${titleFileStr} (${type})`
     const panel = vscode.window.createWebviewPanel(
       `dataEditor`,
-      `Data Editor (${type})`,
+      title,
       vscode.ViewColumn.Active,
       { enableScripts: true }
     )
@@ -76,7 +95,7 @@ export class DataEditorManager {
 
     panel.onDidDispose(() => {
       editor.close()
-      this.editors.delete(panel.title)
+      this.editors.delete(title)
     })
   }
 
