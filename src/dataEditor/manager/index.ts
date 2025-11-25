@@ -64,25 +64,27 @@ export class DataEditorManager {
     )
   }
 
-/**
- * @brief Creates the webview panel to pass to the Data Editor created by the `DataEditorFactory` class
- * @param {T} Type of Data Editor 
- * @param {DataEditorArgMap[T]} config 
- * @param ctx 
- */
+  /**
+   * @brief Creates the webview panel to pass to the Data Editor created by the `DataEditorFactory` class
+   * @param {T} Type of Data Editor
+   * @param {DataEditorArgMap[T]} config
+   * @param ctx
+   */
   async open<T extends EditorType>(
     type: T,
     config: DataEditorArgMap[T],
     ctx: vscode.ExtensionContext
   ) {
-    const titleFileStr = config.targetFile.substring(config.targetFile.lastIndexOf("/"))
+    const titleFileStr = config.targetFile.substring(
+      config.targetFile.lastIndexOf('/')
+    )
     /* Must retain title value for `onPanelDidDispose()` because it is invoked AFTER the panel, and panel.title, have been disposed i.e, the panel.title is non-existent */
     const title = `Data Editor - ${titleFileStr} (${type})`
     const panel = vscode.window.createWebviewPanel(
       `dataEditor`,
       title,
       vscode.ViewColumn.Active,
-      { enableScripts: true }
+      { enableScripts: true, retainContextWhenHidden: true }
     )
     const sveltePanelInit = new SvelteWebviewInitializer(ctx)
     sveltePanelInit.initialize(`dataEditor`, panel.webview)
@@ -92,7 +94,6 @@ export class DataEditorManager {
     const editor = await this.factory.create(type, config, bus)
     this.editors.set(panel.title, editor)
     await editor.open()
-
     panel.onDidDispose(() => {
       editor.close()
       this.editors.delete(title)
@@ -125,8 +126,11 @@ class ConfigProvider implements DataEditorConfigProvider {
   readonly config = vscode.workspace.getConfiguration('dataEditor')
   constructor(public targetFile: TargetFileSelector) {}
 
-  get<T extends keyof ExtractableConfigOpts>(section: T, defaultValue: ExtractableConfigOpts[T]):ExtractableConfigOpts[T]{
+  get<T extends keyof ExtractableConfigOpts>(
+    section: T,
+    defaultValue: ExtractableConfigOpts[T]
+  ): ExtractableConfigOpts[T] {
     const ret = this.config.get(section)
-    return ret ? ret as ExtractableConfigOpts[T] : defaultValue
+    return ret ? (ret as ExtractableConfigOpts[T]) : defaultValue
   }
 }

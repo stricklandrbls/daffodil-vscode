@@ -1,6 +1,7 @@
 import {
   createSession,
   createViewport,
+  destroySession,
   EventSubscriptionRequest,
   getByteOrderMark,
   getClient,
@@ -94,7 +95,6 @@ class OmegaEditorSessionManager {
           opts.heartbeatReceiver!({ ...hb })
         })
       }
-      this.activeSessions.push(newSession.sessionId)
       registerHeartbeatReceiver(newSession.sessionId, opts.heartbeatReceiver)
       res(newSession)
     })
@@ -103,11 +103,9 @@ class OmegaEditorSessionManager {
     if (!this.sessions[id]) throw `Session (${id}) is not registered`
     registerHeartbeatReceiver(id, receiver)
   }
-  remove(id: string) {
-    const removalIndex = this.activeSessions.findIndex((storedId) => {
-      return storedId === id
-    })
-    this.activeSessions.splice(removalIndex, 1)
+  async remove(id: string) {
+    await destroySession(id)
+    this.sessions.delete(id)
     if (sessionCount() === 0) {
       this.onAllSessionsDestroyed()
     }
@@ -185,8 +183,8 @@ export function sessionCreate(
 export function sessionCount() {
   return SessionManager.sessions.size
 }
-export function sessionDestroy(id: string) {
-  SessionManager.remove(id)
+export async function sessionDestroy(id: string) {
+  await SessionManager.remove(id)
   unregisterHeartbeatReceiver(id)
 }
 export function sessionDestroyAll() {
