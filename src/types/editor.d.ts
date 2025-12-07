@@ -3,6 +3,11 @@ import {
   ExtensionMsgResponses,
 } from 'dataEditor/core/message/messages'
 declare global {
+  interface DataEditor {
+    read: (offset: number) => boolean
+  }
+  const DataEditorAPI: DataEditor
+
   interface Window {
     addEditorMessageListener: <K extends keyof ExtensionMsgCommands>(
       type: K,
@@ -17,6 +22,10 @@ declare global {
         type: K,
         data?: ExtensionMsgCommands[K]
       ): ExtensionMsgCommands[K]
+      send<K extends keyof ExtensionMsgCommands>(
+        type: K,
+        data?: ExtensionMsgCommands[K]
+      ): Promise<ExtensionMsgResponses[K]>
     }
   }
 }

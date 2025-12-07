@@ -61,21 +61,22 @@ limitations under the License.
       }, 10000)
     }
   }
-  window.addEditorMessageListener('counts', info => {
-    const {applied, computedFileSize, undos} = info
-    $fileMetrics.changeCount = applied
-    $fileMetrics.computedSize = $fileMetrics.diskSize = computedFileSize
-    $fileMetrics.undoCount = undos
-  })
-  window.addEditorMessageListener('fileInfo', (info)=>{
-             // reset the profiler if changes have been made
-          isProfilerOpen = false
-          startOffset = length = 0
-          const {filename, bom, contentType, language}  = info
-          $fileMetrics.name = filename
-          $fileMetrics.language = language
-          $fileMetrics.type = contentType
-  })
+  window.editor_message.create('fileInfo')
+  // window.addEditorMessageListener('counts', info => {
+  //   const {applied, computedFileSize, undos} = info
+  //   $fileMetrics.changeCount = applied
+  //   $fileMetrics.computedSize = $fileMetrics.diskSize = computedFileSize
+  //   $fileMetrics.undoCount = undos
+  // })
+  // window.addEditorMessageListener('fileInfo', (info)=>{
+  //            // reset the profiler if changes have been made
+  //         isProfilerOpen = false
+  //         startOffset = length = 0
+  //         const {filename, bom, contentType, language}  = info
+  //         $fileMetrics.name = filename
+  //         $fileMetrics.language = language
+  //         $fileMetrics.type = contentType
+  // })
 //   window.addEventListener('message', (msg) => {
 //     switch (msg.data.command) {
 //       case MessageCommand.fileInfo:

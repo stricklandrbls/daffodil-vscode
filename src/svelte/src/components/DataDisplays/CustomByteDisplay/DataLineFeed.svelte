@@ -49,9 +49,9 @@ limitations under the License.
   import {
     byte_value_string,
     null_byte,
+    ViewportData_t,
     type ByteSelectionEvent,
     type ByteValue,
-    type ViewportData_t,
   } from './BinaryData'
   import DataValue from './DataValue.svelte'
   import FileTraversalIndicator from './FileTraversalIndicator.svelte'
@@ -457,7 +457,7 @@ limitations under the License.
     vscode.postMessage('editorOnChange', {
       editMode: $editMode === EditByteModes.Single ? 'single' : 'multi',
       encoding: forcedEncoding ? forcedEncoding : $editorEncoding,
-      selectionData: $editedDataSegment
+      selectionData: $editedDataSegment,
     })
     // vscode.postMessage({
     //   command: MessageCommand.editorOnChange,
@@ -567,8 +567,12 @@ limitations under the License.
     )
   }
 
+  let viewportUpdatePromise: Promise<ViewportData_t>
+  
+  
+
   window.addEventListener('keydown', navigation_keydown_event)
-    window.addListenerOnEditorMessages(
+  window.addListenerOnEditorMessages(
     (response) => {
       const { data, bytesRemaining, capacity, length, srcOffset } = response
       $viewport = {
@@ -577,17 +581,20 @@ limitations under the License.
         length: length,
         bytesLeft: bytesRemaining,
       } as ViewportData_t
+
+      viewportUpdatePromise = Promise.resolve($viewport)
+
       if (awaitViewportSeek) {
-          awaitViewportSeek = false
-          $dataFeedLineTop = Math.max(
-            0,
-            Math.min(lineTopMaxViewport, $dataFeedLineTop)
-          )
-          if ($selectionDataStore.active)
-            selectedByteElement = document.getElementById(
-              $selectedByte.offset.toString()
-            ) as HTMLDivElement
-        }
+        awaitViewportSeek = false
+        // $dataFeedLineTop = Math.max(
+        //   0,
+        //   Math.min(lineTopMaxViewport, $dataFeedLineTop)
+        // )
+        // if ($selectionDataStore.active)
+        //   selectedByteElement = document.getElementById(
+        //     $selectedByte.offset.toString()
+        //   ) as HTMLDivElement
+      }
     },
     'viewportRefresh',
     'scrollViewport'
@@ -617,6 +624,25 @@ limitations under the License.
   //       break
   //   }
   // })
+  const initFetch = () => {
+    return new Promise<ViewportData_t>((res, rej) => {
+      vscode.postMessage('scrollViewport', {
+        bytesPerRow: $bytesPerRow,
+        scrollOffset: 0,
+      })
+    })
+  }
+  
+  viewportUpdatePromise = initFetch().then((vp) => {
+    $dataFeedLineTop = Math.max(
+      0,
+      Math.min(lineTopMaxViewport, $dataFeedLineTop)
+    )
+    if ($selectionDataStore.active)
+      selectedByteElement = document.getElementById(
+        $selectedByte.offset.toString()
+      ) as HTMLDivElement
+  })
 </script>
 
 <svelte:window on:mousemove={mouseover_handler} />

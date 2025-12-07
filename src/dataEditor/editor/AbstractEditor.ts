@@ -36,12 +36,12 @@ export abstract class IDataEditor {
     this.msgMediator!.process('counts').then((counts) => {
       this.opts.bus.post('counts', counts)
     })
-    this.msgMediator!.process('scrollViewport', {
-      scrollOffset: 0,
-      bytesPerRow: 16,
-    }).then((data) => {
-      this.opts.bus.post('viewportRefresh', data)
-    })
+    // this.msgMediator!.process('scrollViewport', { // Remove automatic init data send. Webview should always request.
+    //   scrollOffset: 0,
+    //   bytesPerRow: 16,
+    // }).then((data) => {
+    //   this.opts.bus.post('viewportRefresh', data)
+    // })
   }
   async close(): Promise<void> {
     this.opts.service.disconnect()
