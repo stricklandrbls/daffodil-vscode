@@ -26,7 +26,7 @@ import {
   RequestTypeMap,
 } from './requestHandler'
 import { RequestArgs } from 'dataEditor/core/message/messages'
-import { DataEditorViewport } from 'dataEditor/editor/Viewport'
+import { DataEditorViewport } from 'dataEditor/core/editor/Viewport'
 export interface SessionCreateOpts {
   targetFile: string
   heartbeatReceiver?: HeartbeatReceiver

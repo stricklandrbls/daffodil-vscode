@@ -11,8 +11,8 @@ import { EditorUI } from 'dataEditor/core/ui/editorUI'
 import { IDataEditor } from './AbstractEditor'
 import { EditorType } from '.'
 import { DebugEditorConfig, StandaloneEditorConfig } from 'dataEditor/config'
-import { StandaloneDataEditor } from './StandaloneEditor'
-import { DFDLDebugEditor } from './DFDLDebugEditor'
+import { StandaloneDataEditor } from '../../extension/editors/standalone/StandaloneEditor'
+import { DFDLDebugEditor } from '../../extension/editors/dfdlDebug/DFDLDebugEditor'
 
 export interface DataEditorConstructor<K extends EditorType> {
   new (

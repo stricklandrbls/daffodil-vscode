@@ -1,4 +1,4 @@
-import { DisplayState } from 'dataEditor/editor/DisplayState'
+import { DisplayState } from 'dataEditor/core/editor/DisplayState'
 import { MessageBus } from 'dataEditor/core/message/messageBus'
 import {
   ExtensionMsgResponses,

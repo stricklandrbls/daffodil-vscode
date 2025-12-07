@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { DataEditorFactory } from './editor/DataEditorFactory'
+import { DataEditorFactory } from './core/editor/DataEditorFactory'
 import { DataEditorManager } from './manager'
 import * as vscode from 'vscode'
 

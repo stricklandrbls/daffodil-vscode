@@ -11,9 +11,9 @@ import {
   IDataEditorService,
 } from 'dataEditor/core/service/editorService'
 import { EditorUI } from 'dataEditor/core/ui/editorUI'
-import { IDataEditor } from './AbstractEditor'
-import { EditorType } from '.'
-import { DataEditorArgMap } from './editorRegistry'
+import { IDataEditor } from '../../../core/editor/AbstractEditor'
+import { EditorType } from '../../../core/editor'
+import { DataEditorArgMap } from '../../../core/editor/editorRegistry'
 import * as vscode from 'vscode'
 import {
   AbstractMediator,
@@ -25,7 +25,7 @@ import {
   RequestType,
 } from 'dataEditor/core/service/requestHandler'
 import { OmegaEditSession } from 'dataEditor/extension/adapters/omegaEditAdapter/sessions'
-import { dataToEncodedStr, DisplayState } from './DisplayState'
+import { dataToEncodedStr, DisplayState } from '../../../core/editor/DisplayState'
 class ExtensionLocalMsgHandler
   implements
     RequestHandler<

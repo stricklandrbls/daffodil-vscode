@@ -1,5 +1,5 @@
 // src/core/config.ts
-import { EditorType } from 'dataEditor/editor'
+import { EditorType } from 'dataEditor/core/editor'
 import XDGAppPaths from 'xdg-app-paths'
 import fs from 'fs'
 import assert from 'assert'
@@ -62,6 +62,9 @@ export abstract class DataEditorConfig {
     this.logLevel = p.logLevel
     this.logFile = p.logFile
     this.checkpointPath = p.checkpointPath
+  }
+  static buildFrom(provider: DataEditorConfigProvider){
+    
   }
 }
 

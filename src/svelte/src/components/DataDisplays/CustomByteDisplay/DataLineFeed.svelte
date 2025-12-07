@@ -568,8 +568,6 @@ limitations under the License.
   }
 
   let viewportUpdatePromise: Promise<ViewportData_t>
-  
-  
 
   window.addEventListener('keydown', navigation_keydown_event)
   window.addListenerOnEditorMessages(
@@ -632,12 +630,8 @@ limitations under the License.
       })
     })
   }
-  
+
   viewportUpdatePromise = initFetch().then((vp) => {
-    $dataFeedLineTop = Math.max(
-      0,
-      Math.min(lineTopMaxViewport, $dataFeedLineTop)
-    )
     if ($selectionDataStore.active)
       selectedByteElement = document.getElementById(
         $selectedByte.offset.toString()

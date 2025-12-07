@@ -5,7 +5,7 @@
 // import type { MessageBus } from "../core/messageBus.js";
 // import type { UiToEditor, EditorToUi } from "../core/messages.js";
 import * as vscode from 'vscode'
-import { EditorType } from 'dataEditor/editor'
+import { EditorType } from 'dataEditor/core/editor'
 import {
   DataEditorConfig,
   DataEditorConfigProvider,
@@ -13,11 +13,11 @@ import {
   ExtractableConfigOpts,
   StandaloneEditorConfig,
 } from 'dataEditor/config'
-import { DataEditorFactory } from 'dataEditor/editor/DataEditorFactory'
+import { DataEditorFactory } from 'dataEditor/core/editor/DataEditorFactory'
 import { WebviewBusHost } from 'dataEditor/core/message/messageBus'
 import { SvelteWebviewInitializer } from 'dataEditor/svelteWebviewInitializer'
-import { DataEditorArgMap } from 'dataEditor/editor/editorRegistry'
-import { IDataEditor } from 'dataEditor/editor/AbstractEditor'
+import { DataEditorArgMap } from 'dataEditor/core/editor/editorRegistry'
+import { IDataEditor } from 'dataEditor/core/editor/AbstractEditor'
 
 /**
  * @brief Data Editor Manager Class
@@ -111,8 +111,16 @@ export class DataEditorManager {
     await Promise.all([...this.editors.keys()].map((id) => this.close(id)))
   }
 }
+
+/**
+ * @typedef {()=>string|Promise<string>} TargetFileSelector
+ */
 type TargetFileSelector = () => string | Promise<string>
 
+/**
+ * 
+ * @returns 
+ */
 const VSCodeFileSelector: TargetFileSelector = async (): Promise<string> => {
   const fileUri = await vscode.window.showOpenDialog({
     canSelectMany: false,
