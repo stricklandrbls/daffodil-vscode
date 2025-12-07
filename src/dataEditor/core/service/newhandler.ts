@@ -1,4 +1,4 @@
-import { EditorUI } from 'dataEditor/ui/editorUI'
+import { EditorUI } from 'dataEditor/core/ui/editorUI'
 
 type RequestArgs<R, K extends keyof R> = [R[K]] extends [never]
   ? [type: K]

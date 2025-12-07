@@ -1,2 +1,5 @@
-import { ExtensionMsgCommands, ExtensionMsgResponses } from './message/messages'
+import {
+  ExtensionMsgCommands,
+  ExtensionMsgResponses,
+} from './core/message/messages'
 export { ExtensionMsgCommands, ExtensionMsgResponses }

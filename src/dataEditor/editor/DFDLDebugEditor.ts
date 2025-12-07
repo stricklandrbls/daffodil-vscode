@@ -2,12 +2,12 @@ import {
   EditorToUi,
   UiToEditor,
   UiToEditorMsgs,
-} from 'dataEditor/message/messages'
+} from 'dataEditor/core/message/messages'
 import { IDataEditor } from './AbstractEditor'
 import { DataEditorConfig } from 'classes/dataEditor'
-import { MessageBus } from 'dataEditor/message/messageBus'
-import { DataEditorService } from 'dataEditor/service/editorService'
-import { EditorUI } from 'dataEditor/ui/editorUI'
+import { MessageBus } from 'dataEditor/core/message/messageBus'
+import { DataEditorService } from 'dataEditor/core/service/editorService'
+import { EditorUI } from 'dataEditor/core/ui/editorUI'
 import { DataEditorArgMap } from './editorRegistry'
 
 export class DFDLDebugEditor extends IDataEditor {

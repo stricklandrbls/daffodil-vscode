@@ -1,13 +1,13 @@
-import { MessageBus } from 'dataEditor/message/messageBus'
+import { MessageBus } from 'dataEditor/core/message/messageBus'
 import {
   UiToEditor,
   EditorToUi,
   UiToEditorMsgs,
   ExtensionMsgCommands,
   ExtensionMsgResponses,
-} from 'dataEditor/message/messages'
-import { DataEditorService } from 'dataEditor/service/editorService'
-import { EditorUI } from 'dataEditor/ui/editorUI'
+} from 'dataEditor/core/message/messages'
+import { DataEditorService } from 'dataEditor/core/service/editorService'
+import { EditorUI } from 'dataEditor/core/ui/editorUI'
 import { IDataEditor } from './AbstractEditor'
 import { EditorType } from '.'
 import { DebugEditorConfig, StandaloneEditorConfig } from 'dataEditor/config'

@@ -8,7 +8,10 @@ import {
   RequestArgs,
   UiToEditor,
 } from './messages'
-import { BaseRequests, MappedType } from 'dataEditor/service/requestHandler'
+import {
+  BaseRequests,
+  MappedType,
+} from 'dataEditor/core/service/requestHandler'
 
 export type UIToEditorHandler = (m: UiToEditor) => void
 export type EditorToUIHandler = (m: EditorToUi) => Thenable<boolean>

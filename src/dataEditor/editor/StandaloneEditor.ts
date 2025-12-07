@@ -1,16 +1,16 @@
-import { MessageBus } from 'dataEditor/message/messageBus'
+import { MessageBus } from 'dataEditor/core/message/messageBus'
 import {
   ExtensionMsgCommands,
   ExtensionMsgResponses,
   ExtensionRequest,
   ExtensionResponse,
   RequestArgs,
-} from 'dataEditor/message/messages'
+} from 'dataEditor/core/message/messages'
 import {
   DataEditorService,
   IDataEditorService,
-} from 'dataEditor/service/editorService'
-import { EditorUI } from 'dataEditor/ui/editorUI'
+} from 'dataEditor/core/service/editorService'
+import { EditorUI } from 'dataEditor/core/ui/editorUI'
 import { IDataEditor } from './AbstractEditor'
 import { EditorType } from '.'
 import { DataEditorArgMap } from './editorRegistry'
@@ -18,13 +18,13 @@ import * as vscode from 'vscode'
 import {
   AbstractMediator,
   MessageHandler,
-} from 'dataEditor/message/messageMediator'
+} from 'dataEditor/core/message/messageMediator'
 import {
   IServiceRequestHandler,
   RequestHandler,
   RequestType,
-} from 'dataEditor/service/requestHandler'
-import { OmegaEditSession } from 'dataEditor/adapters/omegaEditAdapter/sessions'
+} from 'dataEditor/core/service/requestHandler'
+import { OmegaEditSession } from 'dataEditor/extension/adapters/omegaEditAdapter/sessions'
 import { dataToEncodedStr, DisplayState } from './DisplayState'
 class ExtensionLocalMsgHandler
   implements

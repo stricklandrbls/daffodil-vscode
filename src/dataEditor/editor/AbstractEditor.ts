@@ -1,13 +1,13 @@
 import { DataEditorConfig, DataEditorConfigProvider } from 'dataEditor/config'
 import { DefaultEditorLogger, IDataEditorLogger } from 'dataEditor/logs'
-import { MessageBus } from 'dataEditor/message/messageBus'
-import { AbstractMediator } from 'dataEditor/message/messageMediator'
+import { MessageBus } from 'dataEditor/core/message/messageBus'
+import { AbstractMediator } from 'dataEditor/core/message/messageMediator'
 import {
   ExtensionMsgCommands,
   ExtensionMsgResponses,
-} from 'dataEditor/message/messages'
-import { DataEditorService } from 'dataEditor/service/editorService'
-import { EditorUI } from 'dataEditor/ui/editorUI'
+} from 'dataEditor/core/message/messages'
+import { DataEditorService } from 'dataEditor/core/service/editorService'
+import { EditorUI } from 'dataEditor/core/ui/editorUI'
 
 export abstract class IDataEditor {
   protected abstract msgMediator:

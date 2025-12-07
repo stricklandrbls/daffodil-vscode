@@ -1,12 +1,12 @@
-import { SvelteUIAdapter } from 'dataEditor/adapters/svelteUIAdapter'
-import { MessageBus } from 'dataEditor/message/messageBus'
+import { SvelteUIAdapter } from 'dataEditor/extension/adapters/svelteUIAdapter'
+import { MessageBus } from 'dataEditor/core/message/messageBus'
 import {
   ExtensionMsgCommands,
   ExtensionMsgResponses,
-} from 'dataEditor/message/messages'
-import { DataEditorService } from 'dataEditor/service/editorService'
-import { EditorUI } from 'dataEditor/ui/editorUI'
-import { OmegaEditorAdapter } from 'dataEditor/adapters/omegaEditAdapter/omegaEditAdapter'
+} from 'dataEditor/core/message/messages'
+import { DataEditorService } from 'dataEditor/core/service/editorService'
+import { EditorUI } from 'dataEditor/core/ui/editorUI'
+import { OmegaEditorAdapter } from 'dataEditor/extension/adapters/omegaEditAdapter/omegaEditAdapter'
 import { EditorType } from '.'
 import { DataEditorConfig } from 'dataEditor/config'
 import { DataEditorRegistry } from './editorRegistry'

@@ -12,7 +12,7 @@ import { generateLogbackConfigFile } from 'dataEditor/logs'
 import {
   DataEditorService,
   EditorServiceEvents,
-} from 'dataEditor/service/editorService'
+} from 'dataEditor/core/service/editorService'
 import EventEmitter from 'events'
 import { Socket } from 'net'
 import path from 'path'
@@ -23,10 +23,10 @@ import {
   sessionDestroy,
   sessionDestroyAll,
 } from './sessions'
-import { RequestHandler } from 'dataEditor/service/requestHandler'
+import { RequestHandler } from 'dataEditor/core/service/requestHandler'
 import * as fs from 'fs'
 import * as child_process from 'child_process'
-import { osCheck } from '../../../utils'
+import { osCheck } from '../../../../utils'
 export type OmegaEditConfigProvider = () => DataEditorConfig &
   OmegaEditServiceConfig
 
@@ -192,22 +192,21 @@ async function startService(serviceConfig: DataEditorConfig): Promise<number> {
       serviceConfig.port
     )
 
-    const startupTimeout = setTimeout(()=>{
+    const startupTimeout = setTimeout(() => {
       rej(`Server startup timed out after ${SERVER_START_TIMEOUT} seconds`)
     }, SERVER_START_TIMEOUT * 1000)
     const serverPid = await startServer(
-        serviceConfig.port,
-        serviceConfig.hostname,
-        getPidFile(serviceConfig.port),
-        logConfigFile
-      )
-          if (serverPid === undefined || serverPid <= 0) {
+      serviceConfig.port,
+      serviceConfig.hostname,
+      getPidFile(serviceConfig.port),
+      logConfigFile
+    )
+    if (serverPid === undefined || serverPid <= 0) {
       rej('Server failed to start or PID is invalid')
     } else {
       clearTimeout(startupTimeout)
       res(serverPid)
     }
-
   })
 }
 const MaxInitializationAttempts: number = 60

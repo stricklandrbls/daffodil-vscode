@@ -14,7 +14,7 @@ import {
   StandaloneEditorConfig,
 } from 'dataEditor/config'
 import { DataEditorFactory } from 'dataEditor/editor/DataEditorFactory'
-import { WebviewBusHost } from 'dataEditor/message/messageBus'
+import { WebviewBusHost } from 'dataEditor/core/message/messageBus'
 import { SvelteWebviewInitializer } from 'dataEditor/svelteWebviewInitializer'
 import { DataEditorArgMap } from 'dataEditor/editor/editorRegistry'
 import { IDataEditor } from 'dataEditor/editor/AbstractEditor'

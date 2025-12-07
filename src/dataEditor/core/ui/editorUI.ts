@@ -1,11 +1,11 @@
 import { DisplayState } from 'dataEditor/editor/DisplayState'
-import { MessageBus } from 'dataEditor/message/messageBus'
+import { MessageBus } from 'dataEditor/core/message/messageBus'
 import {
   ExtensionMsgResponses,
   ExtensionResponse,
   ExtensionRequest,
   ExtensionMsgCommands,
-} from 'dataEditor/message/messages'
+} from 'dataEditor/core/message/messages'
 
 export interface EditorUI {
   attach(bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>): void

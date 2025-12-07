@@ -10,7 +10,7 @@ import {
   IServerHeartbeat,
   ViewportEventKind,
 } from '@omega-edit/client'
-import { RequestHandler } from 'dataEditor/service/requestHandler'
+import { RequestHandler } from 'dataEditor/core/service/requestHandler'
 import {
   getCurrentHeartbeatInfo,
   HeartbeatReceiver,
@@ -25,7 +25,7 @@ import {
   OmegaEditResponses,
   RequestTypeMap,
 } from './requestHandler'
-import { RequestArgs } from 'dataEditor/message/messages'
+import { RequestArgs } from 'dataEditor/core/message/messages'
 import { DataEditorViewport } from 'dataEditor/editor/Viewport'
 export interface SessionCreateOpts {
   targetFile: string

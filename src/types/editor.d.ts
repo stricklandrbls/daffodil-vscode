@@ -1,7 +1,7 @@
 import {
   ExtensionMsgCommands,
   ExtensionMsgResponses,
-} from 'dataEditor/message/messages'
+} from 'dataEditor/core/message/messages'
 declare global {
   interface Window {
     addEditorMessageListener: <K extends keyof ExtensionMsgCommands>(

@@ -18,7 +18,7 @@
 import type {
   ExtensionMsgCommands,
   ExtensionMsgResponses,
-} from 'dataEditor/message/messages'
+} from 'dataEditor/core/message/messages'
 
 export enum MessageCommand {
   clearChanges = 'clearChanges',

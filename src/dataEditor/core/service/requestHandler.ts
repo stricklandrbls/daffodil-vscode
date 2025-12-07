@@ -4,7 +4,7 @@ import {
   ExtensionReqSubMap,
   ExtensionResSubMap,
   RequestArgs,
-} from 'dataEditor/message/messages'
+} from 'dataEditor/core/message/messages'
 export type LookupOptions = {
   caseInsensitive: boolean
   reverse: boolean

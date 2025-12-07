@@ -1,6 +1,6 @@
 import { IServerHeartbeat } from '@omega-edit/client'
 import { IServiceRequestHandler, RequestHandler } from './requestHandler'
-import { RequestArgs } from 'dataEditor/message/messages'
+import { RequestArgs } from 'dataEditor/core/message/messages'
 
 // src/ports/binaryDataService.ts
 export type HeartbeatFn = (ts: number) => void

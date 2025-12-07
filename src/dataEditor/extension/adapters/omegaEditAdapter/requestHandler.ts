@@ -5,7 +5,7 @@ import {
   CountKind,
 } from '@omega-edit/client'
 import { ExtensionMsgCommands, ExtensionMsgResponses } from 'dataEditor/global'
-import { CountResponse } from 'dataEditor/message/messages'
+import { CountResponse } from 'dataEditor/core/message/messages'
 
 export type OmegaEditRequests = Pick<
   ExtensionMsgCommands,
