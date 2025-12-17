@@ -14,6 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { getViewportData } from '@omega-edit/client'
+import { createHash } from 'crypto'
 import { debug } from 'vscode'
 
 export function isDFDLDebugSessionActive(): boolean {
@@ -21,4 +23,32 @@ export function isDFDLDebugSessionActive(): boolean {
     debug.activeDebugSession !== undefined &&
     debug.activeDebugSession.type === 'dfdl'
   )
+}
+export type HashSource = 'local' | 'disk'
+
+export interface HashTarget {
+  viewportId: string
+  bytes?: Uint8Array
+}
+
+export function getHash(
+  source: HashSource,
+  target: HashTarget
+): Promise<string> {
+  return new Promise(async (res, rej) => {
+    console.debug('Calculating hash...')
+    let hashObj = createHash('sha256')
+
+    if (target && target.bytes) {
+      const hashStr = hashObj.update(target.bytes).digest().toString()
+      res(hashStr)
+    } else {
+      const vpDataResponse = await getViewportData(target.viewportId)
+      const hashStr = hashObj
+        .update(vpDataResponse.getData_asU8())
+        .digest()
+        .toString()
+      res(hashStr)
+    }
+  })
 }

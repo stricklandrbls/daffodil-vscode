@@ -84,7 +84,7 @@ import { getCurrentHeartbeatInfo } from './include/server/heartbeat'
 import * as child_process from 'child_process'
 import { osCheck } from '../utils'
 import { getCurrentConfig } from '../utils'
-import { isDFDLDebugSessionActive } from './include/utils'
+import { getHash, isDFDLDebugSessionActive } from './include/utils'
 
 // *****************************************************************************
 // global constants
@@ -471,6 +471,17 @@ export class DataEditorClient implements vscode.Disposable {
     await this.panel.webview.postMessage({
       command: MessageCommand.fileInfo,
       data: data,
+    })
+
+    this.panel.webview.postMessage({
+      command: 21,
+      data: {
+        hashes: {
+          viewport: await getHash('disk', {
+            viewportId: this.currentViewportId,
+          }),
+        },
+      },
     })
   }
 
