@@ -275,8 +275,6 @@ limitations under the License.
     }
   }
 
-  const viewportHash = writable('')
-
   window.addEventListener('message', (msg) => {
     switch (msg.data.command) {
       case 21:
@@ -336,9 +334,6 @@ limitations under the License.
   <Help />
   <hr />
   <ServerMetrics />
-  <div class="data-hashes">
-    Viewport Hash: {$viewportHash}
-  </div>
 </body>
 
 <!-- svelte-ignore css-unused-selector -->

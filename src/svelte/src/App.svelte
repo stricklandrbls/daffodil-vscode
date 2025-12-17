@@ -64,6 +64,7 @@ limitations under the License.
   } from './components/DataDisplays/CustomByteDisplay/BinaryData'
   import { byte_count_divisible_offset } from './utilities/display'
   import Help from './components/layouts/Help.svelte'
+  import { writable } from 'svelte/store'
 
   function requestEditedData() {
     if ($requestable) {
@@ -274,8 +275,13 @@ limitations under the License.
     }
   }
 
+  const viewportHash = writable('')
+
   window.addEventListener('message', (msg) => {
     switch (msg.data.command) {
+      case 21:
+        $viewportHash = msg.data.data.hashes.viewport
+        break
       case MessageCommand.editorOnChange:
         if ($editMode === EditByteModes.Multiple)
           $editorSelection = msg.data.display
@@ -333,6 +339,9 @@ limitations under the License.
 <Help />
 <hr />
 <ServerMetrics />
+<div class="data-hashes">
+  Viewport Hash: {$viewportHash}
+</div>
 
 <!-- </body> -->
 
