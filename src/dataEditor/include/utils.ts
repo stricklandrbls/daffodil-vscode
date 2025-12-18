@@ -47,7 +47,7 @@ export function getHash(
       const hashStr = hashObj
         .update(vpDataResponse.getData_asU8())
         .digest()
-        .toString()
+        .toString('hex')
       res(hashStr)
     }
   })

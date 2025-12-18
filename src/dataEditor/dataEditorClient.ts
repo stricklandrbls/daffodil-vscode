@@ -473,16 +473,7 @@ export class DataEditorClient implements vscode.Disposable {
       data: data,
     })
 
-    this.panel.webview.postMessage({
-      command: 21,
-      data: {
-        hashes: {
-          viewport: await getHash('disk', {
-            viewportId: this.currentViewportId,
-          }),
-        },
-      },
-    })
+   
   }
 
   // handle messages from the webview
@@ -1027,6 +1018,9 @@ async function sendViewportRefresh(
   panel: vscode.WebviewPanel,
   viewportDataResponse: ViewportDataResponse
 ): Promise<void> {
+    const viewportId = viewportDataResponse.getViewportId()
+    const viewportHash = await getHash('disk', {viewportId})
+
   await panel.webview.postMessage({
     command: MessageCommand.viewportRefresh,
     data: {
@@ -1038,6 +1032,14 @@ async function sendViewportRefresh(
       capacity: VIEWPORT_CAPACITY_MAX,
     },
   })
+   panel.webview.postMessage({
+      command: 21,
+      data: {
+        hashes: {
+          viewport: viewportHash,
+        },
+      },
+    })
 }
 
 /**
