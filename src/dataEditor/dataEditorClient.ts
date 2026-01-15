@@ -38,6 +38,7 @@ import {
   getLanguage,
   getLogger,
   getServerInfo,
+  getViewportCount,
   getViewportData,
   IOFlags,
   modifyViewport,
@@ -84,7 +85,13 @@ import { getCurrentHeartbeatInfo } from './include/server/heartbeat'
 import * as child_process from 'child_process'
 import { osCheck } from '../utils'
 import { getCurrentConfig } from '../utils'
-import { getHash, isDFDLDebugSessionActive } from './include/utils'
+import {
+  getHash,
+  getHashFor,
+  getWholeFileHash,
+  HashResponse,
+  isDFDLDebugSessionActive,
+} from './include/utils'
 
 // *****************************************************************************
 // global constants
@@ -411,7 +418,50 @@ export class DataEditorClient implements vscode.Disposable {
       data: data,
     })
   }
-
+  private async calculateHashs(
+    from: ViewportDataResponse | { offset: number }
+  ) {
+    let hashes: HashResponse
+    if (from instanceof ViewportDataResponse) {
+      hashes = {
+        disk: {
+          viewport: await getHashFor('disk', 'viewport', {
+            sessionId: this.omegaSessionId,
+            offset: from.getOffset()!,
+            length: from.getLength()!,
+          }),
+        },
+        local: {
+          viewport: await getHashFor('local', 'viewport', {
+            bytesRx: from.getData_asU8(),
+          }),
+        },
+      }
+    } else {
+      hashes = {
+        disk: {
+          viewport: await getHashFor('disk', 'viewport', {
+            sessionId: this.omegaSessionId,
+            offset: from.offset,
+            length: VIEWPORT_CAPACITY_MAX,
+          }),
+        },
+        local: {
+          viewport: await getHashFor('local', 'viewport', {
+            bytesRx: (
+              await getViewportData(this.currentViewportId)
+            ).getData_asU8(),
+          }),
+        },
+      }
+    }
+    this.panel.webview.postMessage({
+      command: 21,
+      data: {
+        hashes: { ...hashes },
+      },
+    })
+  }
   private async sendHeartbeat() {
     const heartbeatInfo = getCurrentHeartbeatInfo()
 
@@ -472,8 +522,6 @@ export class DataEditorClient implements vscode.Disposable {
       command: MessageCommand.fileInfo,
       data: data,
     })
-
-   
   }
 
   // handle messages from the webview
@@ -533,6 +581,11 @@ export class DataEditorClient implements vscode.Disposable {
           message.data.editedSegment
         )
         await this.sendChangesInfo()
+
+        const offset = (
+          await getViewportData(this.currentViewportId)
+        ).getOffset()
+        this.calculateHashs({ offset })
         break
 
       case MessageCommand.undoChange:
@@ -882,7 +935,29 @@ export class DataEditorClient implements vscode.Disposable {
     try {
       await sendViewportRefresh(
         panel,
-        await modifyViewport(viewportId, startOffset, VIEWPORT_CAPACITY_MAX)
+        await modifyViewport(viewportId, startOffset, VIEWPORT_CAPACITY_MAX),
+        async (dataResponse) => {
+          const hashes: HashResponse = {
+            disk: {
+              viewport: await getHashFor('disk', 'viewport', {
+                sessionId: this.omegaSessionId,
+                offset: dataResponse.getOffset()!,
+                length: dataResponse.getLength()!,
+              }),
+            },
+            local: {
+              viewport: await getHashFor('local', 'viewport', {
+                bytesRx: dataResponse.getData_asU8(),
+              }),
+            },
+          }
+          this.panel.webview.postMessage({
+            command: 21,
+            data: {
+              hashes: { ...hashes },
+            },
+          })
+        }
       )
     } catch {
       const msg = `Failed to scroll viewport ${viewportId} to offset ${startOffset}`
@@ -894,6 +969,19 @@ export class DataEditorClient implements vscode.Disposable {
       })
       vscode.window.showErrorMessage(msg)
     }
+
+    // getWholeFileHash(this.sessionId()).then((hashStr) => {
+    //   panel.webview.postMessage({
+    //     command: 21,
+    //     data: {
+    //       hashes: {
+    //         local: {
+    //           wholeFile: hashStr,
+    //         },
+    //       },
+    //     },
+    //   })
+    // })
   }
 }
 
@@ -1016,11 +1104,9 @@ async function setupLogging(configVars: editor_config.Config): Promise<void> {
 
 async function sendViewportRefresh(
   panel: vscode.WebviewPanel,
-  viewportDataResponse: ViewportDataResponse
+  viewportDataResponse: ViewportDataResponse,
+  viewportRefreshHook?: (dataResponse: ViewportDataResponse) => Promise<any>
 ): Promise<void> {
-    const viewportId = viewportDataResponse.getViewportId()
-    const viewportHash = await getHash('disk', {viewportId})
-
   await panel.webview.postMessage({
     command: MessageCommand.viewportRefresh,
     data: {
@@ -1032,14 +1118,7 @@ async function sendViewportRefresh(
       capacity: VIEWPORT_CAPACITY_MAX,
     },
   })
-   panel.webview.postMessage({
-      command: 21,
-      data: {
-        hashes: {
-          viewport: viewportHash,
-        },
-      },
-    })
+  if (viewportRefreshHook) viewportRefreshHook(viewportDataResponse)
 }
 
 /**
@@ -1049,7 +1128,8 @@ async function sendViewportRefresh(
  */
 async function viewportSubscribe(
   panel: vscode.WebviewPanel,
-  viewportId: string
+  viewportId: string,
+  onDataRx?: (event: ViewportEvent) => any
 ) {
   // subscribe to all viewport events
   client
@@ -1059,10 +1139,13 @@ async function viewportSubscribe(
         .setInterest(ALL_EVENTS & ~ViewportEventKind.VIEWPORT_EVT_MODIFY)
     )
     .on('data', async (event: ViewportEvent) => {
+      if (onDataRx) onDataRx(event)
+      event.
       getLogger().debug({
         viewportId: event.getViewportId(),
         event: event.getViewportEventKind(),
       })
+
       await sendViewportRefresh(panel, await getViewportData(viewportId))
     })
     .on('error', (err) => {

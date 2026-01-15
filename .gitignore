@@ -68,3 +68,6 @@ doc/.wiki/
 
 # ignore .env files
 **/.env
+
+# Jetbrains IntelliJ directory
+.idea

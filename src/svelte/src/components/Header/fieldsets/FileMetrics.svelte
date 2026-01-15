@@ -28,10 +28,13 @@ limitations under the License.
   import { DATA_PROFILE_MAX_LENGTH } from '../../../stores/configuration'
   import Tooltip from '../../layouts/Tooltip.svelte'
   import ISO6391 from 'iso-639-1'
+  import { writable } from 'svelte/store'
   const eventDispatcher = createEventDispatcher()
 
   let displayOpts = false
   let isProfilerOpen = false
+  let metricsDisplayType: 'file-info' | 'hashes' = 'file-info'
+
   let canUndo: boolean
   let canRedo: boolean
   let canRevert: boolean
@@ -62,8 +65,23 @@ limitations under the License.
     }
   }
 
+  const viewportHash = writable('')
+  const diskViewportHash = writable('')
+
   window.addEventListener('message', (msg) => {
     switch (msg.data.command) {
+      case 21:
+        if (msg.data.data.hashes.local.viewport) {
+          const hashStr = msg.data.data.hashes.local.viewport as string
+
+          $viewportHash = hashStr.substring(hashStr.length - 5)
+        }
+        if (msg.data.data.hashes.disk.viewport) {
+          const hashStr = msg.data.data.hashes.disk.viewport as string
+          $diskViewportHash = hashStr.substring(hashStr.length - 5)
+        }
+
+        break
       case MessageCommand.fileInfo:
         {
           // reset the profiler if changes have been made
@@ -119,6 +137,11 @@ limitations under the License.
   function toggleDataProfiler() {
     isProfilerOpen = !isProfilerOpen
   }
+
+  function toggleMetricsDisplayType() {
+    metricsDisplayType =
+      metricsDisplayType == 'file-info' ? 'hashes' : 'file-info'
+  }
 </script>
 
 <SidePanel
@@ -163,28 +186,47 @@ limitations under the License.
   <hr />
   <FlexContainer --dir="row">
     <FlexContainer --dir="column">
-      <Tooltip description="Initial file size" alwaysEnabled={true}>
-        <label for="disk_file_size">Disk Size</label>
+      <Tooltip
+        description={metricsDisplayType == 'file-info'
+          ? 'Initial file size'
+          : 'Disk Hash'}
+        alwaysEnabled={true}
+      >
+        <label for="disk_file_size"
+          >{metricsDisplayType == 'file-info'
+            ? 'Disk Size'
+            : 'Disk Hash'}</label
+        >
       </Tooltip>
       <Tooltip
         description="{$fileMetrics.diskSize.toLocaleString('en')} bytes"
         alwaysEnabled={true}
       >
         <span id="disk_file_size" class="nowrap"
-          >{humanReadableByteLength($fileMetrics.diskSize)}</span
+          >{metricsDisplayType == 'file-info'
+            ? humanReadableByteLength($fileMetrics.diskSize)
+            : $viewportHash}</span
         >
       </Tooltip>
     </FlexContainer>
     <FlexContainer --dir="column">
       <Tooltip description="Size as file is being edited" alwaysEnabled={true}>
-        <label for="computed_file_size">Computed Size</label>
+        <label for="computed_file_size"
+          >{metricsDisplayType == 'file-info'
+            ? 'Computed Size'
+            : 'Modified Hash'}</label
+        >
       </Tooltip>
       <Tooltip
-        description="{$fileMetrics.computedSize.toLocaleString('en')} bytes"
+        description="{$fileMetrics.computedSize.toLocaleString(
+          'en'
+        )} bytes ({$diskViewportHash})"
         alwaysEnabled={true}
       >
         <span id="computed_file_size" class="nowrap"
-          >{humanReadableByteLength($fileMetrics.computedSize)}</span
+          >{metricsDisplayType == 'file-info'
+            ? humanReadableByteLength($fileMetrics.computedSize)
+            : $viewportHash}</span
         >
       </Tooltip>
     </FlexContainer>
@@ -236,12 +278,18 @@ limitations under the License.
         </Button>
       </FlexContainer>
     </FlexContainer>
-    <FlexContainer --dir="column" --align-items="end">
+    <FlexContainer --dir="row" --justify-content="end">
       <Button fn={toggleDataProfiler} description="Open data profiler">
         <span slot="left" class="btn-icon material-symbols-outlined"
           >functions</span
         >
         <span slot="default">Profile</span>
+      </Button>
+      <Button
+        fn={toggleMetricsDisplayType}
+        description={`Toggle Metrics Display Type`}
+      >
+        <span slot="left" class="btn-icon material-symbols-outlined">123</span>
       </Button>
     </FlexContainer>
   </FlexContainer>
