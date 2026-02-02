@@ -17,16 +17,6 @@ declare global {
       listener: (response: ExtensionMsgResponses[K]) => void,
       ...types: K[]
     ) => void
-    editor_message: {
-      create<K extends keyof ExtensionMsgCommands>(
-        type: K,
-        data?: ExtensionMsgCommands[K]
-      ): ExtensionMsgCommands[K]
-      send<K extends keyof ExtensionMsgCommands>(
-        type: K,
-        data?: ExtensionMsgCommands[K]
-      ): Promise<ExtensionMsgResponses[K]>
-    }
   }
 }
 

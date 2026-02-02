@@ -86,5 +86,3 @@ window.addListenerOnEditorMessages = <K extends keyof ExtensionMsgCommands>(
     }
   })
 }
-
-window.editor_message

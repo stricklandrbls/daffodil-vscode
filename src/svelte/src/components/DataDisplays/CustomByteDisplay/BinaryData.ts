@@ -26,6 +26,11 @@ import {
 } from '../../../utilities/display'
 import { dataDislayLineAmount } from '../../../stores'
 import { get } from 'svelte/store'
+import type {
+  ExtensionMsgCommands,
+  ExtensionMsgResponses,
+} from 'dataEditor/core/message/messages'
+import { vscode } from '../../../utilities/vscode'
 
 export const BYTE_ACTION_DIV_OFFSET: number = 24
 
@@ -182,4 +187,18 @@ export class ViewportDataStore_t extends SimpleWritable<ViewportData_t> {
 
 export function latin1Undefined(charCode: number): boolean {
   return charCode < 32 || (charCode > 126 && charCode < 160)
+}
+
+export const Pending = new Map<
+  string,
+  { res: (v: any) => void; rej: (e: any) => void }
+>()
+export function sendDataMessage<K extends 'scrollViewport' | 'viewportRefresh'>(
+  type: K,
+  payload: ExtensionMsgCommands[K]
+): Promise<ExtensionMsgResponses[K]> {
+  vscode.postMessage(type, payload)
+  return new Promise<ExtensionMsgResponses[K]>((res, rej) => {
+    Pending.set(type, { res, rej })
+  })
 }

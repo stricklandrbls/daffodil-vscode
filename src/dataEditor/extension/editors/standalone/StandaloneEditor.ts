@@ -25,7 +25,10 @@ import {
   RequestType,
 } from 'dataEditor/core/service/requestHandler'
 import { OmegaEditSession } from 'dataEditor/extension/adapters/omegaEditAdapter/sessions'
-import { dataToEncodedStr, DisplayState } from '../../../core/editor/DisplayState'
+import {
+  dataToEncodedStr,
+  DisplayState,
+} from '../../../core/editor/DisplayState'
 class ExtensionLocalMsgHandler
   implements
     RequestHandler<
@@ -51,10 +54,8 @@ class StandaloneMsgMediator extends AbstractMediator<
   ExtensionMsgCommands,
   ExtensionMsgResponses
 > {
-  constructor(
-    private serviceHandler: RequestHandler<any, any>,
-    private baseHandler: RequestHandler<any, any>
-  ) {
+  private serviceHandler: RequestHandler<any, any> | undefined = undefined
+  constructor(private baseHandler: RequestHandler<any, any>) {
     super()
   }
   setServiceHandler(handler: RequestHandler<any, any>) {
@@ -74,7 +75,7 @@ class StandaloneMsgMediator extends AbstractMediator<
   }
 }
 export class StandaloneDataEditor extends IDataEditor {
-  protected msgMediator: StandaloneMsgMediator | undefined = undefined
+  protected msgMediator: StandaloneMsgMediator
 
   protected async serviceConnect(): Promise<boolean> {
     let statusBarIntervalId: NodeJS.Timeout | undefined = undefined
@@ -93,6 +94,22 @@ export class StandaloneDataEditor extends IDataEditor {
       clearInterval(statusBarIntervalId)
     })
     const serviceReqHandler = await this.opts.service.connect()
+    this.msgMediator.setServiceHandler(serviceReqHandler)
+
+    return true
+  }
+  constructor(
+    config: DataEditorArgMap[EditorType.Standalone],
+    service: DataEditorService,
+    ui: EditorUI,
+    bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
+  ) {
+    super({
+      config,
+      service,
+      ui,
+      bus,
+    })
     const baseHandler = new ExtensionLocalMsgHandler()
     baseHandler['editorOnChange'] = async (args) => {
       return new Promise((res, rej) => {
@@ -112,23 +129,8 @@ export class StandaloneDataEditor extends IDataEditor {
       })
     }
     this.msgMediator = new StandaloneMsgMediator(
-      serviceReqHandler,
       baseHandler as RequestHandler<any, any>
     )
-    return true
-  }
-  constructor(
-    config: DataEditorArgMap[EditorType.Standalone],
-    service: DataEditorService,
-    ui: EditorUI,
-    bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
-  ) {
-    super({
-      config,
-      service,
-      ui,
-      bus,
-    })
   }
 }
 

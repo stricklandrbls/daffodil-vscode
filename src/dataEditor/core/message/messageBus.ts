@@ -20,7 +20,8 @@ export type EditorToUIHandler = (m: EditorToUi) => Thenable<boolean>
 export interface MessageBus<In, Out> {
   post<K extends keyof Out>(type: K, message: Out[K]): void
   onMessageRx(
-    handler: <K extends keyof In>(...args: RequestArgs<In, K>) => Promise<any>
+    handler: <K extends keyof In>(...args: RequestArgs<In, K>) => Promise<any>,
+    thisArg: any
   ): () => void // unsubscribe
 }
 
@@ -33,15 +34,17 @@ export class WebviewBusHost
   onMessageRx(
     handler: <K extends keyof ExtensionMsgCommands>(
       ...args: RequestArgs<ExtensionMsgCommands, K>
-    ) => Promise<ExtensionMsgResponses[K]>
+    ) => Promise<ExtensionMsgResponses[K]>,
+    thisArg: any
   ): () => void {
     // unsubscribe
 
     this.panel.webview.onDidReceiveMessage((msg) => {
       const command = msg.command
       const data = msg.data
-      handler(command, data)
-    }, this)
+
+      handler.call(thisArg, command, data)
+    })
 
     return () => {
       this.disposable?.dispose()

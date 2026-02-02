@@ -16,7 +16,7 @@
  */
 
 import type { WebviewApi } from 'vscode-webview'
-import type { ExtensionMsgCommands } from 'dataEditor/message/messages'
+import type { ExtensionMsgCommands } from '../../../dataEditor/core/message/messages'
 
 /**
  * A utility wrapper around the acquireVsCodeApi() function, which enables

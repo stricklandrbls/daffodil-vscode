@@ -49,6 +49,7 @@ limitations under the License.
   import {
     byte_value_string,
     null_byte,
+    sendDataMessage,
     ViewportData_t,
     type ByteSelectionEvent,
     type ByteValue,
@@ -73,6 +74,7 @@ limitations under the License.
 
   /* DEBUG_ONLY_START */
   import { addVarToDebug, getDebugVarContext } from '../../Debug'
+  import { writable } from 'svelte/store'
   const debugVarsCtx = getDebugVarContext()
   debugVarsCtx.add(
     { id: 'bytes / row', valueStr: () => $bytesPerRow.toString() },
@@ -566,9 +568,15 @@ limitations under the License.
       bytepos < last + viewportData.fileOffset
     )
   }
-
+  let vpDataStr = writable('waiting for data...')
   let viewportUpdatePromise: Promise<ViewportData_t>
-
+    async function getData(){
+      const result = await sendDataMessage('scrollViewport', {scrollOffset: 0, bytesPerRow: 16})
+    }
+    vscode.postMessage('scrollViewport', {
+      scrollOffset: 0,
+      bytesPerRow: $bytesPerRow,
+    })
   window.addEventListener('keydown', navigation_keydown_event)
   window.addListenerOnEditorMessages(
     (response) => {
@@ -622,24 +630,28 @@ limitations under the License.
   //       break
   //   }
   // })
-  const initFetch = () => {
-    return new Promise<ViewportData_t>((res, rej) => {
-      vscode.postMessage('scrollViewport', {
-        bytesPerRow: $bytesPerRow,
-        scrollOffset: 0,
-      })
-    })
-  }
+  // const initFetch = () => {
+  //   return new Promise<ViewportData_t>((res, rej) => {
+  //     vscode.postMessage('scrollViewport', {
+  //       bytesPerRow: $bytesPerRow,
+  //       scrollOffset: 0,
+  //     })
+  //   })
+  // }
 
-  viewportUpdatePromise = initFetch().then((vp) => {
-    if ($selectionDataStore.active)
-      selectedByteElement = document.getElementById(
-        $selectedByte.offset.toString()
-      ) as HTMLDivElement
-  })
+  // const getData: Promise<ViewportData_t> = new Promise<ViewportData_t>((res, rej) => {})
+
+  // viewportUpdatePromise = initFetch()
+  // viewportUpdatePromise.then((vp) => {
+  //   if ($selectionDataStore.active)
+  //     selectedByteElement = document.getElementById(
+  //       $selectedByte.offset.toString()
+  //     ) as HTMLDivElement
+  // })
 </script>
 
 <svelte:window on:mousemove={mouseover_handler} />
+<div>{$vpDataStr}</div>
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div

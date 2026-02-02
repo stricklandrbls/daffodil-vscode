@@ -39,16 +39,17 @@ limitations under the License.
   let length: number = 0
 
   function saveAs() {
-    vscode.postMessage({
-      command: MessageCommand.saveAs,
-    })
+    // vscode.postMessage({
+    //   command: MessageCommand.saveAs,
+    // })
     displayOpts = false
   }
 
   function save() {
-    vscode.postMessage({
-      command: MessageCommand.save,
-    })
+    // window.editor_message.send('save')
+    // vscode.postMessage({
+    //   command: MessageCommand.save,
+    // })
     displayOpts = false
   }
 
@@ -61,22 +62,27 @@ limitations under the License.
       }, 10000)
     }
   }
-  window.editor_message.create('fileInfo')
+  // vscode.postMessage('fileInfo')
   // window.addEditorMessageListener('counts', info => {
   //   const {applied, computedFileSize, undos} = info
   //   $fileMetrics.changeCount = applied
   //   $fileMetrics.computedSize = $fileMetrics.diskSize = computedFileSize
   //   $fileMetrics.undoCount = undos
   // })
-  // window.addEditorMessageListener('fileInfo', (info)=>{
-  //            // reset the profiler if changes have been made
-  //         isProfilerOpen = false
-  //         startOffset = length = 0
-  //         const {filename, bom, contentType, language}  = info
-  //         $fileMetrics.name = filename
-  //         $fileMetrics.language = language
-  //         $fileMetrics.type = contentType
-  // })
+  window.addEditorMessageListener('fileInfo', (info)=>{
+             // reset the profiler if changes have been made
+          isProfilerOpen = false
+          startOffset = length = 0
+          const {filename, bom, contentType, language}  = info
+          $fileMetrics.name = filename
+          $fileMetrics.language = language
+          $fileMetrics.type = contentType
+  })
+  window.addEditorMessageListener('counts', (counts)=>{
+    $fileMetrics.computedSize = counts.computedFileSize
+    if($fileMetrics.diskSize == 0)
+      $fileMetrics.diskSize = $fileMetrics.computedSize
+  })
 //   window.addEventListener('message', (msg) => {
 //     switch (msg.data.command) {
 //       case MessageCommand.fileInfo:
