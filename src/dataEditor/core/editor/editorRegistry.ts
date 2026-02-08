@@ -1,11 +1,4 @@
-import { MessageBus } from 'dataEditor/core/message/messageBus'
-import {
-  UiToEditor,
-  EditorToUi,
-  UiToEditorMsgs,
-  ExtensionMsgCommands,
-  ExtensionMsgResponses,
-} from 'dataEditor/core/message/messages'
+import { MessageBus, WebviewBusHost } from 'dataEditor/core/message/messageBus'
 import { DataEditorService } from 'dataEditor/core/service/editorService'
 import { EditorUI } from 'dataEditor/core/ui/editorUI'
 import { IDataEditor } from './AbstractEditor'
@@ -19,7 +12,7 @@ export interface DataEditorConstructor<K extends EditorType> {
     config: DataEditorArgMap[K],
     service: DataEditorService,
     ui: EditorUI,
-    bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
+    bus: WebviewBusHost
   ): IDataEditor
 }
 

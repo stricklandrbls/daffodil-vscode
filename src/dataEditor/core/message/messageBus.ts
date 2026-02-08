@@ -53,13 +53,7 @@ export class WebviewBusHost
   implements MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
 {
   private disposable?: vscode.Disposable
-  constructor(readonly panel: vscode.WebviewPanel) {
-    this.panel.webview.onDidReceiveMessage((msg) => {
-      const command = msg.command
-      const data = msg.data
-      this.receive(command, data)
-    })
-  }
+  constructor(readonly panel: vscode.WebviewPanel) {}
   receive<K extends keyof ExtensionMsgCommands>(
     ...args: RequestArgs<ExtensionMsgCommands, K>
   ): Promise<ExtensionMsgResponses[K]> {
@@ -72,7 +66,12 @@ export class WebviewBusHost
     thisArg?: any
   ): () => void {
     // unsubscribe
-    this.receive = handler
+    this.receive = handler.bind(thisArg)
+    this.panel.webview.onDidReceiveMessage((msg) => {
+      const command = msg.command
+      const data = msg.data
+      this.receive(command, data)
+    })
     return () => {
       this.disposable?.dispose()
       this.disposable = undefined

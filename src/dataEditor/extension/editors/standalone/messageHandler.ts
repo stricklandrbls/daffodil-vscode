@@ -2,17 +2,22 @@ import { RequestArgs } from 'dataEditor/core/message/messages'
 import { RequestHandler } from 'dataEditor/core/service/requestHandler'
 import { ExtensionMsgCommands, ExtensionMsgResponses } from 'dataEditor/global'
 
-type LocalHandableMsgKeys = 'editorOnChange' | 'setUITheme' | 'showMessage'
-type LocalRequests = Pick<ExtensionMsgCommands, LocalHandableMsgKeys>
-type LocalResponses = Pick<ExtensionMsgResponses, LocalHandableMsgKeys>
+export type LocalHandableMsgKeys =
+  | 'editorOnChange'
+  | 'setUITheme'
+  | 'showMessage'
+export type LocalRequests = Pick<ExtensionMsgCommands, LocalHandableMsgKeys>
+export type LocalResponses = Pick<ExtensionMsgResponses, LocalHandableMsgKeys>
+export type HandlerMap = {
+  [fn in keyof LocalRequests]: <K extends keyof LocalRequests>(
+    data: LocalRequests[K]
+  ) => Promise<LocalResponses[K]>
+}
+
 export class ExtensionLocalMsgHandler
   implements RequestHandler<LocalRequests, LocalResponses>
 {
-  handlerMap: {
-    [fn in keyof LocalRequests]: <K extends keyof LocalRequests>(
-      data: LocalRequests[K]
-    ) => Promise<LocalResponses[K]>
-  } = {
+  handlerMap: HandlerMap = {
     editorOnChange: function <K extends keyof LocalRequests>(
       data: LocalRequests[K]
     ): Promise<LocalResponses[K]> {
@@ -29,15 +34,20 @@ export class ExtensionLocalMsgHandler
       throw new Error('Function not implemented.')
     },
   }
-  set<K extends keyof LocalRequests>(
-    handlerId: K,
-    handler: (typeof this.handlerMap)[K]
+  set<K extends keyof LocalRequests | typeof this.handlerMap>(
+    fns: K,
+    handler: K extends keyof LocalRequests ? (typeof this.handlerMap)[K] : never
   ) {
-    this.handlerMap[handlerId] = handler
+    if (typeof fns === typeof this.handlerMap) {
+      this.handlerMap = fns as typeof this.handlerMap
+    } else {
+      const fnId = fns as keyof LocalRequests
+      this.handlerMap[fnId] = handler
+    }
   }
   request<K extends LocalHandableMsgKeys>(
     ...args: RequestArgs<Pick<ExtensionMsgCommands, LocalHandableMsgKeys>, K>
-  ): Promise<Pick<ExtensionMsgResponses, LocalHandableMsgKeys>[K]> {
+  ): Promise<LocalResponses[K]> {
     throw new Error('Method not implemented.')
   }
   canHandle(type: string): boolean {
