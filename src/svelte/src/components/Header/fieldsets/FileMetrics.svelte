@@ -77,6 +77,7 @@ limitations under the License.
           $fileMetrics.name = filename
           $fileMetrics.language = language
           $fileMetrics.type = contentType
+          vscode.postMessage('counts')
   })
   window.addEditorMessageListener('counts', (counts)=>{
     $fileMetrics.computedSize = counts.computedFileSize

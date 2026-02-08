@@ -1,6 +1,6 @@
 import { DataEditorConfig, DataEditorConfigProvider } from 'dataEditor/config'
 import { DefaultEditorLogger, IDataEditorLogger } from 'dataEditor/logs'
-import { MessageBus } from 'dataEditor/core/message/messageBus'
+import { MessageBus, WebviewBusHost } from 'dataEditor/core/message/messageBus'
 import { AbstractMediator } from 'dataEditor/core/message/messageMediator'
 import {
   ExtensionMsgCommands,
@@ -25,7 +25,7 @@ export abstract class IDataEditor {
       config: DataEditorConfig
       service: DataEditorService
       ui: EditorUI
-      bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
+      bus: WebviewBusHost
     }
   ) {
     const { logFile, logLevel } = this.opts.config
@@ -34,22 +34,10 @@ export abstract class IDataEditor {
   async open(): Promise<void> {
     const { service, ui, bus } = this.opts
     await this.serviceConnect()
-    ui.attach(bus)
-    bus.onMessageRx(this.msgMediator!.process, this.msgMediator)
 
-    this.msgMediator!.process('fileInfo').then((info) =>
-      this.opts.bus.post('fileInfo', info)
-    )
-    this.msgMediator!.process('counts').then((counts) => {
-      this.opts.bus.post('counts', counts)
-    })
-    this.msgMediator!.process('scrollViewport', {
-      // Remove automatic init data send. Webview should always request.
-      scrollOffset: 0,
-      bytesPerRow: 16,
-    }).then((data) => {
-      this.opts.bus.post('viewportRefresh', data)
-    })
+    ui.attach(bus)
+
+    this.msgMediator.process('fileInfo')
   }
   async close(): Promise<void> {
     this.opts.service.disconnect()

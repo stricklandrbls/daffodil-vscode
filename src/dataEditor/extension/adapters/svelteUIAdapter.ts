@@ -1,9 +1,6 @@
 import { DisplayState } from 'dataEditor/core/editor/DisplayState'
-import { MessageBus } from 'dataEditor/core/message/messageBus'
+import { MessageBus, WebviewBusHost } from 'dataEditor/core/message/messageBus'
 import {
-  UiToEditor,
-  EditorToUi,
-  UiToEditorMsgs,
   ExtensionMsgCommands,
   ExtensionMsgResponses,
 } from 'dataEditor/core/message/messages'
@@ -14,9 +11,9 @@ export class SvelteUIAdapter implements EditorUI {
   getDisplayState(): DisplayState {
     return this.displayState
   }
-  private bus?: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
+  private bus?: WebviewBusHost
 
-  attach(bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>): void {
+  attach(bus: WebviewBusHost): void {
     this.bus = bus
   }
   detach(): void {

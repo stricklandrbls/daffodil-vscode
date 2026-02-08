@@ -1,3 +1,4 @@
+import { MessageBus } from './messageBus'
 import { RequestArgs } from './messages'
 
 export abstract class AbstractMediator<
@@ -5,10 +6,11 @@ export abstract class AbstractMediator<
   Responses extends Record<keyof Base, any>,
 > {
   /** Must be implemented by subclasses — every Base key must be handled. */
-  abstract process<K extends keyof Base>(
-    ...args: RequestArgs<Base, K>
-  ): Promise<Responses[K]>
-
+  abstract process<K extends keyof Base>(...args: RequestArgs<Base, K>): any
+  abstract onProcessed<K extends keyof Base>(
+    type: K,
+    data: Responses[K] extends any ? Responses[K] : never
+  ): any
   /** Optional convenience entrypoint for base routes. */
   route<K extends keyof Base>(...args: RequestArgs<Base, K>): void {
     this.process(...args)

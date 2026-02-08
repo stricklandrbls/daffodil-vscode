@@ -128,7 +128,6 @@ export interface ExtensionMsgResponses {
   undoChange: never
   updateLogicalDisplay: never
   viewportRefresh: ReadResponse
-  read: ReadResponse
 }
 export type ExtensionReqSubMap = Pick<
   ExtensionMsgCommands,

@@ -1,4 +1,4 @@
-import { MessageBus } from 'dataEditor/core/message/messageBus'
+import { MessageBus, WebviewBusHost } from 'dataEditor/core/message/messageBus'
 import {
   ExtensionMsgCommands,
   ExtensionMsgResponses,
@@ -54,6 +54,14 @@ class StandaloneMsgMediator extends AbstractMediator<
   ExtensionMsgCommands,
   ExtensionMsgResponses
 > {
+  onProcessed<K extends keyof ExtensionMsgCommands>(
+    type: K,
+    data: ExtensionMsgResponses[K] extends any
+      ? ExtensionMsgResponses[K]
+      : never
+  ) {
+    throw new Error('Method not implemented.')
+  }
   private serviceHandler: RequestHandler<any, any> | undefined = undefined
   constructor(private baseHandler: RequestHandler<any, any>) {
     super()
@@ -66,12 +74,17 @@ class StandaloneMsgMediator extends AbstractMediator<
   }
   process<K extends keyof ExtensionMsgCommands>(
     ...args: RequestArgs<ExtensionMsgCommands, K>
-  ): Promise<ExtensionMsgResponses[K]> {
+  ): any {
     const [type, data] = args as [K, ExtensionMsgCommands[K]]
     if (this.baseHandler!.canHandle(type)) {
-      return this.baseHandler!.request(type, data)
+      this.baseHandler!.request(type, data).then((data) => {
+        this.onProcessed(type, data)
+      })
     }
-    return this.serviceHandler!.request(type, data)
+
+    this.serviceHandler!.request(type, data).then((data) => {
+      this.onProcessed(type, data)
+    })
   }
 }
 export class StandaloneDataEditor extends IDataEditor {
@@ -102,7 +115,7 @@ export class StandaloneDataEditor extends IDataEditor {
     config: DataEditorArgMap[EditorType.Standalone],
     service: DataEditorService,
     ui: EditorUI,
-    bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
+    bus: WebviewBusHost
   ) {
     super({
       config,
@@ -131,6 +144,10 @@ export class StandaloneDataEditor extends IDataEditor {
     this.msgMediator = new StandaloneMsgMediator(
       baseHandler as RequestHandler<any, any>
     )
+    this.msgMediator.onProcessed = (type, data) => {
+      if (data) this.opts.ui.notify(type, data)
+    }
+    this.opts.bus.onMessageRx(this.msgMediator.process)
   }
 }
 
