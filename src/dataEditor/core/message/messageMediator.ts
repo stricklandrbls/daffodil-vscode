@@ -1,9 +1,14 @@
+import { Extension } from 'vscode'
 import { MessageBus } from './messageBus'
-import { RequestArgs } from './messages'
+import {
+  ExtensionMsgCommands,
+  ExtensionMsgResponses,
+  RequestArgs,
+} from './messages'
 
 export abstract class AbstractMediator<
-  Base extends Record<string, any>,
-  Responses extends Record<keyof Base, any>,
+  Base extends { [k in keyof ExtensionMsgCommands]: any },
+  Responses extends { [K in keyof Base]: any },
 > {
   /** Must be implemented by subclasses — every Base key must be handled. */
   abstract process<K extends keyof Base>(...args: RequestArgs<Base, K>): any

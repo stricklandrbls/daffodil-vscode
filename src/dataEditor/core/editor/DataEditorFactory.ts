@@ -1,5 +1,5 @@
 import { SvelteUIAdapter } from 'dataEditor/extension/adapters/svelteUIAdapter'
-import { MessageBus } from 'dataEditor/core/message/messageBus'
+import { MessageBus, WebviewBusHost } from 'dataEditor/core/message/messageBus'
 import {
   ExtensionMsgCommands,
   ExtensionMsgResponses,
@@ -25,7 +25,7 @@ export class DataEditorFactory {
   async create(
     type: EditorType,
     cfg: DataEditorConfig,
-    bus: MessageBus<ExtensionMsgCommands, ExtensionMsgResponses>
+    bus: WebviewBusHost
   ): Promise<IDataEditor> {
     // parse vscode config json for loglevel
     let service: DataEditorService

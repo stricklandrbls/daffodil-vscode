@@ -85,7 +85,9 @@ export interface RequestHandler<
   Req extends Partial<ExtensionMsgCommands>,
   Res extends { [K in keyof Req]: any },
 > {
-  request<K extends keyof Req>(...args: RequestArgs<Req, K>): Promise<Res[K]>
+  request<K extends keyof Req>(
+    ...args: RequestArgs<Req, K>
+  ): Promise<Res[K] extends any ? Res[K] : void>
   canHandle(type: string): boolean
 }
 interface RequestTypeMap {
