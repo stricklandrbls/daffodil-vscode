@@ -1,55 +1,20 @@
-import { MessageBus, WebviewBusHost } from 'dataEditor/core/message/messageBus'
+import { WebviewBusHost } from 'dataEditor/core/message/messageBus'
 import {
   ExtensionMsgCommands,
   ExtensionMsgResponses,
-  ExtensionRequest,
-  ExtensionResponse,
   RequestArgs,
 } from 'dataEditor/core/message/messages'
-import {
-  DataEditorService,
-  IDataEditorService,
-} from 'dataEditor/core/service/editorService'
+import { DataEditorService } from 'dataEditor/core/service/editorService'
 import { EditorUI } from 'dataEditor/core/ui/editorUI'
 import { IDataEditor } from '../../../core/editor/AbstractEditor'
 import { EditorType } from '../../../core/editor'
 import { DataEditorArgMap } from '../../../core/editor/editorRegistry'
 import * as vscode from 'vscode'
-import {
-  AbstractMediator,
-  MessageHandler,
-} from 'dataEditor/core/message/messageMediator'
-import {
-  IServiceRequestHandler,
-  RequestHandler,
-  RequestType,
-} from 'dataEditor/core/service/requestHandler'
-import { OmegaEditSession } from 'dataEditor/extension/adapters/omegaEditAdapter/sessions'
-import {
-  dataToEncodedStr,
-  DisplayState,
-} from '../../../core/editor/DisplayState'
-class ExtensionLocalMsgHandler
-  implements
-    RequestHandler<
-      Pick<ExtensionMsgCommands, 'editorOnChange'>,
-      Pick<ExtensionMsgResponses, 'editorOnChange'>
-    >
-{
-  request<K extends 'editorOnChange'>(
-    ...args: RequestArgs<Pick<ExtensionMsgCommands, 'editorOnChange'>, K>
-  ): Promise<Pick<ExtensionMsgResponses, 'editorOnChange'>[K]> {
-    throw new Error('Method not implemented.')
-  }
-  canHandle(type: string): boolean {
-    return type === 'editorOnChange'
-  }
-  editorOnChange: (
-    args: ExtensionMsgCommands['editorOnChange']
-  ) => Promise<ExtensionMsgResponses['editorOnChange']> = (args) => {
-    throw ''
-  }
-}
+import { AbstractMediator } from 'dataEditor/core/message/messageMediator'
+import { RequestHandler } from 'dataEditor/core/service/requestHandler'
+import { dataToEncodedStr } from '../../../core/editor/DisplayState'
+import { ExtensionLocalMsgHandler } from './messageHandler'
+
 class StandaloneMsgMediator extends AbstractMediator<
   ExtensionMsgCommands,
   ExtensionMsgResponses
@@ -124,7 +89,7 @@ export class StandaloneDataEditor extends IDataEditor {
       bus,
     })
     const baseHandler = new ExtensionLocalMsgHandler()
-    baseHandler['editorOnChange'] = async (args) => {
+    baseHandler.set('editorOnChange', async (args) => {
       return new Promise((res, rej) => {
         const displayState = this.opts.ui.getDisplayState()
         displayState.editorEncoding = args.encoding as BufferEncoding
@@ -132,18 +97,17 @@ export class StandaloneDataEditor extends IDataEditor {
           args.editMode === 'single' ? 'hex' : displayState.editorEncoding
 
         if (args.selectionData && args.selectionData.length > 0) {
-          res({
-            encodedStr: dataToEncodedStr(
-              Buffer.from(args.selectionData),
-              encodeDataAs
-            ),
-          })
+          //   res({
+          //     encodedStr: dataToEncodedStr(
+          //       Buffer.from(args.selectionData),
+          //       encodeDataAs
+          //     ),
+          //   })
         }
       })
-    }
-    this.msgMediator = new StandaloneMsgMediator(
-      baseHandler as RequestHandler<any, any>
-    )
+    })
+    baseHandler['editorOnChange'] = this.msgMediator =
+      new StandaloneMsgMediator(baseHandler as RequestHandler<any, any>)
     this.msgMediator.onProcessed = (type, data) => {
       if (data) this.opts.ui.notify(type, data)
     }

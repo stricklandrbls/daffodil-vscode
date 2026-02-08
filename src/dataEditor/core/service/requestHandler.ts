@@ -80,6 +80,7 @@ export interface IServiceRequestHandler {
   ): Promise<ExtensionMsgResponses[K]>
   canHandle(type: string): boolean
 }
+
 export interface RequestHandler<
   Req extends Partial<ExtensionMsgCommands>,
   Res extends { [K in keyof Req]: any },
