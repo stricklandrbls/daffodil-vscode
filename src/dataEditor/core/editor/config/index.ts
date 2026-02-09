@@ -1,3 +1,6 @@
+import { DataEditorConfigOpts } from 'dataEditor/config'
+import { EditorType } from '..'
+
 const DefaultHostname: string = '127.0.0.1'
 const DefaultPort: number = 9000
 
@@ -17,11 +20,11 @@ export interface BaseEditorConfigOpts extends ConfigFileVars {
   heartbeatMs?: number
 }
 
-type ConfigBuilder<C extends ConfigFileVars> = {[T in keyof C]: ()=>ConfigBuilder<C> }
-interface IConfigBuilder<C extends ConfigFileVars> extends ConfigBuilder<C>{}
+type ConfigBuilder<C extends ConfigFileVars> = {
+  [T in keyof C]: () => ConfigBuilder<C>
+}
 export interface DataEditorConfigProvider<Vars extends ConfigFileVars> {
-    
-    get<T extends keyof Vars>(name: T, defaultValue?: Vars[T]): Vars[T]
+  get<T extends keyof Vars>(name: T, defaultValue?: Vars[T]): Vars[T]
 }
 export abstract class DataEditorConfig {
   readonly type: EditorType
@@ -43,4 +46,3 @@ export abstract class DataEditorConfig {
     this.checkpointPath = p.checkpointPath
   }
 }
-

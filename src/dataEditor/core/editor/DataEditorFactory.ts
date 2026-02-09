@@ -1,15 +1,11 @@
 import { SvelteUIAdapter } from 'dataEditor/extension/adapters/svelteUIAdapter'
-import { MessageBus, WebviewBusHost } from 'dataEditor/core/message/messageBus'
-import {
-  ExtensionMsgCommands,
-  ExtensionMsgResponses,
-} from 'dataEditor/core/message/messages'
+import { WebviewBusHost } from 'dataEditor/core/message/messageBus'
 import { DataEditorService } from 'dataEditor/core/service/editorService'
 import { EditorUI } from 'dataEditor/core/ui/editorUI'
 import { OmegaEditorAdapter } from 'dataEditor/extension/adapters/omegaEditAdapter/omegaEditAdapter'
 import { EditorType } from '.'
 import { DataEditorConfig } from 'dataEditor/config'
-import { DataEditorRegistry } from './editorRegistry'
+import { DataEditorArgMap, DataEditorRegistry } from './editorRegistry'
 import { IDataEditor } from './AbstractEditor'
 
 export interface EditorFactoryOptions {
@@ -22,9 +18,9 @@ export class DataEditorFactory {
   private editorCtrs = new DataEditorRegistry()
   constructor(private readonly opts: EditorFactoryOptions = {}) {}
 
-  async create(
-    type: EditorType,
-    cfg: DataEditorConfig,
+  async create<K extends EditorType>(
+    type: K,
+    cfg: DataEditorArgMap[K],
     bus: WebviewBusHost
   ): Promise<IDataEditor> {
     // parse vscode config json for loglevel
@@ -33,9 +29,6 @@ export class DataEditorFactory {
       service = this.opts.makeService?.(cfg)
     } else {
       service = new OmegaEditorAdapter(cfg, this.opts.vendor)
-      service.on('heartbeatUpdate', (content) => {
-        bus.post('heartbeat', content)
-      })
     }
     const ui = this.opts.makeUI?.() ?? new SvelteUIAdapter()
 

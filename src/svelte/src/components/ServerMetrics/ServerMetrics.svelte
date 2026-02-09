@@ -94,7 +94,7 @@ limitations under the License.
         break
     }
     heartbeatDivElement.innerHTML = `&#9889; Powered by Ωedit™ v${heartbeat.serverVersion} on port ${heartbeat.omegaEditPort}&nbsp;`
-    console.log(heartbeat)
+
   })
 </script>
 

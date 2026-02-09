@@ -1,4 +1,6 @@
+import * as vscode from 'vscode'
 import {
+  ALL_EVENTS,
   createSession,
   createViewport,
   destroySession,
@@ -7,8 +9,12 @@ import {
   getClient,
   getContentType,
   getLanguage,
-  IServerHeartbeat,
-  ViewportEventKind,
+  getViewportData,
+  IOFlags,
+  saveSession,
+  SaveStatus,
+  ViewportDataResponse,
+  ViewportEvent,
 } from '@omega-edit/client'
 import { RequestHandler } from 'dataEditor/core/service/requestHandler'
 import {
@@ -17,26 +23,33 @@ import {
   registerHeartbeatReceiver,
   unregisterAllHeartbeatReceivers,
   unregisterHeartbeatReceiver,
-  updateHeartbeatInterval,
 } from './heartbeat'
 import {
-  OmegaEditRequestMap,
+  DefaultOERequestHandler,
   OmegaEditRequests,
+  OmegaEditRequestTypeMap,
   OmegaEditResponses,
   RequestTypeMap,
 } from './requestHandler'
-import { RequestArgs } from 'dataEditor/core/message/messages'
+import {
+  ReadResponse,
+  RequestArgs,
+  SaveAsStrategy,
+} from 'dataEditor/core/message/messages'
 import { DataEditorViewport } from 'dataEditor/core/editor/Viewport'
+
 export interface SessionCreateOpts {
   targetFile: string
   heartbeatReceiver?: HeartbeatReceiver
+  dataSubscriber?: (response: ReadResponse) => any
+  saveAsStrategy: SaveAsStrategy
   readonly hostname: string
   readonly port: number
   desiredId?: string
   checkpointDirectory?: string
 }
 export interface SessionStaticFileMetrics {
-  readonly filePath: string
+  filePath: string
   readonly BOM: string
   readonly language: string
   readonly type: string
@@ -52,6 +65,7 @@ export interface SessionInfo {
 class OmegaEditorSessionManager {
   activeSessions: string[] = []
   sessions: Map<string, () => any> = new Map()
+  _sessions: Map<string, { targetFile: string; hbRecv: () => any }> = new Map()
   onAllSessionsDestroyed: () => any = () => {
     throw ''
   }
@@ -63,6 +77,7 @@ class OmegaEditorSessionManager {
         opts.checkpointDirectory
       )
       const id = response.getSessionId()
+
       let bomFetch = await getByteOrderMark(id)
       const bom = bomFetch.getByteOrderMark()
 
@@ -75,7 +90,34 @@ class OmegaEditorSessionManager {
       const filesize = response.getFileSize()
 
       const vpCreateResponse = await createViewport(undefined, id, 0, 1024)
-
+      const vpId = vpCreateResponse.getViewportId()
+      getClient().then((client) => {
+        client
+          .subscribeToViewportEvents(
+            new EventSubscriptionRequest().setId(vpId).setInterest(ALL_EVENTS)
+          )
+          .on('data', (chunk: ViewportEvent) => {
+            console.debug(
+              'Viewport Subscription from [OmegaEditorSessionManager::create]'
+            )
+            const vpid = chunk.getViewportId()
+            getViewportData(vpid)
+              .then((resp) => {
+                if (opts.dataSubscriber) {
+                  opts.dataSubscriber({
+                    bytesRemaining: resp.getFollowingByteCount(),
+                    capacity: 1024,
+                    data: resp.getData_asU8(),
+                    length: resp.getLength(),
+                    srcOffset: resp.getOffset(),
+                  })
+                }
+              })
+              .catch((err) => {
+                throw err
+              })
+          })
+      })
       const newSession = new OmegaEditSession(
         id,
         opts.port,
@@ -86,9 +128,9 @@ class OmegaEditorSessionManager {
           type,
           filesize: filesize ? filesize : -1,
         },
-        vpCreateResponse.getViewportId()
+        opts.saveAsStrategy,
+        vpId
       )
-
       if (opts.heartbeatReceiver) {
         this.sessions.set(newSession.sessionId, () => {
           const hb = getCurrentHeartbeatInfo()!
@@ -121,44 +163,70 @@ const SessionManager = new OmegaEditorSessionManager()
 export class OmegaEditSession
   implements RequestHandler<OmegaEditRequests, OmegaEditResponses>
 {
-  private reqMap: OmegaEditRequestMap
+  private handlerMap: OmegaEditRequestTypeMap = DefaultOERequestHandler
   private currentViewport: DataEditorViewport
   constructor(
     readonly sessionId: string,
     readonly port: number,
-    readonly fileMetrics: SessionStaticFileMetrics,
+    private fileMetrics: SessionStaticFileMetrics,
+    private saveAsStrategy: SaveAsStrategy,
     private viewportId: string
   ) {
     this.currentViewport = new DataEditorViewport(viewportId)
-    this.reqMap = new OmegaEditRequestMap(
-      this.sessionId,
-      this.currentViewportId()
-    )
-    this.reqMap['fileInfo'] = () => {
+    this.handlerMap['fileInfo'] = () => {
       return computeFileInfo(this.sessionId, this.fileMetrics)
     }
-
-    getClient().then((client) => {
-      client
-        .subscribeToViewportEvents(
-          new EventSubscriptionRequest()
-            .setId(this.currentViewportId())
-            .setInterest(ViewportEventKind.VIEWPORT_EVT_MODIFY)
-        )
-        .on('data', () => {
-          this.reqMap.viewportRefresh({ viewportId: this.currentViewportId() })
-        })
-    })
+    this.handlerMap['save'] = (request) => {
+      saveSession(this.sessionId, request.targetFile, IOFlags.IO_FLG_OVERWRITE)
+    }
+    this.handlerMap['saveAs'] = async (request) => {
+      const targetSaveFile = await this.saveAsStrategy.getFile()
+      const saveResponse = await saveSession(
+        this.sessionId,
+        targetSaveFile,
+        IOFlags.IO_FLG_OVERWRITE
+      )
+      let saveSuccess = false
+      if (saveResponse.getSaveStatus() === SaveStatus.MODIFIED) {
+        const confirm = await this.saveAsStrategy.confirm()
+        if (confirm) {
+          const forceSaveResponse = await saveSession(
+            this.sessionId,
+            targetSaveFile,
+            IOFlags.IO_FLG_FORCE_OVERWRITE
+          )
+          saveSuccess =
+            forceSaveResponse.getSaveStatus() === SaveStatus.SUCCESS
+              ? true
+              : false
+        }
+      }
+      if (saveSuccess) {
+        this.fileMetrics.filePath = targetSaveFile
+        this.request('fileInfo')
+        this.request('counts')
+        this.saveAsStrategy.notifySuccess()
+      }
+    }
   }
+  set<K extends keyof OmegaEditRequestTypeMap>(
+    handleId: K,
+    handler: OmegaEditRequestTypeMap[K]
+  ) {
+    this.handlerMap[handleId] = handler
+  }
+
   canHandle(type: string): boolean {
     return Object.keys({} as OmegaEditRequests).includes(type)
   }
   request<K extends keyof OmegaEditRequests>(
     ...args: RequestArgs<OmegaEditRequests, K>
-  ): Promise<OmegaEditResponses[K]> {
+  ): OmegaEditResponses[K] | Promise<OmegaEditResponses[K]> {
     const [type, data] = args as [K, OmegaEditRequests[K]]
-    const executor = this.reqMap[type] as RequestTypeMap[K]
-    return executor(data)
+    const executor = this.handlerMap[type]
+    return executor(data, {
+      ids: { sessionId: this.sessionId, viewportId: this.currentViewportId() },
+    })
   }
 
   currentViewportId() {

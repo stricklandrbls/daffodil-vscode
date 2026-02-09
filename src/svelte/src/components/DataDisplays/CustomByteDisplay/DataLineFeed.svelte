@@ -449,10 +449,6 @@ limitations under the License.
         $selectionDataStore.originalEndOffset + 1
       )
     })
-
-    $editMode === EditByteModes.Single
-      ? postEditorOnChangeMsg('hex')
-      : postEditorOnChangeMsg()
   }
 
   function postEditorOnChangeMsg(forcedEncoding?: string) {

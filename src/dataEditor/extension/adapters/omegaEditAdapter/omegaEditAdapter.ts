@@ -2,10 +2,10 @@
 
 import {
   getServerInfo,
+  IServerHeartbeat,
   IServerInfo,
   startServer,
   stopProcessUsingPID,
-  stopServerGraceful,
 } from '@omega-edit/client'
 import { APP_DATA_PATH, DataEditorConfig } from 'dataEditor/config'
 import { generateLogbackConfigFile } from 'dataEditor/logs'
@@ -18,18 +18,22 @@ import { Socket } from 'net'
 import path from 'path'
 import {
   onAllSessionsDestroyed,
-  sessionCount,
   sessionCreate,
+  SessionCreateOpts,
   sessionDestroy,
-  sessionDestroyAll,
 } from './sessions'
 import { RequestHandler } from 'dataEditor/core/service/requestHandler'
 import * as fs from 'fs'
 import * as child_process from 'child_process'
 import { osCheck } from '../../../../utils'
+import { ReadResponse } from 'dataEditor/core/message/messages'
 export type OmegaEditConfigProvider = () => DataEditorConfig &
   OmegaEditServiceConfig
 
+export type OmegaEditVendorOpts = {
+  heartbeat?: (hb: IServerHeartbeat) => any
+  data: (data: ReadResponse) => any
+}
 export class OmegaEditorAdapter implements DataEditorService {
   private connected = false
   private eventEmitter: EventEmitter = new EventEmitter()
@@ -37,7 +41,7 @@ export class OmegaEditorAdapter implements DataEditorService {
 
   constructor(
     private readonly cfg: DataEditorConfig,
-    private readonly vendor: any /* real sdk type */
+    private readonly vendor: OmegaEditVendorOpts /* real sdk type */
   ) {}
 
   getServiceHandler<OmegaEditSession>(): Promise<OmegaEditSession> {
@@ -65,15 +69,24 @@ export class OmegaEditorAdapter implements DataEditorService {
         this.eventEmitter.emit('error', err)
         return undefined
       })
-      const session = await sessionCreate({
+
+      const sessionOpts: SessionCreateOpts = {
         ...this.cfg,
+        dataSubscriber: (response) => {
+          this.eventEmitter.emit('dataUpdate', response)
+        },
         heartbeatReceiver: (hb) => {
           this.eventEmitter.emit('heartbeatUpdate', {
             ...hb,
             port: this.cfg.port,
           })
         },
+      }
+
+      const session = await sessionCreate({
+        ...sessionOpts,
       })
+
       this.disconnect = async () => {
         this.connected = false
         sessionDestroy(session.sessionId)

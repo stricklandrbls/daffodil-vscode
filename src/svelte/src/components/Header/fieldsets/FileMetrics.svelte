@@ -39,9 +39,7 @@ limitations under the License.
   let length: number = 0
 
   function saveAs() {
-    // vscode.postMessage({
-    //   command: MessageCommand.saveAs,
-    // })
+    vscode.postMessage('saveAs', {targetFile:''})
     displayOpts = false
   }
 
@@ -62,13 +60,7 @@ limitations under the License.
       }, 10000)
     }
   }
-  // vscode.postMessage('fileInfo')
-  // window.addEditorMessageListener('counts', info => {
-  //   const {applied, computedFileSize, undos} = info
-  //   $fileMetrics.changeCount = applied
-  //   $fileMetrics.computedSize = $fileMetrics.diskSize = computedFileSize
-  //   $fileMetrics.undoCount = undos
-  // })
+  
   window.addEditorMessageListener('fileInfo', (info)=>{
              // reset the profiler if changes have been made
           isProfilerOpen = false
@@ -83,6 +75,8 @@ limitations under the License.
     $fileMetrics.computedSize = counts.computedFileSize
     if($fileMetrics.diskSize == 0)
       $fileMetrics.diskSize = $fileMetrics.computedSize
+    $fileMetrics.changeCount = counts.applied
+    $fileMetrics.undoCount = counts.undos
   })
 //   window.addEventListener('message', (msg) => {
 //     switch (msg.data.command) {

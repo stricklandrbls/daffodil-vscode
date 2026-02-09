@@ -92,11 +92,28 @@ export class StandaloneDataEditor extends IDataEditor {
     })
     this.opts.service.on('connected', (info) => {
       clearInterval(statusBarIntervalId)
+      statusBarItem.dispose()
     })
     this.opts.service.on('error', (err) => {
       clearInterval(statusBarIntervalId)
+      statusBarItem.text = err.substring(0, 27)
+      if (err.length > 27) statusBarItem.text = statusBarItem.text + '...'
+      const displayTimeoutId: NodeJS.Timeout | undefined = undefined
+      setTimeout(() => {
+        clearTimeout(displayTimeoutId)
+        statusBarItem.dispose()
+      })
     })
+    this.opts.service.on('dataUpdate', (content) => {
+      this.opts.ui.notify('viewportRefresh', content)
+      this.msgMediator.process('counts')
+    })
+    this.opts.service.on('heartbeatUpdate', (hb) => {
+      this.opts.ui.notify('heartbeat', { ...hb })
+    })
+
     const serviceReqHandler = await this.opts.service.connect()
+
     this.msgMediator.setServiceHandler(serviceReqHandler)
     this.msgMediator.processPreInitMsgs()
     return true
@@ -114,15 +131,21 @@ export class StandaloneDataEditor extends IDataEditor {
       bus,
     })
     const baseHandler = new ExtensionLocalMsgHandler()
+
     baseHandler.set('editorOnChange', async (args) => {
-      return new Promise((res, rej) => {
+      return new Promise<LocalResponses['editorOnChange']>((res, rej) => {
         const displayState = this.opts.ui.getDisplayState()
         displayState.editorEncoding = args.encoding as BufferEncoding
         const encodeDataAs =
           args.editMode === 'single' ? 'hex' : displayState.editorEncoding
 
         if (args.selectionData && args.selectionData.length > 0) {
-          res({encodedStr: dataToEncodedStr(Buffer.from(args.selectionData), encodeDataAs)})
+          res({
+            encodedStr: dataToEncodedStr(
+              Buffer.from(args.selectionData),
+              encodeDataAs
+            ),
+          })
         }
       })
     })

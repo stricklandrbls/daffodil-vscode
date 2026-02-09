@@ -11,9 +11,6 @@ import { DataEditorService } from 'dataEditor/core/service/editorService'
 import { EditorUI } from 'dataEditor/core/ui/editorUI'
 
 export abstract class IDataEditor {
-  // protected abstract msgMediator:
-  //   | AbstractMediator<ExtensionMsgCommands, ExtensionMsgResponses>
-  //   | undefined
   protected abstract msgMediator: AbstractMediator<
     ExtensionMsgCommands,
     ExtensionMsgResponses
@@ -41,6 +38,9 @@ export abstract class IDataEditor {
   }
   async close(): Promise<void> {
     this.opts.service.disconnect()
+  }
+  currentFile() {
+    return this.opts.config.targetFile
   }
   protected abstract serviceConnect(): Promise<boolean>
 }

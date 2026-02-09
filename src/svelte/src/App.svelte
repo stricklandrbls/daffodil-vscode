@@ -69,19 +69,15 @@ limitations under the License.
 
   function requestEditedData() {
     if ($requestable) {
-      vscode.postMessage('requestEditedData')
-      // vscode.postMessage({
-      //   command: MessageCommand.requestEditedData,
-      //   data: {
-      //     selectionToFileOffset: $selectionDataStore.startOffset,
-      //     editedContent: $editorSelection,
-      //     viewport: $focusedViewportId,
-      //     selectionSize: $selectionSize,
-      //     encoding: $editorEncoding,
-      //     radix: $displayRadix,
-      //     editMode: $editMode,
-      //   },
-      // })
+      vscode.postMessage('requestEditedData', {
+        selectionToFileOffset: $selectionDataStore.startOffset,
+        editedContent: $editorSelection,
+        viewport: $focusedViewportId,
+        selectionSize: $selectionSize,
+        encoding: $editorEncoding,
+        radix: $displayRadix,
+        editMode: $editMode,
+      })
     }
   }
 
@@ -231,7 +227,7 @@ limitations under the License.
     vscode.postMessage('applyChanges', {
       offset: editedOffset,
       edited_segment: editedData,
-      original_segment: originalData,
+      original_segment: originalData
     })
 
     // vscode.postMessage({
@@ -290,8 +286,16 @@ limitations under the License.
     if ($editMode === EditByteModes.Multiple)
       $editorSelection = response.encodedStr
   })
-  window.addEditorMessageListener('requestEditedData', () => {})
-
+  window.addEditorMessageListener('requestEditedData', (response) => {
+            $editorSelection = response.dataDisplay
+        if ($editMode === EditByteModes.Multiple) {
+          $editedDataSegment = new Uint8Array(response.data)
+        } else {
+          $editedDataSegment[0] = response.data[0]
+        }
+        $selectionDataStore.endOffset =
+          $selectionDataStore.startOffset + $editedDataSegment.byteLength - 1
+  })
 
   // window.addEditorMessageListener('viewportRefresh', (response) => {
   //   const { data, bytesRemaining, capacity, length, srcOffset } =

@@ -39,8 +39,8 @@ export function updateHeartbeatInterval() {
     )
       .then((heartbeatResponse) => {
         currentHeartbeat = heartbeatResponse
-        receviers.forEach((rx) => {
-          rx(currentHeartbeat!)
+        receviers.forEach((receiver) => {
+          receiver({ ...currentHeartbeat! })
         })
       })
       .catch((err) => {

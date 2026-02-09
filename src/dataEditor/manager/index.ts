@@ -7,9 +7,7 @@
 import * as vscode from 'vscode'
 import { EditorType } from 'dataEditor/core/editor'
 import {
-  DataEditorConfig,
   DataEditorConfigProvider,
-  DebugEditorConfig,
   ExtractableConfigOpts,
   StandaloneEditorConfig,
 } from 'dataEditor/config'
@@ -18,6 +16,7 @@ import { WebviewBusHost } from 'dataEditor/core/message/messageBus'
 import { SvelteWebviewInitializer } from 'dataEditor/svelteWebviewInitializer'
 import { DataEditorArgMap } from 'dataEditor/core/editor/editorRegistry'
 import { IDataEditor } from 'dataEditor/core/editor/AbstractEditor'
+import { VSCodeSaveAsStrategy } from 'dataEditor/extension/utils/saveAsSelector'
 
 /**
  * @brief Data Editor Manager Class
@@ -26,7 +25,6 @@ import { IDataEditor } from 'dataEditor/core/editor/AbstractEditor'
  */
 export class DataEditorManager {
   private editors = new Map<string, IDataEditor>() // key = editorId
-
   constructor(private readonly factory: DataEditorFactory) {}
 
   has(editorId: string) {
@@ -35,7 +33,14 @@ export class DataEditorManager {
   get(editorId: string) {
     return this.editors.get(editorId)
   }
+  private getActiveEditorFiles(): string[] {
+    let ret: string[] = []
 
+    this.editors.forEach((editor) => {
+      ret.push(editor.currentFile())
+    })
+    return ret
+  }
   /**
    * @brief Attaches functions to the extension context for creating Data Editors.
    * @param ctx Current VSCode extension context
@@ -44,7 +49,10 @@ export class DataEditorManager {
     ctx.subscriptions.push(
       vscode.commands.registerCommand('extension.data.edit', async () => {
         const config = await StandaloneEditorConfig.build(
-          new ConfigProvider(VSCodeFileSelector)
+          new ConfigProvider(VSCodeFileSelector),
+          new VSCodeSaveAsStrategy(() => {
+            return this.getActiveEditorFiles()
+          })
         )
         await this.open(EditorType.Standalone, config, ctx)
       })
@@ -53,12 +61,12 @@ export class DataEditorManager {
       vscode.commands.registerCommand(
         'data.editor.dfdl-debug',
         async (targetFile: string) => {
-          const config = await StandaloneEditorConfig.build(
-            new ConfigProvider(() => {
-              return targetFile
-            })
-          )
-          await this.open(EditorType.DFDLDebugLinked, config, ctx)
+          // const config = await DebugEditorConfig.build(
+          //   new ConfigProvider(() => {
+          //     return targetFile
+          //   })
+          // )
+          // await this.open(EditorType.DFDLDebugLinked, config, ctx)
         }
       )
     )
@@ -92,6 +100,7 @@ export class DataEditorManager {
     const bus = new WebviewBusHost(panel)
 
     const editor = await this.factory.create(type, config, bus)
+
     this.editors.set(panel.title, editor)
     await editor.open()
     panel.onDidDispose(() => {
@@ -118,8 +127,8 @@ export class DataEditorManager {
 type TargetFileSelector = () => string | Promise<string>
 
 /**
- * 
- * @returns 
+ *
+ * @returns
  */
 const VSCodeFileSelector: TargetFileSelector = async (): Promise<string> => {
   const fileUri = await vscode.window.showOpenDialog({

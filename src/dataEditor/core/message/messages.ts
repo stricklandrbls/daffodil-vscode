@@ -1,6 +1,7 @@
 // src/core/messages.ts
 
 import { IServerHeartbeat } from '@omega-edit/client'
+import { EditByteModes } from 'dataEditor/extension/editors/utils/dataFormatting'
 
 export enum MessageCommand {
   clearChanges,
@@ -25,14 +26,38 @@ export enum MessageCommand {
   updateLogicalDisplay,
   viewportRefresh,
 }
+//   data: {
+//     selectionToFileOffset: $selectionDataStore.startOffset,
+//     editedContent: $editorSelection,
+//     viewport: $focusedViewportId,
+//     selectionSize: $selectionSize,
+//     encoding: $editorEncoding,
+//     radix: $displayRadix,
+//     editMode: $editMode,
+//   }
+export type EditedDataRequest = {
+  selectionToFileOffset: number
+  editedContent: string
+  viewport: string
+  selectionSize: number
+  encoding: BufferEncoding
+  radix: number
+  editMode: EditByteModes
+}
+export type ApplyChangesData = {
+  offset: number
+  original_segment: Uint8Array<ArrayBufferLike>
+  edited_segment: Uint8Array
+}
+export type ApplyChangesRequest = ApplyChangesData
+export type SaveRequest = {
+  targetFile: string
+}
+
 export interface ExtensionMsgCommands {
   counts: never
   clearChanges: never
-  applyChanges: {
-    offset: number
-    original_segment: Uint8Array<ArrayBufferLike>
-    edited_segment: Uint8Array
-  }
+  applyChanges: ApplyChangesRequest
   editorOnChange: {
     // extension
     editMode: 'single' | 'multi'
@@ -44,9 +69,9 @@ export interface ExtensionMsgCommands {
   profile: { start: number; length: number } // service
   redoChange: never
   replaceResults: never
-  requestEditedData: never
-  save: never
-  saveAs: never
+  requestEditedData: EditedDataRequest
+  save: SaveRequest
+  saveAs: SaveRequest
   saveSegment: { offset: number; length: number }
   scrollViewport: {
     scrollOffset: number
@@ -85,13 +110,13 @@ export type CountResponse = {
   undos: number
   computedFileSize: number
 }
+export type EditedDataResponse = {
+  data: Uint8Array
+  dataDisplay: string
+}
 export interface ExtensionMsgResponses {
-  clearChanges: never
-  applyChanges: {
-    offset: number
-    original_segment: Uint8Array
-    edited_segment: Uint8Array
-  }
+  clearChanges: void
+  applyChanges: number
   editorOnChange: {
     encodedStr: string
   }
@@ -104,11 +129,11 @@ export interface ExtensionMsgResponses {
   counts: CountResponse
   heartbeat: IServerHeartbeat & { port: number } // service
   profile: { start: number; length: number } // service
-  redoChange: never
-  replaceResults: never
-  requestEditedData: never
-  save: never
-  saveAs: never
+  redoChange: void
+  replaceResults: void
+  requestEditedData: EditedDataResponse
+  save: void
+  saveAs: void
   saveSegment: { offset: number; length: number }
   scrollViewport: ReadResponse
   search: number[]
@@ -123,10 +148,10 @@ export interface ExtensionMsgResponses {
     overwriteOnly?: boolean
   }
   searchResults: number[]
-  setUITheme: never
-  showMessage: never
-  undoChange: never
-  updateLogicalDisplay: never
+  setUITheme: void
+  showMessage: void
+  undoChange: number
+  updateLogicalDisplay: void
   viewportRefresh: ReadResponse
 }
 export type ExtensionReqSubMap = Pick<
@@ -142,7 +167,7 @@ type ReadRequest = {
   capacity: number
   isFloating?: boolean
 }
-type ReadResponse = {
+export type ReadResponse = {
   srcOffset: number
   length: number
   bytesRemaining: number
@@ -160,3 +185,10 @@ export type RequestArgs<R, K extends keyof R> = [R[K]] extends [never]
   : [type: K, payload: R[K]]
 export interface ExtensionRequest {}
 export interface ExtensionResponse {}
+
+export abstract class SaveAsStrategy {
+  abstract getFile(): Promise<string>
+  abstract confirm(): Promise<boolean>
+  abstract notifyFailure(msg?: string): void
+  abstract notifySuccess(): void
+}

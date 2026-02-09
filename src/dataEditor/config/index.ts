@@ -4,6 +4,7 @@ import XDGAppPaths from 'xdg-app-paths'
 import fs from 'fs'
 import assert from 'assert'
 import path from 'path'
+import { SaveAsStrategy } from 'dataEditor/core/message/messages'
 
 export const APP_DATA_PATH: string = XDGAppPaths({ name: 'omega_edit' }).data()
 
@@ -32,6 +33,7 @@ export interface BaseEditorConfigOpts extends ConfigFileVars {
 }
 export interface StandaloneEditorConfigOpts extends BaseEditorConfigOpts {
   type: EditorType.Standalone
+  saveAsStrategy: SaveAsStrategy
   targetFile?: string
 }
 
@@ -63,9 +65,7 @@ export abstract class DataEditorConfig {
     this.logFile = p.logFile
     this.checkpointPath = p.checkpointPath
   }
-  static buildFrom(provider: DataEditorConfigProvider){
-    
-  }
+  static buildFrom(provider: DataEditorConfigProvider) {}
 }
 
 export interface DataEditorConfigProvider {
@@ -75,12 +75,14 @@ export interface DataEditorConfigProvider {
   ): ExtractableConfigOpts[T]
   targetFile(): string | Promise<string>
 }
-
 export class StandaloneEditorConfig extends DataEditorConfig {
   constructor(opts: StandaloneEditorConfigOpts) {
     super(opts)
   }
-  static async build(provider: DataEditorConfigProvider) {
+  static async build(
+    provider: DataEditorConfigProvider,
+    saveAsStrategy: SaveAsStrategy
+  ) {
     const port = provider.get('port', 9000)
 
     let config: StandaloneEditorConfigOpts = {
@@ -98,6 +100,7 @@ export class StandaloneEditorConfig extends DataEditorConfig {
       targetFile: await provider.targetFile(),
       heartbeatMs: 1000,
       type: EditorType.Standalone,
+      saveAsStrategy,
     }
 
     if (!Number.isInteger(config.port) || config.port <= 0)

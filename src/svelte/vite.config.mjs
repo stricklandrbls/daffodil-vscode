@@ -15,19 +15,18 @@
  * limitations under the License.
  */
 
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import path from 'path'
 import strip from 'rollup-plugin-strip-code'
 import { fileURLToPath } from 'url'
-import { loadEnvFile } from 'process'
 import * as fs from 'fs'
 const r = (p) => fileURLToPath(new URL(p, import.meta.url))
 const envFilePath = path.resolve(__dirname, '.env')
 
 /** @type {import('vite').UserConfig} */
 export default defineConfig(({ mode }) => {
-  if (fs.existsSync(envFilePath)) loadEnvFile(envFilePath)
+  if (fs.existsSync(envFilePath)) loadEnv(mode, process.cwd(), '')
   const debugDataEditor =
     process.env.DEBUG_DATAEDITOR == 'on' && mode === 'development'
 
