@@ -17,6 +17,7 @@ import EventEmitter from 'events'
 import { Socket } from 'net'
 import path from 'path'
 import {
+  OmegaEditSession,
   onAllSessionsDestroyed,
   sessionCreate,
   SessionCreateOpts,
@@ -26,7 +27,7 @@ import { RequestHandler } from 'dataEditor/core/service/requestHandler'
 import * as fs from 'fs'
 import * as child_process from 'child_process'
 import { osCheck } from '../../../../utils'
-import { ReadResponse } from 'dataEditor/core/message/messages'
+import { ReadResponse, SaveAsStrategy } from 'dataEditor/core/message/messages'
 export type OmegaEditConfigProvider = () => DataEditorConfig &
   OmegaEditServiceConfig
 
@@ -34,35 +35,45 @@ export type OmegaEditVendorOpts = {
   heartbeat?: (hb: IServerHeartbeat) => any
   data: (data: ReadResponse) => any
 }
+export interface OmegaEditServiceEvents extends EditorServiceEvents {
+  connected: (
+    subscribers: {
+      data: (response: ReadResponse) => any
+      heartbeat: (hb: IServerHeartbeat) => any
+    },
+    saveAsStrategy: SaveAsStrategy
+  ) => Promise<OmegaEditSession>
+}
 export class OmegaEditorAdapter implements DataEditorService {
   private connected = false
   private eventEmitter: EventEmitter = new EventEmitter()
   private serverPid: number = -1
 
-  constructor(
-    private readonly cfg: DataEditorConfig,
-    private readonly vendor: OmegaEditVendorOpts /* real sdk type */
-  ) {}
+  constructor() {}
 
-  getServiceHandler<OmegaEditSession>(): Promise<OmegaEditSession> {
+  getServiceHandler<OmegaEditSession>(subscriptions: {
+    hb: (hb: IServerHeartbeat) => void
+    data: (data: ReadResponse) => void
+    saveAsStrategy: SaveAsStrategy
+  }): Promise<OmegaEditSession> {
     throw new Error('Method not implemented.')
   }
-  connect(): Promise<RequestHandler<any, any>> {
+  connect(cfg: DataEditorConfig): Promise<void> {
     return new Promise(async (res, rej) => {
       this.eventEmitter.emit(
         'status',
-        `Conencting to Ωedit server on port ${this.cfg.port}`
+        `Conencting to Ωedit server on port ${cfg.port}`
       )
 
-      if (!(await checkServerListening({ ...this.cfg }))) {
+      if (!(await checkServerListening({ ...cfg }))) {
         this.serverPid = await startService({
-          ...this.cfg,
+          ...cfg,
         }).catch((err) => {
           this.eventEmitter.emit('error', err)
           return -1
         })
       } else {
-        this.serverPid = getExistingPidFile(this.cfg.port)
+        this.serverPid = getExistingPidFile(cfg.port)
       }
 
       const serverInfo = await testServiceConnection().catch((err) => {
@@ -70,44 +81,45 @@ export class OmegaEditorAdapter implements DataEditorService {
         return undefined
       })
 
-      const sessionOpts: SessionCreateOpts = {
-        ...this.cfg,
-        dataSubscriber: (response) => {
-          this.eventEmitter.emit('dataUpdate', response)
-        },
-        heartbeatReceiver: (hb) => {
-          this.eventEmitter.emit('heartbeatUpdate', {
-            ...hb,
-            port: this.cfg.port,
-          })
-        },
-      }
-
-      const session = await sessionCreate({
-        ...sessionOpts,
-      })
-
-      this.disconnect = async () => {
-        this.connected = false
-        sessionDestroy(session.sessionId)
-      }
       this.connected = true
       this.eventEmitter.emit('connected', {
-        hostname: this.cfg.hostname,
-        port: this.cfg.port,
+        startSession: async (
+          subscribers: {
+            data: (response: ReadResponse) => any
+            heartbeat: (hb: IServerHeartbeat) => any
+          },
+          saveAsStrategy: SaveAsStrategy
+        ) => {
+          const sessionOpts: SessionCreateOpts = {
+            ...cfg,
+            dataSubscriber: subscribers.data,
+            heartbeatReceiver: (hb) => {
+              subscribers.heartbeat({ ...hb })
+            },
+            saveAsStrategy: saveAsStrategy,
+          }
+
+          const session = await sessionCreate(sessionOpts)
+
+          this.disconnect = async () => {
+            this.connected = false
+            sessionDestroy(session.sessionId)
+          }
+          return session
+        },
       })
 
       onAllSessionsDestroyed(() => {
         stopProcessUsingPID(this.serverPid)
       })
 
-      res(session as RequestHandler<any, any>)
+      res()
     })
   }
 
-  public on<T extends keyof EditorServiceEvents>(
+  public on<T extends keyof OmegaEditServiceEvents>(
     event: T,
-    listener: (content: EditorServiceEvents[T]) => any
+    listener: (content: OmegaEditServiceEvents[T]) => any
   ) {
     this.eventEmitter.on(event, listener)
   }

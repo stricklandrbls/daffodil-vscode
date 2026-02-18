@@ -11,7 +11,6 @@ import { IDataEditor } from './AbstractEditor'
 export interface EditorFactoryOptions {
   makeService?: (cfg: DataEditorConfig) => DataEditorService
   makeUI?: () => EditorUI
-  vendor?: any
 }
 
 export class DataEditorFactory {
@@ -24,12 +23,7 @@ export class DataEditorFactory {
     bus: WebviewBusHost
   ): Promise<IDataEditor> {
     // parse vscode config json for loglevel
-    let service: DataEditorService
-    if (this.opts.makeService) {
-      service = this.opts.makeService?.(cfg)
-    } else {
-      service = new OmegaEditorAdapter(cfg, this.opts.vendor)
-    }
+    let service = new OmegaEditorAdapter()
     const ui = this.opts.makeUI?.() ?? new SvelteUIAdapter()
 
     return this.editorCtrs.create(type, cfg, service, ui, bus)

@@ -20,6 +20,8 @@ import {
   LocalRequests,
   LocalResponses,
 } from './messageHandler'
+import { OmegaEditorAdapter } from 'dataEditor/extension/adapters/omegaEditAdapter/omegaEditAdapter'
+import { VSCodeSaveAsStrategy } from 'dataEditor/extension/utils/saveAsSelector'
 
 class StandaloneMsgMediator extends AbstractMediator<
   ExtensionMsgCommands,
@@ -90,9 +92,27 @@ export class StandaloneDataEditor extends IDataEditor {
 
       statusBarIntervalId = showServiceStatus(msg, statusBarItem)
     })
-    this.opts.service.on('connected', (info) => {
+    this.opts.service.on('connected', async (sessionStart) => {
       clearInterval(statusBarIntervalId)
       statusBarItem.dispose()
+      const session = await sessionStart(
+        {
+          data: (content) => {
+            this.opts.ui.notify('viewportRefresh', content)
+            this.msgMediator.process('counts')
+          },
+          heartbeat: (hb) => {
+            this.opts.ui.notify('heartbeat', {
+              ...hb,
+              port: this.opts.config.port,
+            })
+          },
+        },
+        new VSCodeSaveAsStrategy(() => {
+          return []
+        })
+      )
+      this.msgMediator.setServiceHandler(session)
     })
     this.opts.service.on('error', (err) => {
       clearInterval(statusBarIntervalId)
@@ -104,23 +124,23 @@ export class StandaloneDataEditor extends IDataEditor {
         statusBarItem.dispose()
       })
     })
-    this.opts.service.on('dataUpdate', (content) => {
-      this.opts.ui.notify('viewportRefresh', content)
-      this.msgMediator.process('counts')
-    })
-    this.opts.service.on('heartbeatUpdate', (hb) => {
-      this.opts.ui.notify('heartbeat', { ...hb })
-    })
+    // this.opts.service.on('dataUpdate', (content) => {
+    //   this.opts.ui.notify('viewportRefresh', content)
+    //   this.msgMediator.process('counts')
+    // })
+    // this.opts.service.on('heartbeatUpdate', (hb) => {
+    //   this.opts.ui.notify('heartbeat', { ...hb })
+    // })
 
-    const serviceReqHandler = await this.opts.service.connect()
+    // const serviceReqHandler = await this.opts.service.connect(this.opts.config)
 
-    this.msgMediator.setServiceHandler(serviceReqHandler)
+    // this.msgMediator.setServiceHandler(serviceReqHandler)
     this.msgMediator.processPreInitMsgs()
     return true
   }
   constructor(
     config: DataEditorArgMap[EditorType.Standalone],
-    service: DataEditorService,
+    service: OmegaEditorAdapter,
     ui: EditorUI,
     bus: WebviewBusHost
   ) {

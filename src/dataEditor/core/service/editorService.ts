@@ -13,7 +13,7 @@ export type DataUpdatedResponse = {
 }
 export interface EditorServiceEvents {
   status: string
-  connected: { hostname: string; port: number }
+  connected: any
   error: string
   heartbeatUpdate: IServerHeartbeat & { port: number }
   dataUpdate: ReadResponse
@@ -24,7 +24,7 @@ export type ServiceRequests = {
 }
 
 export interface DataEditorService {
-  connect(): Promise<RequestHandler<any, any>>
+  connect(args: any): Promise<any>
   disconnect(): Promise<void>
   isConnected(): boolean
 

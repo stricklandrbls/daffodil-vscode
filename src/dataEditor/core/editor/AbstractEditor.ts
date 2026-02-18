@@ -9,6 +9,7 @@ import {
 } from 'dataEditor/core/message/messages'
 import { DataEditorService } from 'dataEditor/core/service/editorService'
 import { EditorUI } from 'dataEditor/core/ui/editorUI'
+import { OmegaEditorAdapter } from 'dataEditor/extension/adapters/omegaEditAdapter/omegaEditAdapter'
 
 export abstract class IDataEditor {
   protected abstract msgMediator: AbstractMediator<
@@ -20,7 +21,7 @@ export abstract class IDataEditor {
   constructor(
     protected readonly opts: {
       config: DataEditorConfig
-      service: DataEditorService
+      service: OmegaEditorAdapter
       ui: EditorUI
       bus: WebviewBusHost
     }
