@@ -37,8 +37,16 @@ export default defineConfig(({ mode }) => {
     },
 
     base: '',
+    // plugins:[svelte({configFile: path.resolve(__dirname, "src/svelte/svelte.config.mjs")})],
+    test: {
+      environment: 'jsdom',
+      globals: true,
+
+      include: ['./tests/**/*.svelte.test.ts'],
+    },
     resolve: {
       alias: {
+        '@': path.resolve(__dirname, '.'),
         $root: debugDataEditor
           ? r('./src/App.debug.svelte')
           : r('./src/App.svelte'),
