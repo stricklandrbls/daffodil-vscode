@@ -15,16 +15,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte'
+  import { createEventDispatcher, getContext, onMount } from 'svelte'
   import {
     editedDataSegment,
     editMode,
-    editorEncoding,
     focusedViewportId,
     selectionDataStore,
-    selectionSize,
     selectedByte,
-    fileMetrics,
     searchQuery,
     editorActionsAllowed,
     dataFeedLineTop,
@@ -34,15 +31,14 @@ limitations under the License.
     replaceQuery,
     searchResultsUpdated,
     dfdlBytePos,
+    editorEncoding,
   } from '../../../stores'
   import {
     EditByteModes,
     type RadixValues,
     EditActionRestrictions,
-    VIEWPORT_SCROLL_INCREMENT,
-  } from '../../../stores/configuration'
-  import { MessageCommand } from '../../../utilities/message'
-  import { vscode } from '../../../utilities/vscode'
+  } from 'ext_types'
+  import { VIEWPORT_SCROLL_INCREMENT } from '../../../stores/configuration'
   import Button from '../../Inputs/Buttons/Button.svelte'
   import FlexContainer from '../../layouts/FlexContainer.svelte'
   import {
@@ -69,9 +65,14 @@ limitations under the License.
     categoryCSSSelectors,
   } from '../../../utilities/highlights'
   import { bytesPerRow } from '../../../stores'
+  import { vscode, type VSMessenger } from 'utilities/vscode'
+  import { getUIMsgId, isUIDebugAttached } from 'stores/states.svelte'
+  import { fileMetricsState } from 'editor_components/Header/fieldsets/FileMetrics.svelte.ts'
+
+  const { postMessage, addListener } = getContext('messenger') as VSMessenger
 
   /* DEBUG_ONLY_START */
-  import { addVarToDebug, getDebugVarContext } from '../../Debug'
+  import { getDebugVarContext } from '../../Debug'
   const debugVarsCtx = getDebugVarContext()
   debugVarsCtx.add(
     { id: 'bytes / row', valueStr: () => $bytesPerRow.toString() },
@@ -98,9 +99,9 @@ limitations under the License.
     if (direction === ViewportScrollDirection.INCREMENT) {
       const fetchBound =
         viewportData.fileOffset + scroll_count * VIEWPORT_SCROLL_INCREMENT
-      if (fetchBound > $fileMetrics.computedSize)
+      if (fetchBound > fileMetricsState.computedSize)
         return (
-          ($fileMetrics.computedSize / $bytesPerRow) * $bytesPerRow -
+          (fileMetricsState.computedSize / $bytesPerRow) * $bytesPerRow -
           $dataDislayLineAmount * $bytesPerRow
         )
 
@@ -150,7 +151,7 @@ limitations under the License.
     eventDispatcher('seek')
   }
   const SCROLL_TO_END = () => {
-    $seekOffsetInput = $fileMetrics.computedSize.toString(addressRadix)
+    $seekOffsetInput = fileMetricsState.computedSize.toString(addressRadix)
     eventDispatcher('seek')
   }
   const SCROLL_TO_TOP = () => {
@@ -180,11 +181,6 @@ limitations under the License.
     highlight: 'even' | 'odd'
   }
 
-  // enum ViewportScrollDirection {
-  //   DECREMENT = -1,
-  //   NONE = 0,
-  //   INCREMENT = 1,
-  // }
   class ViewportScrollDirection {
     public static readonly DECREMENT = -1
     public static readonly NONE = 0
@@ -213,7 +209,9 @@ limitations under the License.
 
   $: themeClass = $UIThemeCSSClass
   $: {
-    totalLinesPerFilesize = Math.ceil($fileMetrics.computedSize / $bytesPerRow)
+    totalLinesPerFilesize = Math.ceil(
+      fileMetricsState.computedSize / $bytesPerRow
+    )
     totalLinesPerViewport = Math.ceil(viewportData.data.length / $bytesPerRow)
     lineTopMaxFile = Math.max(totalLinesPerFilesize - $dataDislayLineAmount, 0)
     lineTopMaxViewport = Math.max(
@@ -453,15 +451,10 @@ limitations under the License.
   }
 
   function postEditorOnChangeMsg(forcedEncoding?: string) {
-    vscode.postMessage({
-      command: MessageCommand.editorOnChange,
-      data: {
-        fileOffset: $selectionDataStore.startOffset + viewportData.fileOffset,
-        selectionData: $editedDataSegment,
-        encoding: forcedEncoding ? forcedEncoding : $editorEncoding,
-        selectionSize: $selectionSize,
-        editMode: $editMode,
-      },
+    postMessage('editorOnChange', {
+      selectionData: $editedDataSegment,
+      encoding: forcedEncoding ? forcedEncoding : $editorEncoding,
+      editMode: $editMode,
     })
   }
 
@@ -469,11 +462,11 @@ limitations under the License.
     // the offset will be the offset of the byte at the start of the line
     const offset =
       Math.ceil(
-        ($fileMetrics.computedSize * (percentageTraversed / 100.0)) /
+        (fileMetricsState.computedSize * (percentageTraversed / 100.0)) /
           $bytesPerRow
       ) * $bytesPerRow
     const firstPageThreshold = $bytesPerRow * $dataDislayLineAmount
-    const lastPageThreshold = $fileMetrics.computedSize - firstPageThreshold
+    const lastPageThreshold = fileMetricsState.computedSize - firstPageThreshold
     if (offset <= firstPageThreshold) {
       // scroll to the top because we are somewhere in the first page
       SCROLL_TO_TOP()
@@ -562,36 +555,36 @@ limitations under the License.
   }
 
   window.addEventListener('keydown', navigation_keydown_event)
-  window.addEventListener('message', (msg) => {
-    switch (msg.data.command) {
-      case MessageCommand.viewportRefresh:
-        if (awaitViewportSeek) {
-          awaitViewportSeek = false
-          $dataFeedLineTop = Math.max(
-            0,
-            Math.min(lineTopMaxViewport, $dataFeedLineTop)
-          )
-          if ($selectionDataStore.active)
-            selectedByteElement = document.getElementById(
-              $selectedByte.offset.toString()
-            ) as HTMLDivElement
-        }
-        break
-      case 'daffodil.data':
-        const { bytePos1b } = msg.data.data
-        if (!bytePosIsDisplayable(bytePos1b - 1)) {
-          $seekOffsetInput = bytePos1b.toString(addressRadix)
-          eventDispatcher('seek')
-        }
-        $dfdlBytePos = bytePos1b - 1
-        break
+
+  addListener('viewportRefresh', (data) => {
+    if (awaitViewportSeek) {
+      awaitViewportSeek = false
+      $dataFeedLineTop = Math.max(
+        0,
+        Math.min(lineTopMaxViewport, $dataFeedLineTop)
+      )
+      if ($selectionDataStore.active)
+        selectedByteElement = document.getElementById(
+          $selectedByte.offset.toString()
+        ) as HTMLDivElement
     }
   })
+  if (isUIDebugAttached(getUIMsgId())) {
+    addListener('bytePos1b', (data) => {
+      const { bytePos1b } = data
+      if (!bytePosIsDisplayable(bytePos1b - 1)) {
+        $seekOffsetInput = bytePos1b.toString(addressRadix)
+        eventDispatcher('seek')
+      }
+      $dfdlBytePos = bytePos1b - 1
+    })
+  }
 </script>
 
 <svelte:window on:mousemove={mouseover_handler} />
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class="container"
   style:height
@@ -667,7 +660,7 @@ limitations under the License.
     <FlexContainer --dir="row">
       <Button
         fn={SCROLL_TO_END}
-        disabledBy={disableIncrement}
+        isDisabled={disableIncrement}
         width="30pt"
         description="Navigate to EOF"
         tooltipAlwaysEnabled={true}
@@ -678,7 +671,7 @@ limitations under the License.
       </Button>
       <Button
         fn={INCREMENT_SEGMENT}
-        disabledBy={disableIncrement}
+        isDisabled={disableIncrement}
         width="30pt"
         description="Increment offset by {$dataDislayLineAmount *
           $bytesPerRow} bytes"
@@ -690,7 +683,7 @@ limitations under the License.
       </Button>
       <Button
         fn={INCREMENT_LINE}
-        disabledBy={disableIncrement}
+        isDisabled={disableIncrement}
         width="30pt"
         description="Increment offset by {$bytesPerRow} bytes"
         tooltipAlwaysEnabled={true}
@@ -701,7 +694,7 @@ limitations under the License.
       </Button>
       <Button
         fn={DECREMENT_LINE}
-        disabledBy={disableDecrement}
+        isDisabled={disableDecrement}
         width="30pt"
         description="Decrement offset by {$bytesPerRow} bytes"
         tooltipAlwaysEnabled={true}
@@ -712,7 +705,7 @@ limitations under the License.
       </Button>
       <Button
         fn={DECREMENT_SEGMENT}
-        disabledBy={disableDecrement}
+        isDisabled={disableDecrement}
         width="30pt"
         description="Decrement offset by {$dataDislayLineAmount *
           $bytesPerRow} bytes"
@@ -724,7 +717,7 @@ limitations under the License.
       </Button>
       <Button
         fn={SCROLL_TO_TOP}
-        disabledBy={disableDecrement}
+        isDisabled={disableDecrement}
         width="30pt"
         description="Navigate to offset 0"
         tooltipAlwaysEnabled={true}
@@ -733,7 +726,7 @@ limitations under the License.
           >stat_3</span
         >
       </Button>
-      <span class="separator" />
+      <span class="separator"></span>
       <Button
         fn={() => {
           $dataDislayLineAmount += 1
@@ -743,7 +736,7 @@ limitations under the License.
             addressRadix
           )
         }}
-        disabledBy={($dataDislayLineAmount + 1) * $bytesPerRow >=
+        isDisabled={($dataDislayLineAmount + 1) * $bytesPerRow >=
           VIEWPORT_SCROLL_INCREMENT}
         description={'Increment display lines (' +
           ($dataDislayLineAmount + 1) +
@@ -764,7 +757,7 @@ limitations under the License.
             addressRadix
           )
         }}
-        disabledBy={$dataDislayLineAmount === 1}
+        isDisabled={$dataDislayLineAmount === 1}
         description={'Decrement display lines (' +
           ($dataDislayLineAmount - 1) +
           ')'}
