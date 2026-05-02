@@ -18,8 +18,8 @@
 import { mount } from 'svelte'
 import 'utilities/messages'
 import './app.css'
-import App from '$root'
-const app = mount(App, {
+import TestApp from './TestApp.svelte'
+const app = mount(TestApp, {
   target: document.getElementById('app')!,
 })
 
