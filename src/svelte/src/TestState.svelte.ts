@@ -1,4 +1,8 @@
+import { createContext } from "svelte"
 import { vscode, type VSMessenger } from "utilities/vscode"
+
+let [getMessengerCtx, setMessengerCtx] = createContext<{addListener: VSMessenger['addListener'], postMessage: VSMessenger['postMessage']}>()
+export const getCtx = getMessengerCtx
 
 export class TestState{
     ready: Promise<VSMessenger>

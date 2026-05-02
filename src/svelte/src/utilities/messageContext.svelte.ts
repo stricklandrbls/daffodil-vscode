@@ -5,7 +5,7 @@
   //   isValid: boolean
 
 import { createContext } from "svelte"
-import { type VSMessenger } from "./vscode"
+import { vscode, type VSMessenger } from "./vscode"
 
   // }
   // const messengerContext = $state<UIMessengerContext>({
@@ -16,26 +16,28 @@ import { type VSMessenger } from "./vscode"
   // setContext('messenger', { messengerContext })
 
   export class UIMessengerContext{
-    #ready = $state<boolean>(false)
+    ready: Promise<VSMessenger>
+    #readyResolve!: (msgr:VSMessenger)=>void
 
     #uiMsgId = $state<string>("")
-    #messageApi = $state<VSMessenger | undefined>(undefined);
-    initialize(id:string, messenger: VSMessenger){
-      if(id === '' || id === '__extension_msg_id__') throw new Error("Invalid UI Message Id Received")
-        this.#uiMsgId = id
-        this.#messageApi = messenger;
-      this.#ready = true
-    }
-    get ready(){return this.#ready}
 
-    get messageApi(){return this.#messageApi}
-  
-  
+    constructor(){
+        this.ready = new Promise<VSMessenger>(resolve => {
+            this.#readyResolve = (msgr)=> resolve(msgr)
+        })
+    }
+    initialize(id:string){
+      if(['','__extension_msg_id__'].includes(id)) throw new Error("Invalid UI Message Id Received")
+        this.#uiMsgId = id
+        const {addListener, postMessage} = vscode.getMessenger(id)
+        
+    }
   
   }
+const MessengerContext = new UIMessengerContext()
 
   export const createUIMessengerCtx = () => {
-    return new UIMessengerContext()
+    return MessengerContext
   }
   export const [getUIMessegnerCtx,setUIMessegnerCtx] = createContext<UIMessengerContext>()
 //   import { createContext } from 'svelte';

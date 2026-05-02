@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { createContext, onMount, setContext } from 'svelte'
     import {TestState} from './TestState.svelte.ts'
   import type { VSMessenger } from 'utilities/vscode'
-
-    
+    setContext('uiMessenger',{addListener: VSMessenger['addListener'], postMessage: VSMessenger['postMessage']})
+    const ctx = createContext<{addListener: VSMessenger['addListener'], postMessage: VSMessenger['postMessage']}>()
     const test = new TestState()
     let appElem = $state<HTMLElement | null> (null)
         let disabled = $state<boolean>(true)
