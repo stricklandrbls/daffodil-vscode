@@ -604,6 +604,39 @@ The Data Editor supports light and dark modes.  The mode is determined by the VS
 <br/>
 <img width="800" src="images/v1.3.1/DE-light-theme.png"/>
 
+## Data Editor Usage During Schema Debug Sessions
+
+### Configuration Options
+
+The Data Editor provides all the functionality listed above while an active schema debug session exists. In order to have the Data Editor start alongside a schema debug session's target file, the launch confiugration must be appropriately defined.
+
+The `openDataEditor` property will enable or disable opening the Data Editor upon debug session start.
+
+The `dataEditor` property is defined by an object containing the following properties:
+
+- `port`: The port which the Omega Edit server will communicate to the Data Editor.
+- `logging`: An object for relevant logging options for the Data Editor consisting of:
+  - `file`: The file to log to.
+  - `level`: The verbosity of logging. Valid values are: `debug`, `info`, `warning`, `error` and `critical`.
+
+```json
+
+"openDataEditor": true,
+"dataEditor": {
+    "port": 9000,
+    "logging": {
+        "file": "/dataEditor-.log",
+        "level": "info"
+    }
+}
+```
+
+### Debug Byte Position Indication
+
+When the Data Editor is opened during a schema debug session it will display a blinking highlight over the byte position.
+
+
+
 ## Navigation
 
 The Data Editor can be navigated using the mouse or keyboard.
